@@ -1,0 +1,23 @@
+{
+  "name": "finder",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"pnpm finder_frontend\" \"pnpm backend\"",
+    "dev:fe": "pnpm --filter finder_frontend dev",
+    "dev:be": "pnpm --filter backend start:dev",
+    "build": "pnpm --filter frontend build && pnpm --filter backend build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write ."
+  },
+  "engines": {
+    "node": ">=20.18.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "eslint": "^9.15.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  }
+}
