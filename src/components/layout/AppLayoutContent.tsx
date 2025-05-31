@@ -4,7 +4,7 @@ import AppHeader from "@/components/layout/AppHeader";
 import AppSidebar from "@/components/layout/AppSidebar";
 import Backdrop from "@/components/layout/Backdrop";
 
-export function LayoutContent({ children }: { children: React.ReactNode }) {
+export function AppLayoutContent({ children }: { children: React.ReactNode }) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
   
   // Dynamic class for main content margin based on sidebar state

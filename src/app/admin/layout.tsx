@@ -1,7 +1,7 @@
 import { Outfit } from 'next/font/google';
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import {LayoutContent} from '@/components/layout/LayoutContent';
+import {AppLayoutContent} from '@/components/layout/AppLayoutContent';
 
 import './globals.css';
 
@@ -21,7 +21,7 @@ export default function AdminLayout({
       <body className={`${outfit.className} dark:bg-gray-900`}>
         <ThemeProvider>
           <SidebarProvider>
-            <LayoutContent>{children}</LayoutContent>
+            <AppLayoutContent>{children}</AppLayoutContent>
           </SidebarProvider>
         </ThemeProvider>
         </body>
