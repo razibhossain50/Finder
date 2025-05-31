@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState,useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useSidebar } from "../../context/SidebarContext";
+import { useSidebar } from "@/context/SidebarContext";
 import {
   BoxCubeIcon,
   CalenderIcon,
@@ -16,7 +16,7 @@ import {
   PlugInIcon,
   TableIcon,
   UserCircleIcon,
-} from "../../icons/index";
+} from "@/icons/index";
 
 type NavItem = {
   name: string;
@@ -29,68 +29,71 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/admin", pro: false }],
+    path: "/admin",
   },
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
+  
+ 
+];
+
+const othersItems: NavItem[] = [
+  
+   {
     icon: <UserCircleIcon />,
     name: "User Profile",
-    path: "profile",
+    path: "/admin/profile",
   },
 
   {
     name: "Forms",
     icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "form-elements", pro: false }],
+    subItems: [{ name: "Form Elements", path: "/admin/form-elements", pro: false }],
   },
   {
     name: "Tables",
     icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "basic-tables", pro: false }],
+    subItems: [{ name: "Basic Tables", path: "/admin/basic-tables", pro: false }],
   },
   {
     name: "Pages",
     icon: <PageIcon />,
     subItems: [
-      { name: "Blank Page", path: "blank", pro: false },
-      { name: "404 Error", path: "error-404", pro: false },
+      { name: "Blank Page", path: "/admin/blank", pro: false },
+      { name: "404 Error", path: "/admin/error-404", pro: false },
     ],
   },
-];
-
-const othersItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
     name: "Charts",
     subItems: [
-      { name: "Line Chart", path: "line-chart", pro: false },
-      { name: "Bar Chart", path: "bar-chart", pro: false },
+      { name: "Line Chart", path: "/admin/line-chart", pro: false },
+      { name: "Bar Chart", path: "/admin/bar-chart", pro: false },
     ],
   },
   {
     icon: <BoxCubeIcon />,
     name: "UI Elements",
     subItems: [
-      { name: "Alerts", path: "alerts", pro: false },
-      { name: "Avatar", path: "avatars", pro: false },
-      { name: "Badge", path: "badge", pro: false },
-      { name: "Buttons", path: "buttons", pro: false },
-      { name: "Images", path: "images", pro: false },
-      { name: "Videos", path: "videos", pro: false },
+      { name: "Alerts", path: "/admin/alerts", pro: false },
+      { name: "Avatar", path: "/admin/avatars", pro: false },
+      { name: "Badge", path: "/admin/badge", pro: false },
+      { name: "Buttons", path: "/admin/buttons", pro: false },
+      { name: "Images", path: "/admin/images", pro: false },
+      { name: "Videos", path: "/admin/videos", pro: false },
     ],
   },
   {
     icon: <PlugInIcon />,
     name: "Authentication",
     subItems: [
-      { name: "Sign In", path: "signin", pro: false },
-      { name: "Sign Up", path: "signup", pro: false },
+      { name: "Sign In", path: "/admin/signin", pro: false },
+      { name: "Sign Up", path: "/admin/signup", pro: false },
     ],
   },
+  {
+    icon: <CalenderIcon />,
+    name: "Calendar",
+    path: "/admin/calendar",
+  }
 ];
 
 const AppSidebar: React.FC = () => {
@@ -134,7 +137,7 @@ const AppSidebar: React.FC = () => {
                   className={`ml-auto w-5 h-5 transition-transform duration-200  ${
                     openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
+                      ? "rotate-180 text-white"
                       : ""
                   }`}
                 />
@@ -289,7 +292,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-dark-300 dark:bg-gray-900 dark:border-gray-800 text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -307,14 +310,15 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link href="/">
+        <Link className="text-3xl" href="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
-              <Image
+            Finder
+              {/* <Image
                 className="dark:hidden"
-                src="/images/logo/logo.png"
+                src="/images/logo/logo-transparent.png"
                 alt="Logo"
-                width={150}
+                width={180}
                 height={40}
               />
               <Image
@@ -323,15 +327,19 @@ const AppSidebar: React.FC = () => {
                 alt="Logo"
                 width={150}
                 height={40}
-              />
+              /> */}
             </>
           ) : (
-            <Image
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+            <>
+            Fi
+            </>
+            
+            // <Image
+            //   src="/images/logo/logo-icon.svg"
+            //   alt="Logo"
+            //   width={32}
+            //   height={32}
+            // />
           )}
         </Link>
       </div>
@@ -340,7 +348,7 @@ const AppSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-white ${
                   !isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
@@ -357,7 +365,7 @@ const AppSidebar: React.FC = () => {
 
             <div className="">
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-white ${
                   !isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
