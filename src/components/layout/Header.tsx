@@ -1,248 +1,180 @@
-"use client"
+"use client";
+import React, { useState, useRef, useEffect } from 'react';
+import { Layout, Menu, X, User, ChevronDown, LogIn, UserPlus, Settings, LogOut } from 'lucide-react';
 
-import { Menu, User, LogOut, Settings, UserCircle } from "lucide-react"
-import Link from "next/link"
+function Header() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+  const navItems = [
+    { label: 'Find your partner', href: '/', active: true },
+    { label: 'Find your doctor', href: '#' },
+  ];
 
-export default function Navigation() {
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4">
-        {/* Mobile Menu - Left */}
-        <div className="flex items-center md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-80">
-              <div className="flex flex-col space-y-4 mt-4">
-                <Link href="/" className="text-lg font-medium hover:text-primary transition-colors">
-                  Home
-                </Link>
-                <Link href="/about" className="text-lg font-medium hover:text-primary transition-colors">
-                  About
-                </Link>
-                <Link href="/services" className="text-lg font-medium hover:text-primary transition-colors">
-                  Services
-                </Link>
-                <Link href="/products" className="text-lg font-medium hover:text-primary transition-colors">
-                  Products
-                </Link>
-                <Link href="/contact" className="text-lg font-medium hover:text-primary transition-colors">
-                  Contact
-                </Link>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        {/* Desktop Logo - Left */}
-        <div className="hidden md:flex">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">L</span>
-            </div>
-            <span className="font-bold text-xl">Logo</span>
-          </Link>
-        </div>
-
-        {/* Mobile Logo - Center */}
-        <div className="flex md:hidden">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">L</span>
-            </div>
-            <span className="font-bold text-xl">Logo</span>
-          </Link>
-        </div>
-
-        {/* Desktop Navigation - Center */}
-        <div className="hidden md:flex flex-1 justify-center">
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/"
-                    className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+    <header>
+        <nav className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              {/* Left section */}
+              <div className="flex items-center">
+                {/* Mobile menu button */}
+                <div className="md:hidden" ref={mobileMenuRef}>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none"
                   >
-                    Home
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/about"
-                    className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                    <span className="sr-only">Open main menu</span>
+                    {isMobileMenuOpen ? (
+                      <X className="block h-6 w-6" />
+                    ) : (
+                      <Menu className="block h-6 w-6" />
+                    )}
+                  </button>
+
+                  {/* Mobile menu dropdown */}
+                  <div
+                    className={`absolute left-0 mt-2 w-full px-2 pt-2 pb-3 bg-white shadow-lg rounded-md transition-all duration-200 transform ${
+                      isMobileMenuOpen
+                        ? 'opacity-100 scale-100 translate-y-0'
+                        : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                    }`}
                   >
-                    About
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Services</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid w-[400px] p-2">
-                    <NavigationMenuLink asChild>
-                      <Link
-                        href="/services/web-design"
-                        className="group grid h-auto w-full items-center justify-start gap-1 rounded-md bg-background p-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                    {navItems.map((item) => (
+                      <a
+                        key={item.label}
+                        href={item.href}
+                        className={`block px-3 py-2 rounded-md text-base font-medium ${
+                          item.active
+                            ? 'text-indigo-700 bg-indigo-50'
+                            : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                        }`}
                       >
-                        <div className="text-sm font-medium leading-none group-hover:underline">Web Design</div>
-                        <div className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          Custom web design solutions for your business
-                        </div>
-                      </Link>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
-                      <Link
-                        href="/services/development"
-                        className="group grid h-auto w-full items-center justify-start gap-1 rounded-md bg-background p-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                      >
-                        <div className="text-sm font-medium leading-none group-hover:underline">Development</div>
-                        <div className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          Full-stack development services
-                        </div>
-                      </Link>
-                    </NavigationMenuLink>
+                        {item.label}
+                      </a>
+                    ))}
                   </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/products"
-                    className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                  >
-                    Products
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/contact"
-                    className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                  >
-                    Contact
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
+                </div>
 
-        {/* Desktop Auth Buttons + Profile - Right */}
-        <div className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost" asChild>
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/signup">Sign Up</Link>
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Profile" />
-                  <AvatarFallback>
-                    <User className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link href="/profile" className="flex items-center">
-                  <UserCircle className="mr-2 h-4 w-4" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings" className="flex items-center">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                {/* Logo */}
+                <div className="flex items-center gap-2">
+                  <Layout className="h-6 w-6 text-indigo-600" />
+                  <span className="font-bold text-lg">Brand</span>
+                </div>
+              </div>
 
-        {/* Mobile Profile - Right */}
-        <div className="flex md:hidden">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Profile" />
-                  <AvatarFallback>
-                    <User className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link href="/login" className="flex items-center">
-                  <UserCircle className="mr-2 h-4 w-4" />
-                  Login
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/signup" className="flex items-center">
-                  <User className="mr-2 h-4 w-4" />
-                  Sign Up
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/profile" className="flex items-center">
-                  <UserCircle className="mr-2 h-4 w-4" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings" className="flex items-center">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+              {/* Middle section - Navigation Items (hidden on mobile) */}
+              <div className="hidden md:flex items-center justify-center space-x-1">
+                {navItems.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out ${
+                      item.active
+                        ? 'text-indigo-700 bg-indigo-50'
+                        : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+
+              {/* Right section */}
+              <div className="flex items-center space-x-4">
+                {/* Auth Buttons (hidden on mobile) */}
+                <div className="hidden md:flex items-center space-x-2">
+                  <a
+                    href="#"
+                    className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-150 ease-in-out"
+                  >
+                    Login
+                  </a>
+                  <a
+                    href="#"
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors duration-150 ease-in-out"
+                  >
+                    Sign up
+                  </a>
+                </div>
+
+                {/* Profile Menu */}
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                    className="flex items-center space-x-1 text-gray-700 hover:text-indigo-600 focus:outline-none"
+                  >
+                    <User className="h-5 w-5" />
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform duration-200 ${
+                        isProfileMenuOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {/* Profile Dropdown */}
+                  <div
+                    className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 transition-all duration-200 ease-in-out transform origin-top-right ${
+                      isProfileMenuOpen
+                        ? 'opacity-100 scale-100 translate-y-0'
+                        : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                    }`}
+                  >
+                    <div className="px-4 py-2 text-xs text-gray-500">Account</div>
+                    <a
+                      href="#"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      Profile Settings
+                    </a>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <a
+                      href="#"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Login
+                    </a>
+                    <a
+                      href="#"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Sign Up
+                    </a>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <a
+                      href="#"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
     </header>
-  )
+  );
 }
+
+export default Header;

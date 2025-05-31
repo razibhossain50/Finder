@@ -1,8 +1,11 @@
 import React from 'react'
+import SearchBiodata from '@/features/SearchBiodata'
 
 const HomePage = () => {
   return (
-    <div>HomePage</div>
+    <div>
+        <SearchBiodata/>
+    </div>
   )
 }
 

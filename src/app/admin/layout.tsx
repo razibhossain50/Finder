@@ -18,7 +18,7 @@ export default function AdminLayout({
 
   return (
     <html lang="en">
-      <body className={`${outfit.className} dark:bg-gray-900`}>
+      <body className={`${outfit.className} bg-white-100 dark:bg-gray-900`} >
         <ThemeProvider>
           <SidebarProvider>
             <AppLayoutContent>{children}</AppLayoutContent>
