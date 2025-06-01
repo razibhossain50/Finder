@@ -94,20 +94,6 @@ export default function Dashboard() {
                   date: "2024-03-15",
                   amount: "$49.99",
                   status: "Completed"
-                },
-                {
-                  id: 2,
-                  item: "Profile Boost - 30 Days",
-                  date: "2024-03-01",
-                  amount: "$29.99",
-                  status: "Completed"
-                },
-                {
-                  id: 3,
-                  item: "Extra Connections",
-                  date: "2024-02-15",
-                  amount: "$19.99",
-                  status: "Completed"
                 }
               ].map((purchase) => (
                 <div key={purchase.id} className="flex items-center justify-between p-4 rounded-lg bg-white">

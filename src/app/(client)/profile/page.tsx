@@ -3,6 +3,7 @@ import { BellRing as Ring, Stethoscope, Scale } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { use } from "react";
+import Link from "next/link";
 
 export default function Profile() {
   return (
@@ -27,12 +28,12 @@ export default function Profile() {
                 <li>• Partner preferences</li>
                 <li>• Photo gallery options</li>
               </ul>
-              <Button 
-                className="w-full bg-rose-500 hover:bg-rose-600"
-                onClick={() => console.log("Create marriage profile")}
+              <Link
+                className="block text-center p-2 rounded-lg w-full bg-rose-500 hover:bg-rose-600"
+                href="/profile/marriage"
               >
                 Create Marriage Profile
-              </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -53,12 +54,12 @@ export default function Profile() {
                 <li>• Professional experience</li>
                 <li>• Hospital affiliations</li>
               </ul>
-              <Button 
-                className="w-full bg-blue-500 hover:bg-blue-600"
-                onClick={() => console.log("Create doctor profile")}
+              <Link
+                className="block text-center p-2 rounded-lg w-full bg-blue-500 hover:bg-blue-600"
+                href="/profile/marriage"
               >
                 Create Doctor Profile
-              </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -79,12 +80,12 @@ export default function Profile() {
                 <li>• Case history</li>
                 <li>• Law firm details</li>
               </ul>
-              <Button 
-                className="w-full bg-emerald-500 hover:bg-emerald-600"
-                onClick={() => console.log("Create lawyer profile")}
+              <Link
+                className="block text-center p-2 rounded-lg w-full bg-emerald-500 hover:bg-emerald-600"
+                href="/profile/marriage"
               >
                 Create Lawyer Profile
-              </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
