@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Layout, Menu, X, User, ChevronDown, LogIn, UserPlus, Settings, LogOut } from 'lucide-react';
+import { Layout, Menu, X, User, ChevronDown, LogIn, UserPlus, Settings, LogOut, UserRoundPen, LayoutDashboard } from 'lucide-react';
+import Link from 'next/link';
 
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -10,7 +11,7 @@ function Header() {
 
   const navItems = [
     { label: 'Find your partner', href: '/', active: true },
-    { label: 'Find your doctor', href: '#' },
+    { label: 'Find your doctor', href: '/search/doctor' },
   ];
 
   useEffect(() => {
@@ -73,10 +74,15 @@ function Header() {
                 </div>
 
                 {/* Logo */}
+                <Link
+                  href="/"
+                  >
                 <div className="flex items-center gap-2">
                   <Layout className="h-6 w-6 text-indigo-600" />
-                  <span className="font-bold text-lg">Brand</span>
+                  <span className="font-bold text-lg">Finder</span>
                 </div>
+
+                </Link>
               </div>
 
               {/* Middle section - Navigation Items (hidden on mobile) */}
@@ -100,18 +106,19 @@ function Header() {
               <div className="flex items-center space-x-4">
                 {/* Auth Buttons (hidden on mobile) */}
                 <div className="hidden md:flex items-center space-x-2">
-                  <a
-                    href="#"
-                    className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-150 ease-in-out"
-                  >
-                    Login
-                  </a>
-                  <a
-                    href="#"
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors duration-150 ease-in-out"
-                  >
-                    Sign up
-                  </a>
+
+                  <Link
+                      href="/auth/login"
+                      className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-150 ease-in-out"
+                    >
+                       Login
+                    </Link>
+                     <Link
+                      href="/auth/signup"
+                      className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors duration-150 ease-in-out"
+                    >
+                       Sign Up
+                    </Link>
                 </div>
 
                 {/* Profile Menu */}
@@ -137,28 +144,42 @@ function Header() {
                     }`}
                   >
                     <div className="px-4 py-2 text-xs text-gray-500">Account</div>
-                    <a
-                      href="#"
+                    <Link
+                      href="/settings"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <Settings className="mr-2 h-4 w-4" />
-                      Profile Settings
-                    </a>
+                      Settings
+                    </Link>
                     <div className="border-t border-gray-100 my-1"></div>
-                    <a
-                      href="#"
+                    <Link
+                      href="/dashboard"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      <LogIn className="mr-2 h-4 w-4" />
-                      Login
-                    </a>
-                    <a
-                      href="#"
+                       <LayoutDashboard className="mr-2 h-4 w-4" />
+                       Dashboard
+                    </Link>
+                    <Link
+                      href="/profile"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Sign Up
-                    </a>
+                       <UserRoundPen className="mr-2 h-4 w-4" />
+                       Profile
+                    </Link>
+                    <Link
+                      href="/auth/login"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                       <LogIn className="mr-2 h-4 w-4" />
+                       Login
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                       <UserPlus className="mr-2 h-4 w-4" />
+                       Sign Up
+                    </Link>
                     <div className="border-t border-gray-100 my-1"></div>
                     <a
                       href="#"

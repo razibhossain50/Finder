@@ -1,5 +1,5 @@
 import React from 'react'
-import SearchBiodata from '@/features/SearchBiodata'
+import SearchBiodata from '@/components/search/SearchBiodata'
 
 const HomePage = () => {
   return (
