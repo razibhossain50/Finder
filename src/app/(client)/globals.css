@@ -1,3 +1,60 @@
 @import 'tailwindcss';
+@import "tw-animate-css";
+@custom-variant dark (&:is(.dark *));
 
 @layer reset, base, components, utilities;
+
+@theme {
+  --font-*: initial;
+  --font-outfit: Outfit, sans-serif;
+
+  --breakpoint-*: initial;
+  --breakpoint-sm: 375px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1280px;
+  --breakpoint-xl: 1536px;
+
+  --text-title-2xl: 72px;
+  --text-title-2xl--line-height: 90px;
+  --text-title-xl: 60px;
+  --text-title-xl--line-height: 72px;
+  --text-title-lg: 48px;
+  --text-title-lg--line-height: 60px;
+  --text-title-md: 36px;
+  --text-title-md--line-height: 44px;
+  --text-title-sm: 30px;
+  --text-title-sm--line-height: 38px;
+
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-primary-100: #f9FCFF;
+  --color-primary-200: #E7F1FF;
+  --color-primary-300: #D0E3FF;
+  --color-primary-400: #7096D1;
+  --color-primary-500: #334EAC;
+  --color-primary-600: #081F5C;
+
+  --color-secondary-100: #FEEBE2;
+  --color-secondary-200: #FCC5C0;
+  --color-secondary-300: #FA9FB5;
+  --color-secondary-400: #F768A1;
+  --color-secondary-500: #C51B8A;
+  --color-secondary-600: #7A0177;
+
+  --color-success-500: #12b76a;
+
+  --color-info-500: #12b76a;
+
+  --color-warning-500: #f79009;
+
+  --color-error-500: #f04438;
+}
+
+:root{
+
+}
+
+@layer base{
+    
+}

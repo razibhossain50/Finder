@@ -28,3 +28,5 @@ build/
 # Ignore nested package-locks/yarn-locks if they get generated accidentally
 apps/*/package-lock.json
 apps/*/yarn.lock
+
+.config/
