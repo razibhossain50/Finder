@@ -1,8 +1,8 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
 import { Eye, EyeOff, Shield, AlertCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
 import "../../../admin/globals.css"
 
 const Login = () => {
@@ -11,24 +11,36 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
 
-    // Simulate API call
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch('http://localhost:2000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-      if (email === "admin@example.com" && password === "password") {
-        console.log("Login successful")
-        // Redirect to admin dashboard
-      } else {
-        setError("Invalid email or password")
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed')
       }
+
+      // Store token and user data
+      localStorage.setItem('access_token', data.access_token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      // Redirect to admin dashboard
+      router.push('/admin/')
     } catch (err) {
-      setError("An error occurred. Please try again.")
+      setError(err.message || 'An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -145,7 +157,7 @@ const Login = () => {
             <div className="mt-6 pt-6 border-t border-gray-100">
               <div className="text-center">
                 <p className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-md">
-                  <span className="font-medium">Demo credentials:</span> admin@example.com / 123456
+                  <span className="font-medium">Demo credentials:</span> admin@example.com / aaaaa
                 </p>
               </div>
             </div>

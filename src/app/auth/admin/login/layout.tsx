@@ -1,5 +1,5 @@
 import { Outfit } from 'next/font/google';
-
+import "../../../admin/globals.css";
 
 const outfit = Outfit({
   subsets: ['latin'],

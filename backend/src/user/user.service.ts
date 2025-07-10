@@ -16,7 +16,7 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const { fullName, email, password, confirmPassword } = createUserDto;
+    const { email, password, confirmPassword } = createUserDto;
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Password and confirm password do not match');
@@ -27,7 +27,7 @@ export class UserService {
       throw new BadRequestException('Email already in use');
     }
 
-    const user = this.userRepository.create({ fullName, email, password });
+    const user = this.userRepository.create({ email, password });
     return this.userRepository.save(user);
   }
 }
