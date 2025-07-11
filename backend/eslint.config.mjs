@@ -36,8 +36,9 @@ export default tseslint.config(
           useTabs: false,
           printWidth: 120,
           trailingComma: 'none',
-          bracketSpacing: false,
-          bracketSameLine: false
+          bracketSpacing: true,
+          bracketSameLine: false,
+          
         }
       ],
     },

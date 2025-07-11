@@ -12,6 +12,7 @@ import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useRef } from "react";
 
 const steps = [
   { title: "Personal Information", subtitle: "Basic details about you" },
@@ -37,7 +38,7 @@ export default function ProfileMarriage() {
 
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/biodata", data);
+      const response = await apiRequest("POST", "/api/biodatas", data);
       return response.json();
     },
     onSuccess: () => {
@@ -56,25 +57,40 @@ export default function ProfileMarriage() {
     },
   });
 
-  const handleNext = () => {
-    console.log("Current step:", currentStep);
-    console.log("Form data:", formData);
-    console.log("Current errors:", errors);
+  const biodataIdRef = useRef<number | null>(null);
 
-    // const isValid = validateCurrentStep();
-    // console.log("Validation result:", isValid);
+  const handleNext = async () => {
+    const isValid = validateCurrentStep();
+    if (!isValid) return;
 
-    // if (isValid) {
-    //   nextStep();
-    // } else {
-    //   console.log("Validation failed with errors:", errors);
-    // }
-     nextStep();
+    if (currentStep === 1) {
+      // First step: create biodata
+      const response = await apiRequest("POST", "/api/biodatas", {
+        ...formData,
+        step: currentStep,
+      });
+      const result = await response.json();
+      biodataIdRef.current = result.id;
+    } else {
+      // Update biodata for subsequent steps
+      if (biodataIdRef.current) {
+        await apiRequest("PUT", `/api/biodatas/${biodataIdRef.current}/step/${currentStep}`, {
+          ...formData,
+          step: currentStep,
+        });
+      }
+    }
+    nextStep();
   };
 
-  const handleSubmit = () => {
-    if (validateCurrentStep()) {
+  const handleSubmit = async () => {
+    if (validateCurrentStep() && biodataIdRef.current) {
+      await apiRequest("PUT", `/api/biodatas/${biodataIdRef.current}/step/${currentStep}`, {
+        ...formData,
+        step: currentStep,
+      });
       submitMutation.mutate(formData);
+      console.log("Submited form data:", formData);
     }
   };
 

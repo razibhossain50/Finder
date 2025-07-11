@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/user.entity';
+import { BiodataModule } from './biodata/biodata.module';
 
 
 @Module({
@@ -32,6 +33,7 @@ import { User } from './user/user.entity';
     }),
     UserModule,
     AuthModule,
+    BiodataModule,
   ],
   controllers: [AppController],
   providers: [AppService],
