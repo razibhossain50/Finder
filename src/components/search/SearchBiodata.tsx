@@ -64,7 +64,7 @@ export default function SearchBiodata() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 py-8">
+    <div className=" py-8">
       <div className="container max-w-7xl mx-auto px-4">
         {/* Search Filters */}
         <SearchFilters onSearch={handleSearch} />
