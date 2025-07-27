@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/user.entity';
+import { Biodata } from './biodata/biodata.entity';
 import { BiodataModule } from './biodata/biodata.module';
 
 
@@ -26,7 +27,7 @@ import { BiodataModule } from './biodata/biodata.module';
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASS'),
         database: config.get<string>('DB_NAME'),
-        entities: [User],
+        entities: [User, Biodata],
         autoLoadEntities: true,
         synchronize: true,
       }),

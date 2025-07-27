@@ -1,18 +1,18 @@
 'use client';
 import { useStepForm } from "@/hooks/use-step-form";
-import { StepIndicator } from "@/components/form/step-form/step-indicator";
-import { PersonalInfoStep } from "@/components/form/step-form/personal-info-step";
-import { EducationalInfoStep } from "@/components/form/step-form/educational-info-step";
-import { FamilyInfoStep } from "@/components/form/step-form/family-info-step";
-import { ContactInfoStep } from "@/components/form/step-form/contact-info-step";
-import { PartnerPreferencesStep } from "@/components/form/step-form/partner-preferences-step";
+import { StepIndicator } from "@/components/profile/marriage/step-indicator";
+import { PersonalInfoStep } from "@/components/profile/marriage/personal-info-step";
+import { EducationalInfoStep } from "@/components/profile/marriage/educational-info-step";
+import { FamilyInfoStep } from "@/components/profile/marriage/family-info-step";
+import { ContactInfoStep } from "@/components/profile/marriage/contact-info-step";
+import { PartnerPreferencesStep } from "@/components/profile/marriage/partner-preferences-step";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useRef } from "react";
+import { useRef, useEffect, useCallback } from "react";
 
 const steps = [
   { title: "Personal Information", subtitle: "Basic details about you" },
@@ -24,6 +24,9 @@ const steps = [
 
 export default function ProfileMarriage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const biodataIdRef = useRef<number | null>(null);
+  
   const {
     currentStep,
     formData,
@@ -34,11 +37,80 @@ export default function ProfileMarriage() {
     validateCurrentStep,
     isLastStep,
     isFirstStep,
+    loadFormData,
   } = useStepForm(5);
 
+  // Query to fetch existing biodata
+  const { data: existingBiodata, isLoading } = useQuery({
+    queryKey: ['biodata'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("GET", "/api/biodatas/current");
+        if (response.ok) {
+          const data = await response.json();
+          return data;
+        }
+        return null;
+      } catch (error) {
+        return null;
+      }
+    },
+  });
+
+  // Load existing data when component mounts
+  useEffect(() => {
+    if (existingBiodata) {
+      biodataIdRef.current = existingBiodata.id;
+      loadFormData(existingBiodata);
+    }
+  }, [existingBiodata, loadFormData]);
+
+  // Mutation for saving step data
+  const saveStepMutation = useMutation({
+    mutationFn: async ({ stepData, step }: { stepData: any; step: number }) => {
+      const currentCompletedSteps = existingBiodata?.completedSteps || [];
+      const updatedCompletedSteps = currentCompletedSteps.includes(step) 
+        ? currentCompletedSteps 
+        : [...currentCompletedSteps, step];
+
+      // Always use the current endpoint for user-specific operations
+      const response = await apiRequest("PUT", "/api/biodatas/current", {
+        ...stepData,
+        step,
+        completedSteps: updatedCompletedSteps,
+      });
+      
+      const result = await response.json();
+      if (!biodataIdRef.current && result.id) {
+        biodataIdRef.current = result.id;
+      }
+      return result;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch biodata to update completed steps
+      queryClient.invalidateQueries({ queryKey: ['biodata'] });
+      toast({
+        title: "Progress Saved",
+        description: "Your information has been saved successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Save Error",
+        description: error.message || "Failed to save your progress. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Final submission mutation
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/biodatas", data);
+      const response = await apiRequest("PUT", "/api/biodatas/current", {
+        ...data,
+        status: 'completed',
+        completedSteps: [1, 2, 3, 4, 5], // Mark all steps as completed
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -47,50 +119,39 @@ export default function ProfileMarriage() {
         description: "Your biodata has been submitted successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: "Error",
-        description:
-          error.message || "Failed to submit biodata. Please try again.",
+        description: error.message || "Failed to submit biodata. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const biodataIdRef = useRef<number | null>(null);
-
   const handleNext = async () => {
     const isValid = validateCurrentStep();
     if (!isValid) return;
 
-    if (currentStep === 1) {
-      // First step: create biodata
-      const response = await apiRequest("POST", "/api/biodatas", {
-        ...formData,
+    // Save current step data
+    try {
+      await saveStepMutation.mutateAsync({
+        stepData: formData,
         step: currentStep,
       });
-      const result = await response.json();
-      biodataIdRef.current = result.id;
-    } else {
-      // Update biodata for subsequent steps
-      if (biodataIdRef.current) {
-        await apiRequest("PUT", `/api/biodatas/${biodataIdRef.current}/step/${currentStep}`, {
-          ...formData,
-          step: currentStep,
-        });
-      }
+      nextStep();
+    } catch (error) {
+      // Error is handled by the mutation's onError
     }
-    nextStep();
   };
 
   const handleSubmit = async () => {
-    if (validateCurrentStep() && biodataIdRef.current) {
-      await apiRequest("PUT", `/api/biodatas/${biodataIdRef.current}/step/${currentStep}`, {
-        ...formData,
-        step: currentStep,
-      });
-      submitMutation.mutate(formData);
-      console.log("Submited form data:", formData);
+    const isValid = validateCurrentStep();
+    if (!isValid) return;
+
+    try {
+      await submitMutation.mutateAsync(formData);
+    } catch (error) {
+      // Error is handled by the mutation's onError
     }
   };
 
@@ -159,13 +220,23 @@ export default function ProfileMarriage() {
         <StepIndicator
           steps={steps}
           currentStep={currentStep}
+          completedSteps={existingBiodata?.completedSteps || []}
           className="mb-8"
         />
 
         {/* Form Content */}
         <Card className="shadow-sm inset-shadow-slate-500 border-green-50">
           <CardContent className="p-6 md:p-8">
-            {renderCurrentStep()}
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-slate-600">Loading your biodata...</p>
+                </div>
+              </div>
+            ) : (
+              renderCurrentStep()
+            )}
 
             {/* Navigation Buttons */}
             <div className="flex justify-between items-center pt-6 border-t border-slate-200 mt-8">
@@ -188,7 +259,7 @@ export default function ProfileMarriage() {
                 <Button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={submitMutation.isPending}
+                  disabled={submitMutation.isPending || saveStepMutation.isPending}
                   className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
                 >
                   <Check className="w-4 h-4" />
@@ -200,9 +271,10 @@ export default function ProfileMarriage() {
                 <Button
                   type="button"
                   onClick={handleNext}
+                  disabled={saveStepMutation.isPending}
                   className="flex items-center gap-2"
                 >
-                  Next
+                  {saveStepMutation.isPending ? "Saving..." : "Next"}
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               )}

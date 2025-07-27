@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from '../user/user.entity';
 
 @Entity('biodata')
 export class Biodata {
@@ -7,6 +8,16 @@ export class Biodata {
 
   @Column({ default: 1 })
   step: number;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @Column({ nullable: true })
+  userId: number;
+
+  @Column('simple-array', { nullable: true })
+  completedSteps: number[];
 
   @Column({ nullable: true })
   partnerAgeMin: number;
@@ -160,4 +171,7 @@ export class Biodata {
 
   @Column({ nullable: true })
   ownMobile: string;
+
+  @Column({ nullable: true })
+  status: string;
 }

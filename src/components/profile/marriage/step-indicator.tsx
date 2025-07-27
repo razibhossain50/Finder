@@ -9,12 +9,13 @@ interface Step {
 interface StepIndicatorProps {
   steps: Step[];
   currentStep: number;
+  completedSteps?: number[];
   className?: string;
 }
 
-export function StepIndicator({ steps, currentStep, className }: StepIndicatorProps) {
+export function StepIndicator({ steps, currentStep, completedSteps = [], className }: StepIndicatorProps) {
   const currentStepInfo = steps[currentStep - 1];
-  
+
   return (
     <div className={cn("w-full", className)}>
 
@@ -33,8 +34,8 @@ export function StepIndicator({ steps, currentStep, className }: StepIndicatorPr
         {steps.map((step, index) => {
           const stepNumber = index + 1;
           const isActive = stepNumber === currentStep;
-          const isCompleted = stepNumber < currentStep;
-          
+          const isCompleted = completedSteps.includes(stepNumber);
+
           return (
             <div key={index} className="flex items-center">
               {/* Step Circle */}
@@ -52,14 +53,14 @@ export function StepIndicator({ steps, currentStep, className }: StepIndicatorPr
                   stepNumber
                 )}
               </div>
-              
+
               {/* Connecting Line */}
               {index < steps.length - 1 && (
-                <div 
+                <div
                   className={cn(
                     "h-0.5 w-16 lg:w-20 mx-2 transition-colors duration-200",
                     isCompleted ? "bg-green-600" : "bg-gray-300"
-                  )} 
+                  )}
                 />
               )}
             </div>

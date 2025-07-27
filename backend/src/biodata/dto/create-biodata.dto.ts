@@ -167,4 +167,10 @@ export class CreateBiodataDto {
 
   @IsString()
   ownMobile: string;
+
+  @IsOptional()
+  completedSteps?: number[];
+
+  @IsOptional()
+  status?: string;
 }

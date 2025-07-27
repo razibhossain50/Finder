@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { z } from "zod";
 
 const biodataSchema = z.object({
@@ -154,6 +154,19 @@ export function useStepForm(totalSteps: number) {
     setErrors(newErrors);
   };
 
+  const loadFormData = useCallback((data: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      ...data,
+      // Ensure default values are preserved if not in loaded data
+      partnerAgeMin: data.partnerAgeMin || 25,
+      partnerAgeMax: data.partnerAgeMax || 35,
+      sameAsPermanent: data.sameAsPermanent || false,
+    }));
+    // Clear any existing errors when loading data
+    setErrors({});
+  }, []);
+
   const validateCurrentStep = () => {
     const stepSchema = stepSchemas[currentStep - 1];
     if (!stepSchema) return true;
@@ -202,6 +215,7 @@ export function useStepForm(totalSteps: number) {
     formData,
     errors,
     updateFormData,
+    loadFormData,
     validateCurrentStep,
     nextStep,
     prevStep,
