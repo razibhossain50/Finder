@@ -1,8 +1,11 @@
 import LoginFormRegular from "@/components/auth/LoginFormRegular"
+import AuthRedirect from "@/components/auth/AuthRedirect"
 
 const LoginRegular = () => {
   return (
-    <div><LoginFormRegular/></div>
+    <AuthRedirect>
+      <LoginFormRegular/>
+    </AuthRedirect>
   )
 }
 

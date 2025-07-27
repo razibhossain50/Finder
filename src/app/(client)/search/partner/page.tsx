@@ -8,7 +8,7 @@ import { PlusCircle, FileText, Camera, Heart, Sparkles, Zap, Users, UserCheck, A
 const SearchBiodataPage = () => {
 
 
-  const steps = [
+  const successStory = [
     {
       icon: FileText,
       title: "Share Your Story",
@@ -103,46 +103,94 @@ const SearchBiodataPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {steps.map((step, index) => (
+            {successStory.map((item, index) => (
               <Card key={index} className="border-2 border-rose-100 hover:border-rose-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 group bg-white/80 backdrop-blur-sm">
                 <CardContent className="p-8 text-center relative">
-                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-white border-4 border-rose-100 rounded-full w-12 h-12 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                      <span className="text-2xl">{step.emoji}</span>
-                    </div>
-                  </div>
-
-                  <div className={`${step.bgColor} rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 mt-6 group-hover:scale-110 transition-transform shadow-md`}>
-                    <step.icon className={`h-8 w-8 ${step.color}`} />
+                  <div className={`${item.bgColor} rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 mt-6 group-hover:scale-110 transition-transform shadow-md`}>
+                    <item.icon className={`h-8 w-8 ${item.color}`} />
                   </div>
 
                   <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                    {step.title}
+                    {item.title}
                   </h3>
 
                   <p className="text-gray-600 leading-relaxed">
-                    {step.description}
+                    {item.description}
                   </p>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 rounded-3xl p-8 text-white shadow-2xl">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-left">
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                  <Zap className="h-6 w-6" />
-                  Ready to Find Your Soulmate?
-                </h3>
-                <p className="text-rose-100">
-                  Join 50,000+ happy couples who found their perfect match with us
-                </p>
+          {/* Beautiful Call-to-Action Section */}
+          <div className="relative group">
+            {/* Glowing Background Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 rounded-3xl blur-xl opacity-30 group-hover:opacity-40 transition-opacity duration-500 animate-pulse"></div>
+
+            {/* Main CTA Container */}
+            <div className="relative bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 rounded-3xl p-10 md:p-12 text-white shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden">
+              {/* Decorative Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-6 left-6">
+                  <Heart className="h-12 w-12 fill-current animate-pulse" />
+                </div>
+                <div className="absolute top-8 right-8">
+                  <Sparkles className="h-10 w-10 animate-pulse delay-1000" />
+                </div>
+                <div className="absolute bottom-6 left-1/3">
+                  <Users className="h-8 w-8 animate-pulse delay-2000" />
+                </div>
+                <div className="absolute bottom-8 right-6">
+                  <Award className="h-10 w-10 animate-pulse delay-500" />
+                </div>
               </div>
-              <Button className="px-8 py-4 bg-white text-rose-600 hover:bg-rose-50 font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg">
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Create Your Profile Now
-              </Button>
+
+              {/* Floating Particles Effect */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/30 rounded-full animate-bounce delay-300"></div>
+                <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-white/40 rounded-full animate-bounce delay-700"></div>
+                <div className="absolute bottom-1/3 left-2/3 w-1.5 h-1.5 bg-white/20 rounded-full animate-bounce delay-1000"></div>
+              </div>
+
+              <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+                {/* Left Content Section */}
+                <div className="text-center lg:text-left flex-1">
+                  {/* Main Heading */}
+                  <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
+                    <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 group-hover:scale-110 transition-transform duration-300">
+                        <Zap className="h-8 w-8 animate-pulse text-yellow-300" />
+                      </div>
+                      <span className="bg-gradient-to-r from-white to-rose-100 bg-clip-text text-transparent">
+                        Ready to Find Your Soulmate?
+                      </span>
+                    </div>
+                  </h3>
+                </div>
+
+                {/* Right Button Section */}
+                <div className="flex flex-col sm:flex-row gap-4 lg:flex-col xl:flex-row">
+                  {/* Primary CTA Button */}
+                  <Button className="group/btn relative px-10 py-6 bg-white text-rose-600 hover:bg-rose-50 font-bold text-lg rounded-2xl transition-all duration-300 transform hover:scale-110 hover:shadow-2xl overflow-hidden">
+                    {/* Button Background Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-rose-50 to-pink-50 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+
+                    {/* Button Content */}
+                    <div className="relative flex items-center gap-3">
+                      <div className="bg-rose-100 rounded-full p-2 group-hover/btn:bg-rose-200 transition-colors duration-300">
+                        <PlusCircle className="h-6 w-6 group-hover/btn:rotate-90 transition-transform duration-300" />
+                      </div>
+                      <span>Create Your Profile</span>
+                    </div>
+
+                    {/* Button Shine Effect */}
+                    <div className="absolute inset-0 -top-2 -bottom-2 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Bottom Accent Line */}
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
             </div>
           </div>
         </div>

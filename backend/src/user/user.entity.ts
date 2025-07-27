@@ -5,13 +5,16 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ nullable: true })
+  fullName: string;
+
   @Column({ unique: true })
   email: string;
 
   @Column()
   password: string;
 
-  @Column({ default: 'superadmin' })
+  @Column({ default: 'user' })
   role: string;
 
   @CreateDateColumn()

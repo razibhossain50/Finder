@@ -1,13 +1,15 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Layout, Menu, X, User, ChevronDown, LogIn, UserPlus, Settings, LogOut, UserRoundPen, LayoutDashboard } from 'lucide-react';
+import { Layout, Menu, X, User, ChevronDown, LogIn, UserPlus, Settings, LogOut, UserRoundPen, LayoutDashboard, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useRegularAuth } from '@/context/RegularAuthContext';
 
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const { user, isAuthenticated, logout } = useRegularAuth();
 
   const navItems = [
     { label: 'Find your partner', href: '/', active: true },
@@ -105,21 +107,31 @@ function Header() {
               {/* Right section */}
               <div className="flex items-center space-x-4">
                 {/* Auth Buttons (hidden on mobile) */}
-                <div className="hidden md:flex items-center space-x-2">
+                {!isAuthenticated && (
+                  <div className="hidden md:flex items-center space-x-2">
+                    <Link
+                        href="/auth/login"
+                        className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-150 ease-in-out"
+                      >
+                         Login
+                      </Link>
+                       <Link
+                        href="/auth/signup"
+                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors duration-150 ease-in-out"
+                      >
+                         Sign Up
+                      </Link>
+                  </div>
+                )}
 
-                  <Link
-                      href="/auth/login"
-                      className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-150 ease-in-out"
-                    >
-                       Login
-                    </Link>
-                     <Link
-                      href="/auth/signup"
-                      className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors duration-150 ease-in-out"
-                    >
-                       Sign Up
-                    </Link>
-                </div>
+                {/* User Info (when authenticated) */}
+                {isAuthenticated && (
+                  <div className="hidden md:flex items-center space-x-3">
+                    <span className="text-sm text-gray-700">
+                      Welcome, {user?.fullName || user?.email}
+                    </span>
+                  </div>
+                )}
 
                 {/* Profile Menu */}
                 <div className="relative" ref={profileMenuRef}>
@@ -143,51 +155,65 @@ function Header() {
                         : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                     }`}
                   >
-                    <div className="px-4 py-2 text-xs text-gray-500">Account</div>
-                    <Link
-                      href="/settings"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Link>
-                    <div className="border-t border-gray-100 my-1"></div>
-                    <Link
-                      href="/dashboard"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                       <LayoutDashboard className="mr-2 h-4 w-4" />
-                       Dashboard
-                    </Link>
-                    <Link
-                      href="/profile"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                       <UserRoundPen className="mr-2 h-4 w-4" />
-                       Profile
-                    </Link>
-                    <Link
-                      href="/auth/login"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                       <LogIn className="mr-2 h-4 w-4" />
-                       Login
-                    </Link>
-                    <Link
-                      href="/auth/signup"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                       <UserPlus className="mr-2 h-4 w-4" />
-                       Sign Up
-                    </Link>
-                    <div className="border-t border-gray-100 my-1"></div>
-                    <a
-                      href="#"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </a>
+                    {isAuthenticated ? (
+                      <>
+                        <div className="px-4 py-2 text-xs text-gray-500">Account</div>
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                           <LayoutDashboard className="mr-2 h-4 w-4" />
+                           Dashboard
+                        </Link>
+                        <Link
+                          href="/profile"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                           <UserRoundPen className="mr-2 h-4 w-4" />
+                           Profile
+                        </Link>
+                        <Link
+                          href="/messages"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                           <MessageCircle className="mr-2 h-4 w-4" />
+                           Messages
+                        </Link>
+                        <Link
+                          href="/settings"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <Settings className="mr-2 h-4 w-4" />
+                          Settings
+                        </Link>
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <button
+                          onClick={logout}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Logout
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="px-4 py-2 text-xs text-gray-500">Get Started</div>
+                        <Link
+                          href="/auth/login"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                           <LogIn className="mr-2 h-4 w-4" />
+                           Login
+                        </Link>
+                        <Link
+                          href="/auth/signup"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                           <UserPlus className="mr-2 h-4 w-4" />
+                           Sign Up
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

@@ -1,10 +1,11 @@
 import SignupFormRegular from "@/components/auth/SignUpFormRegular"
+import AuthRedirect from "@/components/auth/AuthRedirect"
 
 const SignUpPage = () => {
   return (
-    <div>
-        <SignupFormRegular/>
-    </div>
+    <AuthRedirect>
+      <SignupFormRegular/>
+    </AuthRedirect>
   )
 }
 

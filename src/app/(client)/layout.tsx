@@ -2,6 +2,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import './globals.css';
 import { QueryProvider } from '@/components/common/QueryProvider';
+import { RegularAuthProvider } from '@/context/RegularAuthContext';
 
 export default function RootLayout({
   children,
@@ -12,9 +13,11 @@ export default function RootLayout({
     <html lang="en">
       <body className='min-h-screen bg-gray-50'>
         <QueryProvider>
-          <Header />
-          {children}
-          <Footer />
+          <RegularAuthProvider>
+            <Header />
+            {children}
+            <Footer />
+          </RegularAuthProvider>
         </QueryProvider>
       </body>
     </html>

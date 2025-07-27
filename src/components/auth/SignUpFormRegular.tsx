@@ -3,10 +3,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRegularAuth } from "@/context/RegularAuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const signupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -22,6 +25,8 @@ type SignupValues = z.infer<typeof signupSchema>;
 
 export default function SignupFormRegular() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { signup } = useRegularAuth();
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -35,11 +40,11 @@ export default function SignupFormRegular() {
 
   async function onSubmit(values: SignupValues) {
     setIsLoading(true);
+    setError(null);
     try {
-      // Handle signup logic here
-      console.log(values);
-    } catch (error) {
-      console.error(error);
+      await signup(values.fullName, values.email, values.password, values.confirmPassword);
+    } catch (error: any) {
+      setError(error.message || 'Signup failed');
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +60,12 @@ export default function SignupFormRegular() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert className="mb-4" variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -114,6 +125,13 @@ export default function SignupFormRegular() {
               </Button>
             </form>
           </Form>
+
+          <div className="mt-4 text-center text-sm">
+            Already have an account?{" "}
+            <Link href="/auth/login" className="text-primary hover:underline">
+              Sign in
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

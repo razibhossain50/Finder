@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcryptjs';
 import { User } from './user.entity';
 import { CreateUserDto } from './create-user.dto';
 
@@ -8,7 +9,7 @@ import { CreateUserDto } from './create-user.dto';
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private userRepository: Repository<User>
   ) {}
 
   findAll() {
@@ -16,7 +17,7 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const { email, password, confirmPassword } = createUserDto;
+    const { fullName, email, password, confirmPassword } = createUserDto;
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Password and confirm password do not match');
@@ -27,7 +28,18 @@ export class UserService {
       throw new BadRequestException('Email already in use');
     }
 
-    const user = this.userRepository.create({ email, password });
-    return this.userRepository.save(user);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = this.userRepository.create({
+      fullName,
+      email,
+      password: hashedPassword,
+      role: 'user'
+    });
+
+    const savedUser = await this.userRepository.save(user);
+
+    // Return user without password
+    const { password: _, ...userWithoutPassword } = savedUser;
+    return userWithoutPassword;
   }
 }
