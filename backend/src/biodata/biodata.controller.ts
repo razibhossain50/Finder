@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseGuards, Query } from '@nestjs/common';
 import { BiodataService } from './biodata.service';
 import { CreateBiodataDto } from './dto/create-biodata.dto';
 import { UpdateBiodataDto } from './dto/update-biodata.dto';
@@ -19,6 +19,31 @@ export class BiodataController {
   @Get()
   findAll() {
     return this.biodataService.findAll();
+  }
+
+  @Get('search')
+  searchBiodatas(
+    @Query('gender') gender?: string,
+    @Query('maritalStatus') maritalStatus?: string,
+    @Query('location') location?: string,
+    @Query('biodataNumber') biodataNumber?: string,
+    @Query('ageMin') ageMin?: string,
+    @Query('ageMax') ageMax?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const filters = {
+      gender,
+      maritalStatus,
+      location,
+      biodataNumber,
+      ageMin: ageMin ? parseInt(ageMin) : undefined,
+      ageMax: ageMax ? parseInt(ageMax) : undefined,
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 6,
+    };
+
+    return this.biodataService.searchBiodatas(filters);
   }
 
   @Get('current')

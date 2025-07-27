@@ -52,8 +52,8 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Gender</SelectLabel>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -69,11 +69,11 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
                 <SelectGroup>
                   <SelectLabel>Marital Status</SelectLabel>
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="never-married">Never married</SelectItem>
-                  <SelectItem value="married">Married</SelectItem>
-                  <SelectItem value="divorced">Divorced</SelectItem>
-                  <SelectItem value="widow">Widow</SelectItem>
-                  <SelectItem value="widower">Widower</SelectItem>
+                  <SelectItem value="Unmarried">Unmarried</SelectItem>
+                  <SelectItem value="Married">Married</SelectItem>
+                  <SelectItem value="Divorced">Divorced</SelectItem>
+                  <SelectItem value="Widow">Widow</SelectItem>
+                  <SelectItem value="Widower">Widower</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>

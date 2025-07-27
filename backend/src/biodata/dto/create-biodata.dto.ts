@@ -37,7 +37,7 @@ export class CreateBiodataDto {
   weight: number;
 
   @IsString()
-  skinColor: string;
+  complexion: string;
 
   @IsString()
   profession: string;
@@ -130,7 +130,7 @@ export class CreateBiodataDto {
 
   @IsString()
   @IsOptional()
-  partnerSkinColor?: string;
+  partnerComplexion?: string;
 
   @IsString()
   @IsOptional()

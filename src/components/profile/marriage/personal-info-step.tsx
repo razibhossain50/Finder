@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
 interface PersonalInfoStepProps {
   data: any;
   errors: any;
-  updateData: (data: Partial<any>) => void;
+  updateData: (data: Partial<unknown>) => void;
 }
 
 export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepProps) {
@@ -238,18 +238,18 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
               <p className="text-xs text-red-500 mt-1">{errors.weight}</p>
             )}
           </div>
-          {/* Skin Color */}
+          {/* Complexion */}
           <div className="space-y-2.5">
             <Label className="text-sm font-medium text-slate-700">
-              Skin Color <span className="text-red-500">*</span>
+              Complexion <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
               <Select
-                value={data.skinColor || ""}
-                onValueChange={(value) => updateData({ skinColor: value })}
+                value={data.complexion || ""}
+                onValueChange={(value) => updateData({ complexion: value })}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Skin Color" />
+                  <SelectValue placeholder="Select Complexion" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Black">Black</SelectItem>
@@ -260,8 +260,8 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
                 </SelectContent>
               </Select>
             </div>
-            {errors.skinColor && (
-              <p className="text-xs text-red-500 mt-1">{errors.skinColor}</p>
+            {errors.complexion && (
+              <p className="text-xs text-red-500 mt-1">{errors.complexion}</p>
             )}
           </div>
           {/* Profession */}

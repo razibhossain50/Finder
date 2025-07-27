@@ -5,62 +5,119 @@ import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchCard } from "@/components/search/SearchCard";
 import { Pagination } from "@/components/search/Pagination";
 import { NoResults } from "@/components/search/NoResults";
-import { biodatas } from "@/api/biodatas";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SearchBiodata() {
-  // Pagination and results state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchResults, setSearchResults] = useState(biodatas);
+  // Search state
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const resultsPerPage = 6;
+  const [isLoading, setIsLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 6,
+    total: 0,
+    totalPages: 0,
+  });
+  const { toast } = useToast();
 
-  // Calculate pagination
-  const totalPages = Math.ceil(searchResults.length / resultsPerPage);
-  const startIndex = (currentPage - 1) * resultsPerPage;
-  const endIndex = startIndex + resultsPerPage;
-  const currentResults = searchResults.slice(startIndex, endIndex);
-
-  // Handle search
-  const handleSearch = (filters: {
+  // Handle search with database API
+  const handleSearch = async (filters: {
     gender: string;
     maritalStatus: string;
     location: string;
     biodataNumber: string;
   }) => {
-    let filteredResults = biodatas;
+    setIsLoading(true);
+    try {
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+      
+      if (filters.gender && filters.gender !== 'all') {
+        queryParams.append('gender', filters.gender);
+      }
+      
+      if (filters.maritalStatus && filters.maritalStatus !== 'all') {
+        queryParams.append('maritalStatus', filters.maritalStatus);
+      }
+      
+      if (filters.location) {
+        queryParams.append('location', filters.location);
+      }
+      
+      if (filters.biodataNumber) {
+        queryParams.append('biodataNumber', filters.biodataNumber);
+      }
+      
+      // Always start from page 1 for new search
+      queryParams.append('page', '1');
+      queryParams.append('limit', '6');
 
-    if (filters.biodataNumber) {
-      filteredResults = filteredResults.filter(biodata =>
-        biodata.id.toLowerCase().includes(filters.biodataNumber.toLowerCase())
-      );
+      const response = await apiRequest("GET", `/api/biodatas/search?${queryParams.toString()}`);
+      const result = await response.json();
+
+      setSearchResults(result.data || []);
+      setPagination(result.pagination || {
+        page: 1,
+        limit: 6,
+        total: 0,
+        totalPages: 0,
+      });
+      setHasSearched(true);
+
+      toast({
+        title: "Search completed",
+        description: `Found ${result.pagination?.total || 0} biodata(s)`,
+      });
+    } catch (error: any) {
+      console.error('Search error:', error);
+      toast({
+        title: "Search failed",
+        description: error.message || "Failed to search biodatas. Please try again.",
+        variant: "destructive",
+      });
+      setSearchResults([]);
+      setPagination({
+        page: 1,
+        limit: 6,
+        total: 0,
+        totalPages: 0,
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    if (filters.maritalStatus && filters.maritalStatus !== "all") {
-      filteredResults = filteredResults.filter(biodata =>
-        biodata.maritalStatus.toLowerCase().replace(" ", "-") === filters.maritalStatus
-      );
-    }
-
-    if (filters.gender) {
-      filteredResults = filteredResults.filter(biodata =>
-        biodata.gender.toLowerCase() === filters.gender.toLowerCase()
-      );
-    }
-
-    if (filters.location) {
-      filteredResults = filteredResults.filter(biodata =>
-        biodata.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
-    }
-
-    setSearchResults(filteredResults);
-    setCurrentPage(1);
-    setHasSearched(true);
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handlePageChange = async (page: number) => {
+    setIsLoading(true);
+    try {
+      // Get the last search filters (you might want to store these in state)
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', page.toString());
+      queryParams.append('limit', '6');
+
+      const response = await apiRequest("GET", `/api/biodatas/search?${queryParams.toString()}`);
+      const result = await response.json();
+
+      setSearchResults(result.data || []);
+      setPagination(result.pagination || {
+        page,
+        limit: 6,
+        total: 0,
+        totalPages: 0,
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error: any) {
+      console.error('Pagination error:', error);
+      toast({
+        title: "Failed to load page",
+        description: error.message || "Failed to load page. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -69,13 +126,23 @@ export default function SearchBiodata() {
         {/* Search Filters */}
         <SearchFilters onSearch={handleSearch} />
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="mt-8 flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-slate-600">Searching biodatas...</p>
+            </div>
+          </div>
+        )}
+
         {/* Results Section */}
-        {hasSearched && (
+        {hasSearched && !isLoading && (
           <div className="mt-8 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">Search Results</h2>
               <p className="text-sm text-muted-foreground">
-                Showing {searchResults.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, searchResults.length)} of {searchResults.length} results
+                Showing {pagination.total > 0 ? ((pagination.page - 1) * pagination.limit) + 1 : 0}-{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} results
               </p>
             </div>
 
@@ -84,16 +151,18 @@ export default function SearchBiodata() {
             ) : (
               <>
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {currentResults.map((biodatas) => (
-                    <SearchCard key={biodatas.id} biodatas={biodatas} />
+                  {searchResults.map((biodata) => (
+                    <SearchCard key={biodata.id} biodatas={biodata} />
                   ))}
                 </div>
 
-                <Pagination 
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
+                {pagination.totalPages > 1 && (
+                  <Pagination 
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                )}
               </>
             )}
           </div>

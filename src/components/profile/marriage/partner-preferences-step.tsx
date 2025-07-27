@@ -8,7 +8,7 @@ import { useState } from "react";
 interface PartnerPreferencesStepProps {
   data: any;
   errors: any;
-  updateData: (data: Partial<any>) => void;
+  updateData: (data: Partial<unknown>) => void;
 }
 
 export function PartnerPreferencesStep({
@@ -136,14 +136,14 @@ export function PartnerPreferencesStep({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div className="space-y-2.5">
               <Label className="text-sm font-medium text-slate-700">
-                Preferred Skin Color
+                Preferred Complexion
               </Label>
               <div className="relative">
                 <Input
-                  id="partnerSkinColor"
+                  id="partnerComplexion"
                   placeholder="Any preference"
-                  value={data.partnerSkinColor || ""}
-                  onChange={(e) => updateData({ partnerSkinColor: e.target.value })}
+                  value={data.partnerComplexion || ""}
+                  onChange={(e) => updateData({ partnerComplexion: e.target.value })}
                   className="bg-white"
                 />
               </div>

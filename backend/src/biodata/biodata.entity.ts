@@ -50,7 +50,7 @@ export class Biodata {
   weight: number;
 
   @Column({ nullable: true })
-  skinColor: string;
+  complexion: string;
 
   @Column({ nullable: true })
   profession: string;
@@ -140,7 +140,7 @@ export class Biodata {
   familyDetails: string;
 
   @Column({ nullable: true })
-  partnerSkinColor: string;
+  partnerComplexion: string;
 
   @Column({ nullable: true })
   partnerHeight: string;

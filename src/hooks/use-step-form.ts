@@ -11,7 +11,7 @@ const biodataSchema = z.object({
   age: z.number().min(18, "Age must be at least 18").max(70, "Age must be at most 70"),
   height: z.string().min(1, "Height is required"),
   weight: z.number().min(1, "Weight is required"),
-  skinColor: z.string().min(1, "Skin color is required"),
+  complexion: z.string().min(1, "Complexion is required"),
   profession: z.string().min(1, "Profession is required"),
   bloodGroup: z.string().min(1, "Blood group is required"),
   
@@ -56,7 +56,7 @@ const biodataSchema = z.object({
   // Partner Preferences
   partnerAgeMin: z.number().min(18, "Minimum age should be 18").max(70, "Maximum age should be 70"),
   partnerAgeMax: z.number().min(18, "Minimum age should be 18").max(70, "Maximum age should be 70"),
-  partnerSkinColor: z.string().optional(),
+  partnerComplexion: z.string().optional(),
   partnerHeight: z.string().optional(),
   partnerEducation: z.string().optional(),
   partnerProfession: z.string().optional(),
@@ -81,7 +81,7 @@ const stepSchemas = [
     age: true,
     height: true,
     weight: true,
-    skinColor: true,
+    complexion: true,
     profession: true,
     bloodGroup: true,
     permanentCountry: true,
