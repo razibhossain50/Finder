@@ -84,56 +84,35 @@ export function SearchCard({ biodatas }: { biodatas: Biodata }) {
 
         {/* Profile Details */}
         <div className="px-4 pb-4 flex-1 space-y-3">
-          {/* Name */}
-          <div className="text-center">
-            <h3 className="font-semibold text-lg text-foreground truncate">
-              {biodatas.fullName || 'Name not provided'}
-            </h3>
-          </div>
-
           {/* Key Information Grid */}
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-1 gap-2 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-3.5 w-3.5 text-blue-500" />
               <span className="text-muted-foreground">
-                <span className="font-medium text-foreground">{biodatas.age}</span> years
+                <span className="font-medium text-foreground">Age</span> <span>{biodatas.age} years</span> 
               </span>
             </div>
             
             <div className="flex items-center gap-2">
               <div className="h-3.5 w-3.5 bg-green-500 rounded-full flex-shrink-0"></div>
               <span className="text-muted-foreground truncate">
-                <span className="font-medium text-foreground">{biodatas.height || 'N/A'}</span>
+                <span className="font-medium text-foreground">Height: </span><span>{biodatas.height || 'N/A'}</span>
               </span>
             </div>
 
-            <div className="flex items-center gap-2 col-span-2">
+            <div className="flex items-center gap-2">
               <div className="h-3.5 w-3.5 bg-orange-400 rounded-full flex-shrink-0"></div>
               <span className="text-muted-foreground truncate">
-                <span className="font-medium text-foreground">{biodatas.complexion || 'Not specified'}</span> complexion
+                <span className="font-medium text-foreground">complexion: </span> <span>{biodatas.complexion || 'Not specified'}</span>
               </span>
             </div>
 
-            <div className="flex items-center gap-2 col-span-2">
+            <div className="flex items-center gap-2">
               <User className="h-3.5 w-3.5 text-purple-500" />
               <span className="text-muted-foreground truncate">
-                <span className="font-medium text-foreground">{biodatas.profession || 'Not specified'}</span>
+                <span className="font-medium text-foreground">Profession: </span><span>{biodatas.profession || 'Not specified'}</span>
               </span>
             </div>
-          </div>
-
-          {/* Marital Status Badge */}
-          <div className="flex justify-center pt-2">
-            <Badge variant="secondary" className={cn(
-              "text-xs",
-              biodatas.maritalStatus?.toLowerCase().includes("unmarried") 
-                ? "bg-green-50 text-green-600 border-green-200"
-                : biodatas.maritalStatus?.toLowerCase().includes("married")
-                ? "bg-blue-50 text-blue-600 border-blue-200"
-                : "bg-amber-50 text-amber-600 border-amber-200"
-            )}>
-              {biodatas.maritalStatus || 'Status not specified'}
-            </Badge>
           </div>
         </div>
 
@@ -141,7 +120,7 @@ export function SearchCard({ biodatas }: { biodatas: Biodata }) {
         <div className="p-4 pt-0 mt-auto">
           <Button 
             onClick={handleViewBiodata}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium transition-all duration-200"
+            className="cursor-pointer w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium transition-all duration-200"
             size="sm"
           >
             View Full Biodata

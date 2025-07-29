@@ -15,11 +15,77 @@ export default function SearchBiodata() {
   const [isLoading, setIsLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 6,
+    limit: 8,
     total: 0,
     totalPages: 0,
   });
+  
+  // Store all results for client-side pagination
+  const [allResults, setAllResults] = useState<any[]>([]);
   const { toast } = useToast();
+
+  // Store current filters for pagination
+  const [currentFilters, setCurrentFilters] = useState<{
+    gender: string;
+    maritalStatus: string;
+    location: string;
+    biodataNumber: string;
+  }>({
+    gender: '',
+    maritalStatus: '',
+    location: '',
+    biodataNumber: ''
+  });
+
+  // Client-side filtering function
+  const filterBiodatas = (biodatas: any[], filters: {
+    gender: string;
+    maritalStatus: string;
+    location: string;
+    biodataNumber: string;
+  }) => {
+    return biodatas.filter((biodata) => {
+      // Gender filter - using biodataType field which contains "Male" or "Female"
+      if (filters.gender && filters.gender !== 'all' && filters.gender !== '') {
+        if (biodata.biodataType !== filters.gender) {
+          return false;
+        }
+      }
+      
+      // Marital status filter
+      if (filters.maritalStatus && filters.maritalStatus !== 'all' && filters.maritalStatus !== '') {
+        if (biodata.maritalStatus !== filters.maritalStatus) {
+          return false;
+        }
+      }
+      
+      // Location filter (check multiple address fields)
+      if (filters.location && filters.location !== '') {
+        const locationMatch = 
+          biodata.presentArea?.toLowerCase().includes(filters.location.toLowerCase()) ||
+          biodata.permanentArea?.toLowerCase().includes(filters.location.toLowerCase()) ||
+          biodata.presentZilla?.toLowerCase().includes(filters.location.toLowerCase()) ||
+          biodata.permanentZilla?.toLowerCase().includes(filters.location.toLowerCase()) ||
+          biodata.presentUpazilla?.toLowerCase().includes(filters.location.toLowerCase()) ||
+          biodata.permanentUpazilla?.toLowerCase().includes(filters.location.toLowerCase()) ||
+          biodata.presentDivision?.toLowerCase().includes(filters.location.toLowerCase()) ||
+          biodata.permanentDivision?.toLowerCase().includes(filters.location.toLowerCase());
+        
+        if (!locationMatch) {
+          return false;
+        }
+      }
+      
+      // Biodata number filter - using id field
+      if (filters.biodataNumber && filters.biodataNumber !== '') {
+        if (!biodata.id?.toString().includes(filters.biodataNumber)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  };
 
   // Handle search with database API
   const handleSearch = async (filters: {
@@ -29,47 +95,41 @@ export default function SearchBiodata() {
     biodataNumber: string;
   }) => {
     setIsLoading(true);
+    setCurrentFilters(filters); // Store filters for pagination
+    
     try {
-      // Build query parameters
-      const queryParams = new URLSearchParams();
-      
-      if (filters.gender && filters.gender !== 'all') {
-        queryParams.append('gender', filters.gender);
-      }
-      
-      if (filters.maritalStatus && filters.maritalStatus !== 'all') {
-        queryParams.append('maritalStatus', filters.maritalStatus);
-      }
-      
-      if (filters.location) {
-        queryParams.append('location', filters.location);
-      }
-      
-      if (filters.biodataNumber) {
-        queryParams.append('biodataNumber', filters.biodataNumber);
-      }
-      
-      // Always start from page 1 for new search
-      queryParams.append('page', '1');
-      queryParams.append('limit', '6');
-
-      const response = await apiRequest("GET", `/api/biodatas/search?${queryParams.toString()}`);
+      // Get all biodatas from API
+      const response = await apiRequest("GET", "/api/biodatas");
       const result = await response.json();
 
-      setSearchResults(result.data || []);
-      setPagination(result.pagination || {
+      // Extract biodatas array
+      const allBiodatas = Array.isArray(result) ? result : (result.data || []);
+      
+      // Apply client-side filtering
+      const filteredResults = filterBiodatas(allBiodatas, filters);
+      
+      // Store all filtered results for pagination
+      setAllResults(filteredResults);
+      
+      // Calculate pagination
+      const totalPages = Math.ceil(filteredResults.length / 8);
+      const currentPageResults = filteredResults.slice(0, 8); // First 8 results
+      
+      setSearchResults(currentPageResults);
+      setPagination({
         page: 1,
-        limit: 6,
-        total: 0,
-        totalPages: 0,
+        limit: 8,
+        total: filteredResults.length,
+        totalPages: totalPages,
       });
+      
       setHasSearched(true);
 
       toast({
         title: "Search completed",
-        description: `Found ${result.pagination?.total || 0} biodata(s)`,
+        description: `Found ${filteredResults.length} biodata(s)`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Search error:', error);
       toast({
         title: "Search failed",
@@ -77,9 +137,10 @@ export default function SearchBiodata() {
         variant: "destructive",
       });
       setSearchResults([]);
+      setAllResults([]);
       setPagination({
         page: 1,
-        limit: 6,
+        limit: 8,
         total: 0,
         totalPages: 0,
       });
@@ -88,31 +149,31 @@ export default function SearchBiodata() {
     }
   };
 
-  const handlePageChange = async (page: number) => {
+  const handlePageChange = (page: number) => {
     setIsLoading(true);
+    
     try {
-      // Get the last search filters (you might want to store these in state)
-      const queryParams = new URLSearchParams();
-      queryParams.append('page', page.toString());
-      queryParams.append('limit', '6');
+      // Calculate the start and end indices for the requested page
+      const startIndex = (page - 1) * 8;
+      const endIndex = startIndex + 8;
+      
+      // Get the results for the current page from allResults
+      const currentPageResults = allResults.slice(startIndex, endIndex);
+      
+      // Update the search results and pagination state
+      setSearchResults(currentPageResults);
+      setPagination(prev => ({
+        ...prev,
+        page: page
+      }));
 
-      const response = await apiRequest("GET", `/api/biodatas/search?${queryParams.toString()}`);
-      const result = await response.json();
-
-      setSearchResults(result.data || []);
-      setPagination(result.pagination || {
-        page,
-        limit: 6,
-        total: 0,
-        totalPages: 0,
-      });
-
+      // Scroll to top smoothly
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Pagination error:', error);
       toast({
         title: "Failed to load page",
-        description: error.message || "Failed to load page. Please try again.",
+        description: "Failed to load page. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -150,7 +211,7 @@ export default function SearchBiodata() {
               <NoResults />
             ) : (
               <>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                   {searchResults.map((biodata) => (
                     <SearchCard key={biodata.id} biodatas={biodata} />
                   ))}
