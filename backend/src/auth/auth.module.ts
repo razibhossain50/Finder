@@ -12,7 +12,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     TypeOrmModule.forFeature([User]),
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
+      secret: 'your-secret-key',
       signOptions: { expiresIn: '1d' },
     }),
   ],
@@ -20,4 +20,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule {
+  constructor() {
+    console.log('=== AUTH MODULE INIT ===');
+    console.log('JWT_SECRET for module:', 'your-secret-key');
+  }
+}

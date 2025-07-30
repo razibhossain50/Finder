@@ -76,10 +76,17 @@ export class AuthService {
     const user = await this.validateUser(loginDto);
     const payload = { id: user.id, email: user.email, role: user.role };
 
+    console.log('=== LOGIN DEBUG ===');
+    console.log('JWT_SECRET being used:', 'your-secret-key');
+    console.log('Payload being signed:', payload);
+
     const fullUser = await this.usersRepository.findOne({ where: { id: user.id } });
 
+    const token = this.jwtService.sign(payload);
+    console.log('Generated token:', token);
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: token,
       user: {
         id: user.id,
         fullName: fullUser?.fullName || null,

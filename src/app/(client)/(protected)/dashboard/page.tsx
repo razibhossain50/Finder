@@ -1,11 +1,11 @@
 "use client";
-import { CreditCard, Users, Heart, BookmarkCheck, ShoppingCart, Plus, LogOut } from "lucide-react";
+import { Users, Heart, BookmarkCheck, ShoppingCart, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 
 export default function Dashboard() {
-  const { user, logout } = useRegularAuth();
+  const { user } = useRegularAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 p-8">
@@ -18,14 +18,6 @@ export default function Dashboard() {
               </h1>
               <p className="text-gray-600 mt-1">Here's what's happening with your account</p>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={logout}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
           </div>
 
           {/* Connection Status Card */}

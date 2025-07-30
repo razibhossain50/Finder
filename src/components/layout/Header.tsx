@@ -12,8 +12,7 @@ function Header() {
   const { user, isAuthenticated, logout } = useRegularAuth();
 
   const navItems = [
-    { label: 'Find your partner', href: '/', active: true },
-    { label: 'Find your doctor', href: '/search/doctor' },
+    { label: 'Find your partner', href: '/', active: true }
   ];
 
   useEffect(() => {

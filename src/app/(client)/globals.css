@@ -58,10 +58,6 @@
   --color-error-500: #f04438;
 }
 
-:root{
+:root {}
 
-}
-
-@layer base{
-    
-}
+@layer base {}
