@@ -1,10 +1,10 @@
 import React from 'react'
-import SearchBiodataPage from '@/app/(client)/search/partner/page'
+import AllBiodatas from '@/app/(client)/profile/biodatas/page'
 
 const HomePage = () => {
   return (
     <div>
-        <SearchBiodataPage/>
+        <AllBiodatas/>
     </div>
   )
 }

@@ -228,7 +228,7 @@ export default function Profile() {
             <p className="text-gray-600 mt-1">Complete biodata information</p>
           </div>
           <Button asChild variant="default" >
-            <Link href="/profile/marriage" className="flex items-center gap-2">
+            <Link href="/profile/biodatas/create-biodata" className="flex items-center gap-2">
               <Edit className="h-4 w-4" />
               Edit Profile
             </Link>

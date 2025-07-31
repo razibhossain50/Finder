@@ -165,7 +165,7 @@ function Header() {
                            Dashboard
                         </Link>
                         <Link
-                          href="/profile"
+                           href={`/profile/biodatas/${user?.id}`}
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                            <UserRoundPen className="mr-2 h-4 w-4" />
