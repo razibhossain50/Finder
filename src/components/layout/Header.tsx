@@ -31,7 +31,7 @@ function Header() {
 
   return (
     <header>
-        <nav className="bg-white shadow-sm">
+        <nav className="bg-white/95 backdrop-blur-sm shadow-lg border-b border-gray-100 dark:bg-gray-900/95 dark:border-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               {/* Left section */}
@@ -40,7 +40,7 @@ function Header() {
                 <div className="md:hidden" ref={mobileMenuRef}>
                   <button
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none"
+                    className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-brand-600 hover:bg-gradient-to-r hover:from-brand-50 hover:to-rose-50 focus:outline-none transition-all duration-200 dark:text-gray-300 dark:hover:text-brand-400"
                   >
                     <span className="sr-only">Open main menu</span>
                     {isMobileMenuOpen ? (
@@ -75,14 +75,16 @@ function Header() {
                 </div>
 
                 {/* Logo */}
-                <Link
-                  href="/"
-                  >
-                <div className="flex items-center gap-2">
-                  <Layout className="h-6 w-6 text-indigo-600" />
-                  <span className="font-bold text-lg">Finder</span>
-                </div>
-
+                <Link href="/" className="group">
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Layout className="h-7 w-7 text-brand-500 group-hover:text-brand-600 transition-colors duration-200" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-purple-500 opacity-0 group-hover:opacity-20 rounded-lg blur-sm transition-opacity duration-200"></div>
+                    </div>
+                    <span className="font-bold text-xl bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent group-hover:from-rose-600 group-hover:to-purple-600 transition-all duration-200">
+                      Finder
+                    </span>
+                  </div>
                 </Link>
               </div>
 
@@ -92,13 +94,16 @@ function Header() {
                   <a
                     key={item.label}
                     href={item.href}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out ${
+                    className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ease-in-out group ${
                       item.active
-                        ? 'text-indigo-700 bg-indigo-50'
-                        : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'
+                        ? 'text-brand-700 bg-gradient-to-r from-brand-50 to-rose-50 dark:from-brand-900/20 dark:to-rose-900/20 dark:text-brand-300'
+                        : 'text-gray-700 hover:text-brand-600 hover:bg-gradient-to-r hover:from-gray-50 hover:to-brand-50/50 dark:text-gray-300 dark:hover:text-brand-400'
                     }`}
                   >
-                    {item.label}
+                    {item.active && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-purple-500/10 rounded-lg"></div>
+                    )}
+                    <span className="relative">{item.label}</span>
                   </a>
                 ))}
               </div>
@@ -107,18 +112,19 @@ function Header() {
               <div className="flex items-center space-x-4">
                 {/* Auth Buttons (hidden on mobile) */}
                 {!isAuthenticated && (
-                  <div className="hidden md:flex items-center space-x-2">
+                  <div className="hidden md:flex items-center space-x-3">
                     <Link
                         href="/auth/login"
-                        className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors duration-150 ease-in-out"
+                        className="px-4 py-2 text-sm font-medium text-brand-600 hover:text-brand-700 transition-all duration-200 ease-in-out hover:bg-brand-50/50 rounded-lg dark:text-brand-400 dark:hover:text-brand-300"
                       >
                          Login
                       </Link>
                        <Link
                         href="/auth/signup"
-                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors duration-150 ease-in-out"
+                        className="relative px-4 py-2 text-sm font-medium text-rose-500 hover:text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg hover:from-brand-600 hover:to-brand-700 transition-all duration-200 ease-in-out shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group overflow-hidden"
                       >
-                         Sign Up
+                        <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span className="relative">Sign Up</span>
                       </Link>
                   </div>
                 )}
@@ -136,9 +142,14 @@ function Header() {
                 <div className="relative" ref={profileMenuRef}>
                   <button
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                    className="flex items-center space-x-1 text-gray-700 hover:text-indigo-600 focus:outline-none"
+                    className="flex items-center space-x-1 p-2 rounded-lg text-gray-700 hover:text-brand-600 hover:bg-gradient-to-r hover:from-brand-50 hover:to-rose-50 focus:outline-none transition-all duration-200 dark:text-gray-300 dark:hover:text-brand-400 group"
                   >
-                    <User className="h-5 w-5" />
+                    <div className="relative">
+                      <User className="h-5 w-5" />
+                      {isAuthenticated && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-rose-500 to-purple-500 rounded-full border-2 border-white dark:border-gray-900"></div>
+                      )}
+                    </div>
                     <ChevronDown
                       className={`h-4 w-4 transition-transform duration-200 ${
                         isProfileMenuOpen ? 'rotate-180' : ''
@@ -148,7 +159,7 @@ function Header() {
 
                   {/* Profile Dropdown */}
                   <div
-                    className={`user-profile-dropdown absolute right-0 z-50 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 transition-all duration-200 ease-in-out transform origin-top-right ${
+                    className={`user-profile-dropdown absolute right-0 z-50 mt-2 w-56 rounded-xl shadow-xl py-2 bg-white/95 backdrop-blur-sm border border-gray-100 dark:bg-gray-900/95 dark:border-gray-800 transition-all duration-200 ease-in-out transform origin-top-right ${
                       isProfileMenuOpen
                         ? 'opacity-100 scale-100 translate-y-0'
                         : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
@@ -156,52 +167,52 @@ function Header() {
                   >
                     {isAuthenticated ? (
                       <>
-                        <div className="px-4 py-2 text-xs text-gray-500">Account</div>
+                        <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Account</div>
                         <Link
                           href="/dashboard"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-rose-50 hover:text-brand-700 rounded-lg mx-2 transition-all duration-200 dark:text-gray-300 dark:hover:text-brand-400 dark:hover:from-brand-900/20 dark:hover:to-rose-900/20"
                         >
-                           <LayoutDashboard className="mr-2 h-4 w-4" />
+                           <LayoutDashboard className="mr-3 h-4 w-4" />
                            Dashboard
                         </Link>
                         <Link
                            href={`/profile/biodatas/${user?.id}`}
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-rose-50 hover:text-brand-700 rounded-lg mx-2 transition-all duration-200 dark:text-gray-300 dark:hover:text-brand-400 dark:hover:from-brand-900/20 dark:hover:to-rose-900/20"
                         >
-                           <UserRoundPen className="mr-2 h-4 w-4" />
+                           <UserRoundPen className="mr-3 h-4 w-4" />
                            Profile
                         </Link>
                         <Link
                           href="/settings"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-rose-50 hover:text-brand-700 rounded-lg mx-2 transition-all duration-200 dark:text-gray-300 dark:hover:text-brand-400 dark:hover:from-brand-900/20 dark:hover:to-rose-900/20"
                         >
-                          <Settings className="mr-2 h-4 w-4" />
+                          <Settings className="mr-3 h-4 w-4" />
                           Settings
                         </Link>
-                        <div className="border-t border-gray-100 my-1"></div>
+                        <div className="border-t border-gray-100 dark:border-gray-800 my-2 mx-2"></div>
                         <button
                           onClick={logout}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg mx-2 transition-all duration-200 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300"
                         >
-                          <LogOut className="mr-2 h-4 w-4" />
+                          <LogOut className="mr-3 h-4 w-4" />
                           Logout
                         </button>
                       </>
                     ) : (
                       <>
-                        <div className="px-4 py-2 text-xs text-gray-500">Get Started</div>
+                        <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Get Started</div>
                         <Link
                           href="/auth/login"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-rose-50 hover:text-brand-700 rounded-lg mx-2 transition-all duration-200 dark:text-gray-300 dark:hover:text-brand-400 dark:hover:from-brand-900/20 dark:hover:to-rose-900/20"
                         >
-                           <LogIn className="mr-2 h-4 w-4" />
+                           <LogIn className="mr-3 h-4 w-4" />
                            Login
                         </Link>
                         <Link
                           href="/auth/signup"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center px-4 py-2.5 text-sm text-rose-500 hover:text-white hover:bg-rose-500 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 rounded-lg mx-2 transition-all duration-200 shadow-md hover:shadow-lg"
                         >
-                           <UserPlus className="mr-2 h-4 w-4" />
+                           <UserPlus className="mr-3 h-4 w-4" />
                            Sign Up
                         </Link>
                       </>

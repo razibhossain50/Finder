@@ -15,17 +15,21 @@ import {
   Droplets,
   Shield,
   Home,
-  Edit,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft,
+  Star,
+  Share2,
+  MessageCircle,
+  Sparkles
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useRegularAuth } from "@/context/RegularAuthContext";
 import Image from "next/image";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 interface BiodataProfile {
   id: number;
@@ -107,32 +111,26 @@ export default function Profile() {
   const [profile, setProfile] = useState<BiodataProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useRegularAuth();
+  const params = useParams();
+  const biodataId = params.id as string;
 
   const fetchProfile = useCallback(async () => {
-    if (!user) {
-      setError("User not authenticated");
-      setLoading(false);
-      return;
-    }
+    if (!biodataId) return;
 
     try {
       setError(null);
-      const token = localStorage.getItem('regular_access_token');
+      setLoading(true);
 
-      // Get current user's biodata using the correct endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/current`, {
+      // Fetch specific biodata by ID - no authentication required
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/${biodataId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
       if (!response.ok) {
         if (response.status === 404) {
-          // No biodata found for this user
-          setProfile(null);
-          setError("No biodata found. Please create your profile first.");
+          setError("Profile not found. This biodata may not exist or has been removed.");
         } else {
           throw new Error(`Failed to fetch profile: ${response.statusText}`);
         }
@@ -146,13 +144,11 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [biodataId]);
 
   useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
-  }, [fetchProfile, user]);
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleRetry = () => {
     setLoading(true);
@@ -161,10 +157,36 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 p-4 md:p-8">
         <div className="container max-w-6xl mx-auto">
-          <div className="text-center py-12">
-            <div className="animate-pulse">Loading profile...</div>
+          <div className="text-center py-20">
+            <div className="relative">
+              {/* Animated loading spinner */}
+              <div className="w-16 h-16 mx-auto mb-6 relative">
+                <div className="absolute inset-0 rounded-full border-4 border-rose-200"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-rose-500 border-t-transparent animate-spin"></div>
+              </div>
+
+              {/* Loading text with sparkle effect */}
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Sparkles className="h-5 w-5 text-rose-500 animate-pulse" />
+                <h2 className="text-xl font-semibold text-gray-800">Loading Profile</h2>
+                <Sparkles className="h-5 w-5 text-rose-500 animate-pulse" />
+              </div>
+
+              <p className="text-gray-600 animate-pulse">Preparing beautiful biodata for you...</p>
+
+              {/* Skeleton cards preview */}
+              <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-white/60 backdrop-blur-sm rounded-xl p-6 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded mb-3"></div>
+                    <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -187,8 +209,10 @@ export default function Profile() {
                 <RefreshCw className="h-4 w-4" />
                 Retry
               </Button>
-              <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
-                Go to Dashboard
+              <Button variant="outline" asChild>
+                <Link href="/profile/biodatas">
+                  Back to All Profiles
+                </Link>
               </Button>
             </div>
           </div>
@@ -219,57 +243,123 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 p-4 md:p-8">
       <div className="container max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-            <p className="text-gray-600 mt-1">Complete biodata information</p>
+        {/* Enhanced Header */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-rose-600 to-purple-600 bg-clip-text text-transparent">
+                Biodata Profile
+              </h1>
+              <p className="text-gray-600 mt-1 flex items-center gap-2">
+                <Star className="h-4 w-4 text-yellow-500" />
+                ID: BD{biodataId}
+              </p>
+            </div>
           </div>
-          <Button asChild variant="default" >
-            <Link href="/profile/biodatas/create-biodata" className="flex items-center gap-2">
-              <Edit className="h-4 w-4" />
-              Edit Profile
-            </Link>
-          </Button>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700 transition-all duration-200 hover:shadow-md"
+            >
+              <Heart className="h-4 w-4" />
+              Save
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 hover:shadow-md"
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white border-0 transition-all duration-200 hover:shadow-lg hover:scale-105"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Contact
+            </Button>
+          </div>
         </div>
 
-        {/* Profile Header Card */}
-        <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
-                {profile.profilePicture ? (
-                  <Image
-                    src={profile.profilePicture}
-                    alt="Profile"
-                    width={96}
-                    height={96}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="h-12 w-12 text-white" />
-                )}
+        {/* Enhanced Profile Header Card */}
+        <Card className="relative overflow-hidden border-0 shadow-2xl">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600"></div>
+          <div className="absolute inset-0 bg-black/10"></div>
+
+          {/* Decorative Elements */}
+          <div className="absolute top-4 right-4 opacity-20">
+            <Sparkles className="h-8 w-8 text-white animate-pulse" />
+          </div>
+          <div className="absolute bottom-4 left-4 opacity-20">
+            <Heart className="h-6 w-6 text-white animate-pulse delay-1000" />
+          </div>
+
+          <CardContent className="relative p-8">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+              {/* Enhanced Profile Picture */}
+              <div className="relative">
+                <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border-4 border-white/30 shadow-xl">
+                  {profile.profilePicture ? (
+                    <Image
+                      src={profile.profilePicture}
+                      alt="Profile"
+                      width={128}
+                      height={128}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-16 w-16 text-white" />
+                  )}
+                </div>
+                {/* Online Status Indicator */}
+                <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-3 border-white shadow-lg"></div>
               </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold">{safeDisplay(profile.fullName, user?.fullName || "Unknown User")}</h2>
-                <div className="flex items-center gap-4 text-blue-100">
-                  <span className="flex items-center gap-1">
+
+              {/* Enhanced Profile Info */}
+              <div className="flex-1 text-center md:text-left space-y-4 text-white">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-2">
+                    {safeDisplay(profile.fullName, "Unknown User")}
+                  </h2>
+                  <p className="text-xl text-white/90 font-medium">
+                    {safeDisplay(profile.profession, "Professional")}
+                  </p>
+                </div>
+
+                {/* Key Info Row */}
+                <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 text-white/90">
+                  <span className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full">
                     <Calendar className="h-4 w-4" />
                     {profile.age || "N/A"} years old
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full">
                     <MapPin className="h-4 w-4" />
                     {safeDisplay(profile.presentDivision)}, {safeDisplay(profile.presentCountry)}
                   </span>
+                  <span className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full">
+                    <Ruler className="h-4 w-4" />
+                    {safeDisplay(profile.height)}
+                  </span>
                 </div>
-                <div className="flex gap-2">
-                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+
+                {/* Enhanced Badges */}
+                <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-colors px-4 py-2 text-sm font-medium">
                     {safeDisplay(profile.biodataType)}
                   </Badge>
-                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-colors px-4 py-2 text-sm font-medium">
                     {safeDisplay(profile.maritalStatus)}
+                  </Badge>
+                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-colors px-4 py-2 text-sm font-medium">
+                    {safeDisplay(profile.religion)}
                   </Badge>
                 </div>
               </div>
@@ -277,68 +367,73 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Main Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        {/* Enhanced Main Content Grid */}
+        <div className="grid gap-8 lg:grid-cols-2">
           {/* Personal Information */}
-          <Card className="bg-white/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-blue-500" />
-                Personal Information
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <User className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Personal Information</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Date of Birth</p>
-                    <p className="text-lg">{formatDate(profile.dateOfBirth)}</p>
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Date of Birth</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-blue-500" />
+                      {formatDate(profile.dateOfBirth)}
+                    </p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Age</p>
-                    <p className="text-lg">{safeDisplay(profile.age)} years</p>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Age</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.age)} years</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Height</p>
-                    <p className="text-lg flex items-center gap-1">
-                      <Ruler className="h-4 w-4 text-gray-400" />
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Height</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <Ruler className="h-4 w-4 text-green-500" />
                       {safeDisplay(profile.height)}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Weight</p>
-                    <p className="text-lg flex items-center gap-1">
-                      <Weight className="h-4 w-4 text-gray-400" />
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Weight</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <Weight className="h-4 w-4 text-orange-500" />
                       {safeDisplay(profile.weight)} {profile.weight ? 'kg' : ''}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Complexion</p>
-                    <p className="text-lg">{safeDisplay(profile.complexion)}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Complexion</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.complexion)}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Blood Group</p>
-                    <p className="text-lg flex items-center gap-1">
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Blood Group</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
                       <Droplets className="h-4 w-4 text-red-500" />
                       {safeDisplay(profile.bloodGroup)}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Religion</p>
-                    <p className="text-lg">{safeDisplay(profile.religion)}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Religion</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.religion)}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Marital Status</p>
-                    <p className="text-lg">{safeDisplay(profile.maritalStatus)}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Marital Status</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.maritalStatus)}</p>
                   </div>
                 </div>
                 {profile.healthIssues && safeDisplay(profile.healthIssues) !== "Not provided" && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Health Issues</p>
-                    <p className="text-lg flex items-start gap-1">
-                      <Shield className="h-4 w-4 text-gray-400 mt-1" />
-                      {safeDisplay(profile.healthIssues)}
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-sm font-semibold text-yellow-800 mb-2 flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Health Information
                     </p>
+                    <p className="text-gray-700">{safeDisplay(profile.healthIssues)}</p>
                   </div>
                 )}
               </div>
@@ -346,33 +441,35 @@ export default function Profile() {
           </Card>
 
           {/* Contact Information */}
-          <Card className="bg-white/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Phone className="h-5 w-5 text-emerald-500" />
-                Contact Information
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <Phone className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Contact Information</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="text-lg flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-400" />
-                    {safeDisplay(profile.email, user?.email || "Not provided")}
+                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Email Address</p>
+                  <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-emerald-500" />
+                    <span className="break-all">{safeDisplay(profile.email, "Not provided")}</span>
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Own Mobile</p>
-                  <p className="text-lg flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-400" />
+                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Personal Mobile</p>
+                  <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
+                    <Phone className="h-5 w-5 text-blue-500" />
                     {safeDisplay(profile.ownMobile)}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Guardian Mobile</p>
-                  <p className="text-lg flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-400" />
+                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Guardian Mobile</p>
+                  <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
+                    <Phone className="h-5 w-5 text-purple-500" />
                     {safeDisplay(profile.guardianMobile)}
                   </p>
                 </div>
@@ -381,39 +478,41 @@ export default function Profile() {
           </Card>
 
           {/* Education */}
-          <Card className="bg-white/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-purple-500" />
-                Education
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <GraduationCap className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Education Background</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Education Medium</p>
-                    <p className="text-lg">{safeDisplay(profile.educationMedium)}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Education Medium</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.educationMedium)}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Highest Education</p>
-                    <p className="text-lg">{safeDisplay(profile.highestEducation)}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Highest Education</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.highestEducation)}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Institute</p>
-                    <p className="text-lg">{safeDisplay(profile.instituteName)}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Institute</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.instituteName)}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Subject</p>
-                    <p className="text-lg">{safeDisplay(profile.subject)}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Subject</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.subject)}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Passing Year</p>
-                    <p className="text-lg">{safeDisplay(profile.passingYear)}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Passing Year</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.passingYear)}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Result</p>
-                    <p className="text-lg">{safeDisplay(profile.result)}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Result</p>
+                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.result)}</p>
                   </div>
                 </div>
               </div>
@@ -421,188 +520,377 @@ export default function Profile() {
           </Card>
 
           {/* Professional Information */}
-          <Card className="bg-white/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-orange-500" />
-                Professional Information
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <Briefcase className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Professional Details</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Profession</p>
-                  <p className="text-lg">{safeDisplay(profile.profession)}</p>
+                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Profession</p>
+                  <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-orange-500" />
+                    {safeDisplay(profile.profession)}
+                  </p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Economic Condition</p>
-                  <p className="text-lg">{safeDisplay(profile.economicCondition)}</p>
+                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Economic Condition</p>
+                  <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.economicCondition)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Address Information */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="bg-white/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Home className="h-5 w-5 text-indigo-500" />
-                Permanent Address
+        {/* Enhanced Address Information */}
+        <div className="grid gap-8 lg:grid-cols-2">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <Home className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Permanent Address</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  <span>{safeDisplay(profile.permanentArea)}, {safeDisplay(profile.permanentUpazilla)}</span>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Area & Upazilla</p>
+                  <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-indigo-500" />
+                    {safeDisplay(profile.permanentArea)}, {safeDisplay(profile.permanentUpazilla)}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  <span>{safeDisplay(profile.permanentZilla)}, {safeDisplay(profile.permanentDivision)}</span>
+                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">District & Division</p>
+                  <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-indigo-500" />
+                    {safeDisplay(profile.permanentZilla)}, {safeDisplay(profile.permanentDivision)}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  <span>{safeDisplay(profile.permanentCountry)}</span>
+                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-2">Country</p>
+                  <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-indigo-500" />
+                    {safeDisplay(profile.permanentCountry)}
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-teal-500" />
-                Present Address
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-teal-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <MapPin className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Present Address</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {profile.sameAsPermanent ? (
-                  <p className="text-gray-600 italic">Same as permanent address</p>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>{safeDisplay(profile.presentArea)}, {safeDisplay(profile.presentUpazilla)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>{safeDisplay(profile.presentZilla)}, {safeDisplay(profile.presentDivision)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>{safeDisplay(profile.presentCountry)}</span>
-                    </div>
-                  </>
-                )}
-              </div>
+            <CardContent className="p-6">
+              {profile.sameAsPermanent ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                  <Home className="h-8 w-8 text-blue-500 mx-auto mb-3" />
+                  <p className="text-blue-800 font-medium text-lg">Same as permanent address</p>
+                  <p className="text-blue-600 text-sm mt-1">Currently residing at permanent location</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Area & Upazilla</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-teal-500" />
+                      {safeDisplay(profile.presentArea)}, {safeDisplay(profile.presentUpazilla)}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">District & Division</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-teal-500" />
+                      {safeDisplay(profile.presentZilla)}, {safeDisplay(profile.presentDivision)}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Country</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-teal-500" />
+                      {safeDisplay(profile.presentCountry)}
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Family Information */}
-        <Card className="bg-white/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-rose-500" />
-              Family Information
+        {/* Enhanced Family Information */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+          <CardHeader className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-t-lg">
+            <CardTitle className="flex items-center gap-3">
+              <div className="p-2 bg-rose-500 rounded-lg group-hover:scale-110 transition-transform">
+                <Users className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-800">Family Information</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Father&apos;s Name</p>
-                    <p className="text-lg">{safeDisplay(profile.fatherName)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Father&apos;s Profession</p>
-                    <p className="text-lg">{safeDisplay(profile.fatherProfession)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Father Status</p>
-                    <p className="text-lg">{profile.fatherAlive === 'Yes' ? 'Alive' : profile.fatherAlive === 'No' ? 'Deceased' : safeDisplay(profile.fatherAlive)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Mother&apos;s Name</p>
-                    <p className="text-lg">{safeDisplay(profile.motherName)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Mother&apos;s Profession</p>
-                    <p className="text-lg">{safeDisplay(profile.motherProfession)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Mother Status</p>
-                    <p className="text-lg">{profile.motherAlive === 'Yes' ? 'Alive' : profile.motherAlive === 'No' ? 'Deceased' : safeDisplay(profile.motherAlive)}</p>
+          <CardContent className="p-6">
+            <div className="grid gap-8 lg:grid-cols-2">
+              {/* Parents Information */}
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-100">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <User className="h-5 w-5 text-blue-500" />
+                    Parents Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Father's Name</p>
+                      <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.fatherName)}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Father&apos;s Profession</p>
+                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-blue-500" />
+                        {safeDisplay(profile.fatherProfession)}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Father Status</p>
+                      <div className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        {profile.fatherAlive === 'Yes' ? (
+                          <>
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span className="text-green-700">Alive</span>
+                          </>
+                        ) : profile.fatherAlive === 'No' ? (
+                          <>
+                            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                            <span className="text-gray-600">Deceased</span>
+                          </>
+                        ) : (
+                          <span>{safeDisplay(profile.fatherAlive)}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Mother&apos;s Name</p>
+                      <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.motherName)}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Mother&apos;s Profession</p>
+                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-pink-500" />
+                        {safeDisplay(profile.motherProfession)}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Mother Status</p>
+                      <div className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        {profile.motherAlive === 'Yes' ? (
+                          <>
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span className="text-green-700">Alive</span>
+                          </>
+                        ) : profile.motherAlive === 'No' ? (
+                          <>
+                            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                            <span className="text-gray-600">Deceased</span>
+                          </>
+                        ) : (
+                          <span>{safeDisplay(profile.motherAlive)}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Brothers</p>
-                    <p className="text-lg">{safeDisplay(profile.brothersCount, "0")}</p>
+
+              {/* Siblings & Family Details */}
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-5 border border-purple-100">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-purple-500" />
+                    Siblings & Family
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow">
+                      <div className="text-3xl font-bold text-blue-600 mb-1">
+                        {safeDisplay(profile.brothersCount, "0")}
+                      </div>
+                      <p className="text-sm font-semibold text-gray-600">Brothers</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow">
+                      <div className="text-3xl font-bold text-pink-600 mb-1">
+                        {safeDisplay(profile.sistersCount, "0")}
+                      </div>
+                      <p className="text-sm font-semibold text-gray-600">Sisters</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Sisters</p>
-                    <p className="text-lg">{safeDisplay(profile.sistersCount, "0")}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Family Details</p>
-                  <p className="text-lg">{safeDisplay(profile.familyDetails)}</p>
+
+                  {profile.familyDetails && safeDisplay(profile.familyDetails) !== "Not provided" && (
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
+                        <Home className="h-4 w-4 text-purple-500" />
+                        Family Details
+                      </p>
+                      <p className="text-gray-700 leading-relaxed">{safeDisplay(profile.familyDetails)}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Partner Preferences */}
-        <Card className="bg-white/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-pink-500" />
-              Partner Preferences
+        {/* Enhanced Partner Preferences */}
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+          <CardHeader className="bg-gradient-to-r from-pink-50 via-rose-50 to-red-50 rounded-t-lg">
+            <CardTitle className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg group-hover:scale-110 transition-transform">
+                <Heart className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-800">Partner Preferences</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Age Range</p>
-                    <p className="text-lg">{safeDisplay(profile.partnerAgeMin)} - {safeDisplay(profile.partnerAgeMax)} years</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Complexion</p>
-                    <p className="text-lg">{safeDisplay(profile.partnerComplexion)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Height</p>
-                    <p className="text-lg">{safeDisplay(profile.partnerHeight)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Education</p>
-                    <p className="text-lg">{safeDisplay(profile.partnerEducation)}</p>
+          <CardContent className="p-6">
+            <div className="grid gap-8 lg:grid-cols-2">
+              {/* Basic Preferences */}
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg p-5 border border-rose-100">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <User className="h-5 w-5 text-rose-500" />
+                    Basic Preferences
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Age Range</p>
+                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-rose-500" />
+                        {safeDisplay(profile.partnerAgeMin)} - {safeDisplay(profile.partnerAgeMax)} years
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Complexion</p>
+                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-amber-500" />
+                        {safeDisplay(profile.partnerComplexion)}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Height Preference</p>
+                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        <Ruler className="h-4 w-4 text-green-500" />
+                        {safeDisplay(profile.partnerHeight)}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Education</p>
+                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        <GraduationCap className="h-4 w-4 text-purple-500" />
+                        {safeDisplay(profile.partnerEducation)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Professional & Location Preferences */}
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-100">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-blue-500" />
+                    Professional & Location
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-2">Profession Preference</p>
+                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-blue-500" />
+                        {safeDisplay(profile.partnerProfession)}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-2">Location Preference</p>
+                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-teal-500" />
+                        {safeDisplay(profile.partnerLocation)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Details */}
+                {profile.partnerDetails && safeDisplay(profile.partnerDetails) !== "Not provided" && (
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-5 border border-amber-100">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <Heart className="h-5 w-5 text-amber-500" />
+                      Additional Preferences
+                    </h4>
+                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <p className="text-gray-700 leading-relaxed">{safeDisplay(profile.partnerDetails)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Call to Action Section */}
+        <Card className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white border-0 shadow-2xl overflow-hidden relative">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute top-4 right-4 opacity-20">
+            <Sparkles className="h-12 w-12 text-white animate-pulse" />
+          </div>
+          <div className="absolute bottom-4 left-4 opacity-20">
+            <Heart className="h-8 w-8 text-white animate-pulse delay-1000" />
+          </div>
+
+          <CardContent className="relative p-8 text-center">
+            <div className="max-w-2xl mx-auto space-y-6">
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Profession</p>
-                  <p className="text-lg">{safeDisplay(profile.partnerProfession)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Location</p>
-                  <p className="text-lg">{safeDisplay(profile.partnerLocation)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Additional Details</p>
-                  <p className="text-lg">{safeDisplay(profile.partnerDetails)}</p>
-                </div>
+                <h3 className="text-2xl md:text-3xl font-bold">
+                  Interested in this Profile?
+                </h3>
+                <p className="text-lg text-white/90">
+                  Take the next step towards finding your perfect life partner. Connect with {safeDisplay(profile.fullName, "this person")} today!
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Button
+                  size="lg"
+                  className="bg-white text-rose-600 hover:bg-rose-50 font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  <MessageCircle className="h-5 w-5 mr-2" />
+                  Send Interest
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-white text-rose-600 hover:bg-white hover:text-rose-600 hover:border-rose-600 font-semibold px-8 py-3 rounded-full transition-all duration-300 hover:shadow-xl group"
+                >
+                  <Heart className="h-5 w-5 mr-2 group-hover:text-rose-600 transition-colors duration-300" />
+                  Add to Favorites
+                </Button>
+              </div>
+
+              <div className="flex justify-center items-center gap-6 text-sm text-white/80">
+                <span className="flex items-center gap-1">
+                  <Shield className="h-4 w-4" />
+                  Verified Profile
+                </span>
+                <span className="flex items-center gap-1">
+                  <Star className="h-4 w-4" />
+                  Premium Member
+                </span>
               </div>
             </div>
           </CardContent>
