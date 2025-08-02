@@ -4,6 +4,7 @@
 import { BiodataSearch } from "@/components/biodata/BiodataSearch";
 import { Card, CardBody, Button } from "@heroui/react";
 import { PlusCircle, FileText, Camera, Heart, Sparkles, Zap, Users, UserCheck, Award, TrendingUp, Globe } from 'lucide-react';
+import Link from 'next/link';
 
 const AllBiodatas = () => {
     const successStory = [
@@ -173,20 +174,22 @@ const AllBiodatas = () => {
                                 {/* Right Button Section */}
                                 <div className="flex flex-col sm:flex-row gap-4 lg:flex-col xl:flex-row">
                                     {/* Primary CTA Button */}
-                                    <Button className="group/btn relative px-10 py-6 bg-white text-rose-600 hover:bg-rose-50 font-bold text-lg rounded-2xl transition-all duration-300 transform hover:scale-110 hover:shadow-2xl overflow-hidden">
-                                        {/* Button Background Effect */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-rose-50 to-pink-50 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                                    <Button className="group/btn relative px-10 py-6 bg-white text-rose-600 hover:bg-rose-50 font-bold text-lg rounded-2xl transition-all duration-300 transform hover:scale-110 hover:shadow-2xl overflow-hidden" asChild>
+                                        <Link href="/profile/biodatas/edit/new">
+                                            {/* Button Background Effect */}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-rose-50 to-pink-50 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
 
-                                        {/* Button Content */}
-                                        <div className="relative flex items-center gap-3">
-                                            <div className="bg-rose-100 rounded-full p-2 group-hover/btn:bg-rose-200 transition-colors duration-300">
-                                                <PlusCircle className="h-6 w-6 group-hover/btn:rotate-90 transition-transform duration-300" />
+                                            {/* Button Content */}
+                                            <div className="relative flex items-center gap-3">
+                                                <div className="bg-rose-100 rounded-full p-2 group-hover/btn:bg-rose-200 transition-colors duration-300">
+                                                    <PlusCircle className="h-6 w-6 group-hover/btn:rotate-90 transition-transform duration-300" />
+                                                </div>
+                                                <span>Create Your Profile</span>
                                             </div>
-                                            <span>Create Your Profile</span>
-                                        </div>
 
-                                        {/* Button Shine Effect */}
-                                        <div className="absolute inset-0 -top-2 -bottom-2 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
+                                            {/* Button Shine Effect */}
+                                            <div className="absolute inset-0 -top-2 -bottom-2 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
+                                        </Link>
                                     </Button>
                                 </div>
                             </div>

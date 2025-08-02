@@ -74,7 +74,7 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 p-8">
-      <div className="container max-w-4xl mx-auto space-y-8">
+      <div className="container space-y-8">
         <h1 className="text-3xl font-bold">Settings</h1>
 
         {/* Profile Settings */}

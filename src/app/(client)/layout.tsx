@@ -3,6 +3,8 @@ import Footer from "@/components/layout/Footer";
 import './globals.css';
 import { QueryProvider } from '@/components/common/QueryProvider';
 import { RegularAuthProvider } from '@/context/RegularAuthContext';
+import { HeroUIProvider } from '@heroui/react';
+import { ToastProvider } from "@heroui/toast";
 
 export default function RootLayout({
   children,
@@ -12,13 +14,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className='min-h-screen bg-gray-50'>
-        <QueryProvider>
-          <RegularAuthProvider>
-            <Header />
-            {children}
-            <Footer />
-          </RegularAuthProvider>
-        </QueryProvider>
+        <HeroUIProvider>
+          <ToastProvider />
+          <QueryProvider>
+            <RegularAuthProvider>
+              <Header />
+              {children}
+              <Footer />
+            </RegularAuthProvider>
+          </QueryProvider>
+        </HeroUIProvider>
       </body>
     </html>
   );

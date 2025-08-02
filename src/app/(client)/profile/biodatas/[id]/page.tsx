@@ -17,11 +17,12 @@ import {
   Home,
   AlertCircle,
   RefreshCw,
-  ArrowLeft,
   Star,
   Share2,
   MessageCircle,
-  Sparkles
+  Sparkles,
+  Edit,
+  Plus
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -131,12 +132,53 @@ export default function Profile() {
       if (!response.ok) {
         if (response.status === 404) {
           setError("Profile not found. This biodata may not exist or has been removed.");
+        } else if (response.status === 500) {
+          setError("Server error occurred. Please try again later.");
+        } else if (response.status === 403) {
+          setError("Access denied. You may not have permission to view this profile.");
         } else {
-          throw new Error(`Failed to fetch profile: ${response.statusText}`);
+          const errorText = await response.text().catch(() => 'Unknown error');
+          setError(`Failed to fetch profile: ${response.status} ${response.statusText}`);
         }
-      } else {
-        const data = await response.json();
+        return;
+      }
+
+      // Get response text first
+      const responseText = await response.text();
+
+      if (!responseText.trim()) {
+        // Empty response means no biodata exists - show create biodata section
+        setProfile(null);
+        return;
+      }
+
+      // Try to parse as JSON with better error handling
+      try {
+        const data = JSON.parse(responseText);
+
+        // Check if data is null or empty (no biodata found)
+        if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+          // No biodata found - show create biodata section
+          setProfile(null);
+          return;
+        }
+
+        // Validate that we received a valid biodata object
+        if (typeof data !== 'object') {
+          throw new Error('Invalid data format received');
+        }
+
         setProfile(data);
+      } catch (parseError) {
+        // Check if it's an HTML error page
+        if (responseText.includes('<html>') || responseText.includes('<!DOCTYPE')) {
+          setError('Server configuration error. Please contact support.');
+        } else if (responseText.includes('404') || responseText.includes('Not Found')) {
+          // 404 in response text means no biodata - show create section
+          setProfile(null);
+        } else {
+          setError('Invalid response format from server. Please try again later.');
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -223,20 +265,106 @@ export default function Profile() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 p-8">
-        <div className="container max-w-6xl mx-auto space-y-8">
-          <div className="text-center py-12">
-            <div className="space-y-4">
-              <User className="h-16 w-16 text-gray-400 mx-auto" />
-              <h2 className="text-2xl font-bold text-gray-900">No Profile Found</h2>
-              <p className="text-gray-600 max-w-md mx-auto">
-                You haven&apos;t created your biodata profile yet. Create one to get started with finding your perfect match.
-              </p>
-              <Button variant="default" className="mt-4">
-                Create Profile
-              </Button>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 p-4 md:p-8">
+        <div className="container max-w-4xl mx-auto">
+          {/* Header Section */}
+          <div className="text-center mb-12">
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-rose-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              Create Your Biodata Profile
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Start your journey to find your perfect life partner
+            </p>
           </div>
+
+          {/* Main Content Card */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-2xl overflow-hidden">
+            {/* Decorative Header */}
+            <div className="relative bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 p-8">
+              <div className="absolute inset-0 bg-black/10"></div>
+              <div className="absolute top-4 right-4 opacity-20">
+                <Sparkles className="h-8 w-8 text-white animate-pulse" />
+              </div>
+              <div className="relative text-center text-white">
+                <div className="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <User className="h-10 w-10 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">No Biodata Profile Found</h2>
+                <p className="text-white/90">
+                  You haven&apos;t created your biodata profile yet
+                </p>
+              </div>
+            </div>
+
+            {/* Content Section */}
+            <CardContent className="p-8">
+              <div className="text-center space-y-6">
+                <div className="max-w-2xl mx-auto">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                    Why Create a Biodata Profile?
+                  </h3>
+                  <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    <div className="text-center p-4">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-rose-100 rounded-full flex items-center justify-center">
+                        <Heart className="h-6 w-6 text-rose-500" />
+                      </div>
+                      <h4 className="font-semibold text-gray-800 mb-2">Find Your Match</h4>
+                      <p className="text-sm text-gray-600">Connect with compatible life partners</p>
+                    </div>
+                    <div className="text-center p-4">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Shield className="h-6 w-6 text-blue-500" />
+                      </div>
+                      <h4 className="font-semibold text-gray-800 mb-2">Verified Profiles</h4>
+                      <p className="text-sm text-gray-600">Join a trusted matrimony platform</p>
+                    </div>
+                    <div className="text-center p-4">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-green-100 rounded-full flex items-center justify-center">
+                        <Users className="h-6 w-6 text-green-500" />
+                      </div>
+                      <h4 className="font-semibold text-gray-800 mb-2">Large Community</h4>
+                      <p className="text-sm text-gray-600">Access thousands of profiles</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Call to Action */}
+                <div className="space-y-4">
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white px-8 py-3 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    asChild
+                  >
+                    <Link href="/profile/biodatas/edit/new">
+                      <Plus className="h-5 w-5 mr-2" />
+                      Create Your Biodata Profile
+                    </Link>
+                  </Button>
+
+                  <div className="flex justify-center gap-4">
+                    <Button variant="outline" asChild>
+                      <Link href="/profile/biodatas">
+                        Browse All Profiles
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link href="/dashboard">
+                        Go to Dashboard
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Additional Info */}
+                <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    <Shield className="h-4 w-4 inline mr-1" />
+                    Your information is secure and will only be shared with verified members
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -261,6 +389,17 @@ export default function Profile() {
 
           {/* Action Buttons */}
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 hover:shadow-md"
+              asChild
+            >
+              <Link href={`/profile/biodatas/edit/${biodataId}`}>
+                <Edit className="h-4 w-4" />
+                Edit Profile
+              </Link>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -651,7 +790,7 @@ export default function Profile() {
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <p className="text-sm font-semibold text-gray-600 mb-1">Father's Name</p>
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Father&apos;s Name</p>
                       <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.fatherName)}</p>
                     </div>
                     <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -870,7 +1009,7 @@ export default function Profile() {
                   className="bg-white text-rose-600 hover:bg-rose-50 font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
                   <MessageCircle className="h-5 w-5 mr-2" />
-                  Send Interest
+                  Contact
                 </Button>
                 <Button
                   variant="outline"
