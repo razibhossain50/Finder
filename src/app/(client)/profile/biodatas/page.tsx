@@ -77,7 +77,7 @@ const AllBiodatas = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
-            <div className="container max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+            <div className="container max-w-7xl mx-auto p-4 space-y-8">
                 {/* BiodataSearch Component handles everything: header, search, results, pagination */}
                 <BiodataSearch />
             </div>
@@ -90,7 +90,7 @@ const AllBiodatas = () => {
                     <div className="absolute bottom-10 right-10 text-3xl">🌟</div>
                 </div>
 
-                <div className="max-w-6xl mx-auto text-center relative z-10">
+                <div className="max-w-7xl mx-auto text-center relative z-10 p-4">
                     <div className="mb-16">
                         <div className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-100 to-pink-100 px-4 py-2 rounded-full mb-6 shadow-sm border border-rose-200">
                             <Sparkles className="h-4 w-4 text-rose-500" />
@@ -215,10 +215,10 @@ const AllBiodatas = () => {
                     </div>
                 </div>
 
-                <div className="max-w-6xl mx-auto relative z-10">
+                <div className="max-w-7xl mx-auto relative p-4 z-10">
                     <div className="text-center mb-16">
                         <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full mb-6 shadow-sm border border-rose-200">
-                            <TrendingUp className="h-4 w-4 text-rose-500" />
+                        <Sparkles className="h-4 w-4 text-rose-500" />
                             <span className="text-rose-700 font-medium">Our Success</span>
                         </div>
                         <h2 className="text-title-lg font-bold text-gray-800 mb-4">
@@ -233,10 +233,6 @@ const AllBiodatas = () => {
                         {stats.map((stat, index) => (
                             <Card key={index} className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-white/80 backdrop-blur-sm group">
                                 <CardBody className="p-8 text-center relative overflow-hidden">
-                                    <div className="absolute -top-2 -right-2 text-4xl opacity-10 group-hover:opacity-20 transition-opacity">
-                                        {stat.emoji}
-                                    </div>
-
                                     <div className={`${stat.bgColor} rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
                                         <stat.icon className={`h-8 w-8 ${stat.color}`} />
                                     </div>

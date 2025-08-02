@@ -50,14 +50,7 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
           {/* Name with Admin Note */}
           <div className="col-span-2 mb-6">
             <Input
-              label={
-                <div className="flex items-center gap-2">
-                  Your full name
-                  <Tooltip content="Only visible for admin">
-                    <Info className="w-4 h-4 text-slate-400 cursor-help" />
-                  </Tooltip>
-                </div>
-              }
+              label="Your full name"
               placeholder="Enter full name"
               value={(data.fullName as string) || ""}
               onChange={(e) => updateData({ fullName: e.target.value })}
@@ -65,10 +58,15 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
               errorMessage={errors.fullName}
               isInvalid={!!errors.fullName}
               description={
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 text-xs text-slate-500">
                   <Info className="w-3 h-3" />
                   Only visible for admin
                 </div>
+              }
+              endContent={
+                <Tooltip content="Only visible for admin">
+                  <Info className="w-4 h-4 text-slate-400 cursor-help" />
+                </Tooltip>
               }
             />
           </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ChevronDown } from "lucide-react";
 import { geoLocation } from "../../api/geo-location";
 
 type SelectionPath = {
@@ -132,10 +132,10 @@ export function LocationSelector({ onLocationSelect }: LocationSelectorProps) {
     <div className="relative">
       {locationSelection ? (
         <div
-          className="w-full px-3 py-2 border border-gray-200 rounded-md bg-background flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
+          className="w-full px-3 py-2 rounded-[14px] h-12 bg-[#f4f4f5] flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
           onClick={handleToggleDropdown}
         >
-          <span className="text-sm truncate">{locationSelection}</span>
+            <span className="text-sm truncate">{locationSelection}</span>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -154,9 +154,10 @@ export function LocationSelector({ onLocationSelect }: LocationSelectorProps) {
           onClick={handleToggleDropdown}
         >
           <div
-            className="w-full px-3 py-2 border border-gray-200 rounded-md bg-background flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
+            className="w-full px-3 py-2 rounded-[14px] h-12 bg-[#f4f4f5] flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
           >
             <span className="text-sm text-muted-foreground">Select location</span>
+            <ChevronDown size={16}/>
           </div>
 
           {isLocationDropdownOpen && (

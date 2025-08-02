@@ -119,7 +119,7 @@ function Header() {
                     <Layout className="h-7 w-7 text-brand-500 group-hover:text-brand-600 transition-colors duration-200" />
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-purple-500 opacity-0 group-hover:opacity-20 rounded-lg blur-sm transition-opacity duration-200"></div>
                   </div>
-                  <span className="font-bold text-xl bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent group-hover:from-rose-600 group-hover:to-purple-600 transition-all duration-200">
+                  <span className="font-bold text-xl bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent from-rose-600 to-purple-600 transition-all duration-200">
                     Finder
                   </span>
                 </div>

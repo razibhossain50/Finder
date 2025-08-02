@@ -1,10 +1,9 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import {
-    Card, CardBody, CardHeader, Button, Select, SelectItem, Input, Chip, Pagination, Spinner, Avatar, Divider
-} from "@heroui/react";
-import { Search, MapPin, Calendar, User, GraduationCap, Briefcase, Eye, Heart, Sparkles, Star } from "lucide-react";
 import Link from "next/link";
+import { Card, CardBody, CardHeader, Button, Select, SelectItem, Input, Chip,
+        Pagination, Avatar, Divider} from "@heroui/react";
+import { Search, User, Eye, Heart, Sparkles, Star } from "lucide-react";
 import { LocationSelector } from "@/components/form/LocationSelector";
 
 interface Biodata {
@@ -211,39 +210,25 @@ export const BiodataSearch = () => {
     return (
         <div className="space-y-8">
             {/* Enhanced Header */}
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-5 py-12">
                 <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-rose-600 to-purple-600 bg-clip-text text-transparent">
-                    All Biodatas
+                        <div className="flex items-center justify-center gap-2">
+                                <Sparkles className="h-6 w-6 text-rose-500" />
+                                <div className=" text-gray-800">Finder</div>
+                                <Sparkles className="h-6 w-6 text-rose-500" />
+                        </div>
                 </h1>
-                <p className="text-gray-600 text-lg">Discover and connect with verified profiles</p>
-                <Chip 
-                    color="primary" 
-                    variant="flat" 
-                    size="lg"
-                    className="bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 border-rose-200"
-                    startContent={<Star className="h-4 w-4" />}
-                >
-                    {filteredBiodatas.length} Profile{filteredBiodatas.length !== 1 ? 's' : ''} Found
-                </Chip>
+                <p className="text-gray-600 text-2xl">&quot;Craft your love story with someone who complements your soul and spirit&quot;</p>
             </div>
 
             {/* Enhanced Search and Filters */}
-            <Card className="w-full bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
-                <CardHeader className="bg-gradient-to-r from-rose-50 via-pink-50 to-purple-50 rounded-t-lg">
-                    <div className="text-center w-full space-y-2">
-                        <div className="flex items-center justify-center gap-2">
-                            <Sparkles className="h-6 w-6 text-rose-500" />
-                            <h2 className="text-2xl font-bold text-gray-800">Find Your Perfect Match</h2>
-                            <Sparkles className="h-6 w-6 text-rose-500" />
-                        </div>
-                        <p className="text-gray-600">Use our advanced filters to discover compatible life partners</p>
-                    </div>
-                </CardHeader>
-                <CardBody className="p-8">
+            <Card className="overflow-visible w-full bg-white/80  border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <CardBody className="p-8 overflow-y-visible">
                     <div className="grid gap-6 md:grid-cols-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">I&apos;m looking for</label>
                             <Select
+                                size="lg"
                                 placeholder="Select gender"
                                 selectedKeys={selectedGender ? [selectedGender] : []}
                                 onSelectionChange={(keys) => setSelectedGender(Array.from(keys)[0] as string)}
@@ -257,6 +242,7 @@ export const BiodataSearch = () => {
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">Marital status</label>
                             <Select
+                                size="lg"
                                 placeholder="Select marital status"
                                 selectedKeys={selectedMaritalStatus ? [selectedMaritalStatus] : []}
                                 onSelectionChange={(keys) => setSelectedMaritalStatus(Array.from(keys)[0] as string)}
@@ -279,6 +265,7 @@ export const BiodataSearch = () => {
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">Biodata Number</label>
                             <Input
+                                size="lg"
                                 placeholder="Enter biodata number"
                                 value={biodataNumber}
                                 onChange={(e) => setBiodataNumber(e.target.value)}
@@ -294,18 +281,18 @@ export const BiodataSearch = () => {
                         startContent={<Search className="h-5 w-5" />}
                         isLoading={loading}
                     >
-                        Search Perfect Matches
+                        Find Your Partner
                     </Button>
                 </CardBody>
             </Card>
 
             {/* Enhanced Biodatas Grid */}
             {currentBiodatas.length > 0 ? (
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-4 md:gap-8 md:grid-cols-3">
                     {currentBiodatas.map((biodata) => (
                         <Card key={biodata.id} className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group overflow-hidden">
                             {/* Card Header with Gradient */}
-                            <CardHeader className="bg-gradient-to-r from-rose-50 to-pink-50 pb-2 relative">
+                            <CardHeader className="bg-gradient-to-r from-rose-400 to-pink-500 text-white pb-2 relative">
                                 <div className="absolute top-2 right-2 opacity-20">
                                     <Sparkles className="h-4 w-4 text-rose-500 animate-pulse" />
                                 </div>
@@ -314,94 +301,78 @@ export const BiodataSearch = () => {
                                         color={biodata.biodataType?.toLowerCase() === "male" ? "primary" : "secondary"}
                                         variant="flat"
                                         size="sm"
-                                        className="bg-white/80 backdrop-blur-sm"
+                                        className="bg-white/90 backdrop-blur-sm"
                                         startContent={<Star className="h-3 w-3" />}
                                     >
                                         BD{biodata.id}
                                     </Chip>
                                     <Button
                                         isIconOnly
-                                        variant="light"
+                                        variant="ghost"
                                         size="sm"
                                         onPress={() => toggleFavorite(biodata.id)}
-                                        className={`${favorites.has(biodata.id) ? "text-red-500 bg-red-50" : "text-gray-400 hover:text-red-500 hover:bg-red-50"} transition-all duration-200`}
+                                        className={`${favorites.has(biodata.id) ? "bg-white/90" : "bg-white/90 text-gray-400 hover:text-red-500"} transition-all duration-200`}
                                     >
                                         <Heart
-                                            className={`h-4 w-4 ${favorites.has(biodata.id) ? "fill-current" : ""} group-hover:scale-110 transition-transform`}
+                                            className={`h-4 w-4 ${favorites.has(biodata.id) ? "fill-rose-500 stroke-rose-500" : ""} group-hover:scale-110 transition-transform`}
                                         />
                                     </Button>
                                 </div>
                             </CardHeader>
 
-                            <CardBody className="space-y-6 p-6">
+                            <CardBody className="space-y-3 md:space-y-6 p-3 md:p-4">
                                 {/* Enhanced Profile Avatar */}
-                                <div className="flex justify-center">
-                                    <div className="relative">
-                                        <Avatar
-                                            src={biodata.profilePicture}
-                                            name={biodata.fullName}
-                                            size="lg"
-                                            className="w-24 h-24 border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300"
-                                        />
-                                        {/* Online Status Indicator */}
-                                        <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
-                                    </div>
-                                </div>
+                                <div className="grid grid-cols-24">
+                                    <div className="col-span-6 flex justify-center">
+                                        <div className="relative">
+                                            {
+                                                biodata.biodataType=="Male"?(
+                                                    <Avatar
+                                                src={biodata.profilePicture?`${biodata.profilePicture}`:"icons/male.png"}
+                                                name={biodata.fullName}
+                                                size="lg"
+                                                className="w-fit h-fit border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300"
+                                            />
 
-                                {/* Enhanced Profile Info */}
-                                <div className="text-center space-y-3">
-                                    <h3 className="font-bold text-xl text-gray-900 group-hover:text-rose-600 transition-colors duration-200">
-                                        {biodata.fullName || "Unknown User"}
-                                    </h3>
-
-                                    <div className="space-y-2 text-sm text-gray-600">
-                                        <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-full px-3 py-1">
-                                            <Calendar className="h-4 w-4 text-blue-500" />
-                                            <span className="font-medium">{biodata.age || "N/A"} years old</span>
+                                                ):(
+                                                    <Avatar
+                                                src={biodata.profilePicture?`${biodata.profilePicture}`:"icons/female.png"}
+                                                name={biodata.fullName}
+                                                size="lg"
+                                                className="w-24 h-24 border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                                )
+                                            }
                                         </div>
+                                    </div>
 
-                                        <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-full px-3 py-1">
-                                            <MapPin className="h-4 w-4 text-green-500" />
-                                            <span className="truncate font-medium">
-                                                {biodata.presentDivision || "Unknown"}, {biodata.presentCountry || "Unknown"}
-                                            </span>
+                                    {/* Enhanced Profile Info */}
+                                    <div className="col-span-18 space-y-1 px-3">
+                                        <div className=" text-lg text-gray-900 group-hover:text-rose-600 transition-colors duration-200">
+                                            <span className="font-bold">Age: </span>{biodata.age || "Unknown User"}
                                         </div>
-
-                                        {biodata.profession && (
-                                            <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-full px-3 py-1">
-                                                <Briefcase className="h-4 w-4 text-orange-500" />
-                                                <span className="truncate font-medium">{biodata.profession}</span>
+                                        <div className="flex items-center  gap-2 bg-gray-50 rounded-full">
+                                                <span className="truncate font-medium">
+                                                <span className="font-bold">Height: </span>{biodata.height || "Unknown"}
+                                                </span>
                                             </div>
-                                        )}
-
-                                        {biodata.highestEducation && (
-                                            <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-full px-3 py-1">
-                                                <GraduationCap className="h-4 w-4 text-purple-500" />
-                                                <span className="truncate font-medium">{biodata.highestEducation}</span>
+                                        {
+                                            biodata.biodataType=="male"?(
+                                            <div className="flex items-center  gap-2 bg-gray-50 rounded-full">
+                                                <span className="truncate font-medium">
+                                                <span className="font-bold">Complexion: </span>{biodata.complexion || "Unknown"}
+                                                </span>
                                             </div>
-                                        )}
+
+                                            ):(
+                                            <div className="flex items-center  gap-2 bg-gray-50 rounded-full">
+                                                <span className="font-bold">Profession: </span><span className="truncate font-medium">{biodata.profession}</span>
+                                            </div>
+
+                                            )
+                                        }
                                     </div>
 
-                                    {/* Enhanced Badges */}
-                                    <div className="flex justify-center gap-2 flex-wrap">
-                                        <Chip 
-                                            size="sm" 
-                                            variant="flat" 
-                                            className={`${biodata.biodataType?.toLowerCase() === "male" 
-                                                ? "bg-blue-100 text-blue-700 border-blue-200" 
-                                                : "bg-pink-100 text-pink-700 border-pink-200"
-                                            } font-medium`}
-                                        >
-                                            {biodata.biodataType || "Unknown"}
-                                        </Chip>
-                                        <Chip 
-                                            size="sm" 
-                                            variant="flat" 
-                                            className="bg-purple-100 text-purple-700 border-purple-200 font-medium"
-                                        >
-                                            {biodata.maritalStatus || "Unknown"}
-                                        </Chip>
-                                    </div>
                                 </div>
 
                                 <Divider className="bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
@@ -410,8 +381,8 @@ export const BiodataSearch = () => {
                                 <Button
                                     as={Link}
                                     href={`/profile/biodatas/${biodata.id}`}
-                                    className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                                    size="lg"
+                                    className="w-full bg-white border-1 text-rose-500 border-rose-500 hover:from-rose-600 hover:to-pink-600 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                    size="md"
                                     startContent={<Eye className="h-4 w-4" />}
                                 >
                                     View Full Profile
