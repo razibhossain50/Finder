@@ -91,7 +91,7 @@ const AllBiodatas = () => {
                     <div className="mb-16">
                         <div className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-100 to-pink-100 px-4 py-2 rounded-full mb-6 shadow-sm border border-rose-200">
                             <Sparkles className="h-4 w-4 text-rose-500" />
-                            <span className="text-rose-700 font-medium">Create Your Profile</span>
+                            <span className="text-rose-700 font-medium">Edit Biodata</span>
                         </div>
                         <h2 className="text-title-lg font-bold text-gray-800 mb-4">
                             Your Perfect Match Awaits
@@ -181,7 +181,7 @@ const AllBiodatas = () => {
                                                 <div className="bg-rose-100 rounded-full p-2 group-hover/btn:bg-rose-200 transition-colors duration-300">
                                                     <PlusCircle className="h-6 w-6 group-hover/btn:rotate-90 transition-transform duration-300" />
                                                 </div>
-                                                <span>Create Your Profile</span>
+                                                <span>Create Biodata</span>
                                             </div>
 
                                             {/* Button Shine Effect */}

@@ -219,7 +219,7 @@ function Header() {
                         className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-rose-50 hover:text-brand-700 rounded-lg mx-2 transition-all duration-200 dark:text-gray-300 dark:hover:text-brand-400 dark:hover:from-brand-900/20 dark:hover:to-rose-900/20"
                       >
                         <UserRoundPen className="mr-3 h-4 w-4" />
-                        Create your Profile
+                        Create Biodata
                         {biodataLoading && (
                           <div className="ml-2 w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                         )}

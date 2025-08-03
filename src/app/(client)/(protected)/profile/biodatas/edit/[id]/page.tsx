@@ -319,10 +319,10 @@ export default function BiodataForm() {
                                 Try Again
                             </Button>
                             <Button variant="bordered" as={Link} href="/profile/biodatas" className="w-full">
-                                Back to Profiles
+                                View Biodatas
                             </Button>
                         </div>
-                    </CardBody>
+                    </CardBody> 
                 </Card>
             </div>
         );
@@ -339,7 +339,7 @@ export default function BiodataForm() {
                         href={isCreateMode ? "/profile/biodatas" : `/profile/biodatas/${biodataId}`}
                         startContent={<ArrowLeft className="w-4 h-4" />}
                     >
-                        {isCreateMode ? "Back to Profiles" : "Back to Profile"}
+                        {isCreateMode ? "View Biodatas" : "View Bioadata"}
                     </Button>
                 </div>
 

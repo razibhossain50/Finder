@@ -1,22 +1,9 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
-import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
-} from "@/icons/index";
+import { BoxCubeIcon,ChevronDownIcon,GridIcon, HorizontaLDots,ListIcon} from "@/icons/index";
 
 type NavItem = {
   name: string;
@@ -31,54 +18,26 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     path: "/admin",
   },
-
-
+  {
+    name: "Users Management",
+    icon: <ListIcon />,
+    subItems: [{ name: "Users", path: "/admin/users" }],
+  },
 ];
 
 const othersItems: NavItem[] = [
 
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/admin/profile",
-  },
 
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/admin/form-elements", pro: false }],
-  },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/admin/basic-tables", pro: false }],
-  },
-  {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/admin/blank", pro: false },
-      { name: "404 Error", path: "/admin/error-404", pro: false },
-    ],
-  },
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/admin/line-chart", pro: false },
-      { name: "Bar Chart", path: "/admin/bar-chart", pro: false },
-    ],
-  },
   {
     icon: <BoxCubeIcon />,
     name: "UI Elements",
     subItems: [
-      { name: "Alerts", path: "/admin/alerts", pro: false },
-      { name: "Avatar", path: "/admin/avatars", pro: false },
-      { name: "Badge", path: "/admin/badge", pro: false },
-      { name: "Buttons", path: "/admin/buttons", pro: false },
-      { name: "Images", path: "/admin/images", pro: false },
-      { name: "Videos", path: "/admin/videos", pro: false },
+      { name: "Data Table", path: "/admin/table", pro: false },
+      {name: "User Profile",path: "/admin/profile"},
+      { name: "Line Chart", path: "/admin/chart/line-chart", pro: false },
+      { name: "Bar Chart", path: "/admin/chart/bar-chart", pro: false },
+      { name: "Blank Page", path: "/admin/blank", pro: false },
+      { name: "404 Error", path: "/admin/error-404", pro: false },
     ],
   }
 ];
