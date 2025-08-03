@@ -6,14 +6,26 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('api/biodatas')
-// @UseGuards(JwtAuthGuard) // Temporarily disabled for debugging
 export class BiodataController {
   constructor(private readonly biodataService: BiodataService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() createBiodataDto: CreateBiodataDto, @CurrentUser() user: any) {
-    const userId = user?.id || 1; // Fallback for testing
-    return this.biodataService.create({ ...createBiodataDto, userId });
+    console.log('=== POST /api/biodatas ===');
+    console.log('User from JWT:', user);
+    console.log('User ID:', user?.id);
+    console.log('Create DTO:', createBiodataDto);
+    
+    if (!user?.id) {
+      console.error('No user ID found in JWT payload');
+      throw new Error('User authentication required');
+    }
+    
+    const dataWithUserId = { ...createBiodataDto, userId: user.id };
+    console.log('Data being sent to service:', dataWithUserId);
+    
+    return this.biodataService.create(dataWithUserId);
   }
 
   @Get()
@@ -30,7 +42,7 @@ export class BiodataController {
     @Query('ageMin') ageMin?: string,
     @Query('ageMax') ageMax?: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     const filters = {
       gender,
@@ -40,17 +52,20 @@ export class BiodataController {
       ageMin: ageMin ? parseInt(ageMin) : undefined,
       ageMax: ageMax ? parseInt(ageMax) : undefined,
       page: page ? parseInt(page) : 1,
-      limit: limit ? parseInt(limit) : 6,
+      limit: limit ? parseInt(limit) : 6
     };
 
     return this.biodataService.searchBiodatas(filters);
   }
 
   @Get('current')
+  @UseGuards(JwtAuthGuard)
   findCurrent(@CurrentUser() user: any) {
     console.log('Current user:', user); // Debug log
-    const userId = user?.id || 1; // Fallback for testing
-    return this.biodataService.findByUserId(userId);
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+    return this.biodataService.findByUserId(user.id);
   }
 
   @Get(':id')
@@ -59,6 +74,7 @@ export class BiodataController {
   }
 
   @Put('current')
+  @UseGuards(JwtAuthGuard)
   async updateCurrent(@Body() updateBiodataDto: UpdateBiodataDto, @CurrentUser() user: any) {
     console.log('=== PUT /api/biodatas/current ===');
     console.log('Update current user:', user);
@@ -66,9 +82,12 @@ export class BiodataController {
     console.log('Update data:', JSON.stringify(updateBiodataDto, null, 2));
     console.log('Update data keys:', Object.keys(updateBiodataDto || {}));
 
-    const userId = user?.id || 1; // Fallback for testing
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+
     try {
-      const result = await this.biodataService.updateByUserId(userId, updateBiodataDto);
+      const result = await this.biodataService.updateByUserId(user.id, updateBiodataDto);
       console.log('Controller: Update successful');
       return result;
     } catch (error) {
@@ -80,18 +99,56 @@ export class BiodataController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBiodataDto: UpdateBiodataDto) {
+  @UseGuards(JwtAuthGuard)
+  async update(@Param('id') id: string, @Body() updateBiodataDto: UpdateBiodataDto, @CurrentUser() user: any) {
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+
+    // Validate ownership
+    const isOwner = await this.biodataService.validateOwnership(+id, user.id);
+    if (!isOwner) {
+      throw new Error('You can only update your own biodata');
+    }
+
     return this.biodataService.update(+id, updateBiodataDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @UseGuards(JwtAuthGuard)
+  async remove(@Param('id') id: string, @CurrentUser() user: any) {
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+
+    // Validate ownership
+    const isOwner = await this.biodataService.validateOwnership(+id, user.id);
+    if (!isOwner) {
+      throw new Error('You can only delete your own biodata');
+    }
+
     return this.biodataService.remove(+id);
   }
 
   // For multi-step form: update step and partial data
   @Put(':id/step/:step')
-  updateStep(@Param('id') id: string, @Param('step') step: string, @Body() partialData: UpdateBiodataDto) {
+  @UseGuards(JwtAuthGuard)
+  async updateStep(
+    @Param('id') id: string,
+    @Param('step') step: string,
+    @Body() partialData: UpdateBiodataDto,
+    @CurrentUser() user: any
+  ) {
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+
+    // Validate ownership
+    const isOwner = await this.biodataService.validateOwnership(+id, user.id);
+    if (!isOwner) {
+      throw new Error('You can only update your own biodata');
+    }
+
     return this.biodataService.updateStep(+id, +step, partialData);
   }
 }

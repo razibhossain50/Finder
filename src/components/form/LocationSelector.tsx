@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, X, ChevronDown } from "lucide-react";
+import { ChevronLeft, X, ChevronRight, ChevronDown } from "lucide-react";
 import { geoLocation } from "../../api/geo-location";
 
 type SelectionPath = {
@@ -13,61 +13,124 @@ type Level = "country" | "division" | "district" | "upazila";
 
 interface LocationSelectorProps {
   onLocationSelect: (location: string) => void;
+  value?: string;
 }
 
-export function LocationSelector({ onLocationSelect }: LocationSelectorProps) {
+export function LocationSelector({ onLocationSelect, value }: LocationSelectorProps) {
   const [currentLevel, setCurrentLevel] = useState<Level>("country");
   const [selectionPath, setSelectionPath] = useState<SelectionPath>({});
-  const [isAnimating, setIsAnimating] = useState(false);
   const [locationSelection, setLocationSelection] = useState<string>("");
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
-  
+
   const locationContainerRef = useRef<HTMLDivElement>(null);
   const data = geoLocation[0];
+
+  // Sync internal state with external value prop
+  useEffect(() => {
+    if (value !== undefined) {
+      setLocationSelection(value);
+    }
+  }, [value]);
+
+  // Check if an option has children (should show arrow)
+  const hasChildren = (value: string, level: Level) => {
+    switch (level) {
+      case "country":
+        return true; // Country always has divisions
+      case "division":
+        if (value === "All Divisions") return false; // "All Divisions" doesn't have children
+        const division = data.divisions.find((div) => div.name === value);
+        return division && division.districts && division.districts.length > 0;
+      case "district":
+        if (value === "All Districts") return false; // "All Districts" doesn't have children
+        const selectedDivision = data.divisions.find((div) => div.name === selectionPath.division);
+        const district = selectedDivision?.districts?.find((dist) => dist.name === value);
+        return district && district.upazilas && district.upazilas.length > 0;
+      case "upazila":
+        if (value === "All Upazilas") return false;
+        return false; // Upazilas are the final level, no children
+      default:
+        return false;
+    }
+  };
 
   // Get current location options based on level and selection path
   const getCurrentLocationOptions = () => {
     switch (currentLevel) {
       case "country":
-        return [{ name: data.country, value: data.country }];
+        return [{ name: data.country, value: data.country, hasChildren: hasChildren(data.country, "country") }];
       case "division":
-        return data.divisions.map((div) => ({ name: div.name, value: div.name }));
+        return data.divisions.map((div) => ({
+          name: div.name,
+          value: div.name,
+          hasChildren: hasChildren(div.name, "division")
+        }));
       case "district":
         const selectedDivision = data.divisions.find((div) => div.name === selectionPath.division);
-        return selectedDivision?.districts.map((dist) => ({ name: dist.name, value: dist.name })) || [];
+        if (!selectedDivision || !selectedDivision.districts) return [];
+
+        return selectedDivision.districts.map((dist) => ({
+          name: dist.name,
+          value: dist.name,
+          hasChildren: hasChildren(dist.name, "district")
+        }));
       case "upazila":
         const division = data.divisions.find((div) => div.name === selectionPath.division);
-        const selectedDistrict = division?.districts.find((dist) => dist.name === selectionPath.district);
-        return selectedDistrict?.upazilas.map((upazila) => ({ name: upazila, value: upazila })) || [];
+        const selectedDistrict = division?.districts?.find((dist) => dist.name === selectionPath.district);
+        return selectedDistrict?.upazilas.map((upazila) => ({
+          name: upazila,
+          value: upazila,
+          hasChildren: false
+        })) || [];
       default:
         return [];
     }
   };
 
   // Handle location selection
-  const handleLocationSelection = async (value: string) => {
-    if (isAnimating) return;
-
-    setIsAnimating(true);
+  const handleLocationSelection = (value: string) => {
     const newPath = { ...selectionPath };
 
     switch (currentLevel) {
       case "country":
         newPath.country = value;
         setSelectionPath(newPath);
-        await animateToLevel("division");
+        setCurrentLevel("division");
         break;
       case "division":
+        if (value === "All Divisions") {
+          // Close dropdown and set selection
+          setLocationSelection("All Divisions");
+          onLocationSelect("All Divisions");
+          setIsLocationDropdownOpen(false);
+          return;
+        }
         newPath.division = value;
         setSelectionPath(newPath);
-        await animateToLevel("district");
+        setCurrentLevel("district");
         break;
       case "district":
+        if (value === "All Districts") {
+          // Close dropdown and set selection
+          const fullPath = `${newPath.country} > ${newPath.division} > All Districts`;
+          setLocationSelection(fullPath);
+          onLocationSelect("All Districts");
+          setIsLocationDropdownOpen(false);
+          return;
+        }
         newPath.district = value;
         setSelectionPath(newPath);
-        await animateToLevel("upazila");
+        setCurrentLevel("upazila");
         break;
       case "upazila":
+        if (value === "All Upazilas") {
+          // Close dropdown and set selection
+          const fullPath = `${newPath.country} > ${newPath.division} > ${newPath.district} > All Upazilas`;
+          setLocationSelection(fullPath);
+          onLocationSelect("All Upazilas");
+          setIsLocationDropdownOpen(false);
+          return;
+        }
         newPath.upazila = value;
         setSelectionPath(newPath);
         const fullPath = `${newPath.country} > ${newPath.division} > ${newPath.district} > ${value}`;
@@ -76,26 +139,15 @@ export function LocationSelector({ onLocationSelect }: LocationSelectorProps) {
         setIsLocationDropdownOpen(false);
         break;
     }
-
-    setIsAnimating(false);
-  };
-
-  // Animate to a specific level
-  const animateToLevel = async (level: Level) => {
-    setCurrentLevel(level);
-    await new Promise((resolve) => setTimeout(resolve, 300));
   };
 
   // Reset location selection
-  const resetLocation = async () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
+  const resetLocation = () => {
     setSelectionPath({});
     setLocationSelection("");
     onLocationSelect("");
+    setCurrentLevel("country");
     setIsLocationDropdownOpen(true);
-    await animateToLevel("country");
-    setIsAnimating(false);
   };
 
   const handleToggleDropdown = () => {
@@ -135,7 +187,7 @@ export function LocationSelector({ onLocationSelect }: LocationSelectorProps) {
           className="w-full px-3 py-2 rounded-[14px] h-12 bg-[#f4f4f5] flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
           onClick={handleToggleDropdown}
         >
-            <span className="text-sm truncate">{locationSelection}</span>
+          <span className="text-sm truncate">{locationSelection}</span>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -157,7 +209,7 @@ export function LocationSelector({ onLocationSelect }: LocationSelectorProps) {
             className="w-full px-3 py-2 rounded-[14px] h-12 bg-[#f4f4f5] flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
           >
             <span className="text-sm text-muted-foreground">Select location</span>
-            <ChevronDown size={16}/>
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </div>
 
           {isLocationDropdownOpen && (
@@ -192,7 +244,9 @@ export function LocationSelector({ onLocationSelect }: LocationSelectorProps) {
                     className="w-full p-2 text-left rounded-md hover:bg-muted transition-colors flex items-center justify-between"
                   >
                     <span className="text-sm">{option.name}</span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    {option.hasChildren && (
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    )}
                   </button>
                 ))}
               </div>

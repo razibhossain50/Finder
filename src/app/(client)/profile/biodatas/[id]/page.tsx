@@ -31,6 +31,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useRegularAuth } from "@/context/RegularAuthContext";
 
 interface BiodataProfile {
   id: number;
@@ -114,6 +115,21 @@ export default function Profile() {
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
   const biodataId = params.id as string;
+  const { user, isAuthenticated } = useRegularAuth();
+
+  // Check if the current user can edit this profile
+  const canEditProfile = () => {
+    console.log('🔍 Debug canEditProfile:', {
+      isAuthenticated,
+      user,
+      profile: profile ? { id: profile.id, userId: profile.userId } : null,
+      userIdMatch: profile && user ? profile.userId === user.id : false
+    });
+
+    if (!isAuthenticated || !user || !profile) return false;
+    // User can edit if they own this profile (userId matches)
+    return profile.userId === user.id;
+  };
 
   const fetchProfile = useCallback(async () => {
     if (!biodataId) return;
@@ -389,17 +405,20 @@ export default function Profile() {
 
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 hover:shadow-md"
-              asChild
-            >
-              <Link href={`/profile/biodatas/edit/${biodataId}`}>
-                <Edit className="h-4 w-4" />
-                Edit Profile
-              </Link>
-            </Button>
+
+            {canEditProfile() && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 hover:shadow-md"
+                asChild
+              >
+                <Link href={`/profile/biodatas/edit/${biodataId}`}>
+                  <Edit className="h-4 w-4" />
+                  Edit Profile
+                </Link>
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

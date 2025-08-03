@@ -76,11 +76,8 @@ const AllBiodatas = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50">
-            <div className="container max-w-7xl mx-auto p-4 space-y-8">
-                {/* BiodataSearch Component handles everything: header, search, results, pagination */}
+        <div className="-mt-20">
                 <BiodataSearch />
-            </div>
             <section className="py-24 px-4 bg-gradient-to-br from-white via-rose-50/50 to-pink-50/50 relative overflow-hidden">
                 {/* Subtle Background Elements */}
                 <div className="absolute inset-0 opacity-10">
@@ -218,7 +215,7 @@ const AllBiodatas = () => {
                 <div className="max-w-7xl mx-auto relative p-4 z-10">
                     <div className="text-center mb-16">
                         <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full mb-6 shadow-sm border border-rose-200">
-                        <Sparkles className="h-4 w-4 text-rose-500" />
+                            <Sparkles className="h-4 w-4 text-rose-500" />
                             <span className="text-rose-700 font-medium">Our Success</span>
                         </div>
                         <h2 className="text-title-lg font-bold text-gray-800 mb-4">

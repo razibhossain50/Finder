@@ -41,9 +41,13 @@ function Header() {
 
         if (response.ok) {
           const data = await response.json();
+          console.log('🔍 Debug /api/biodatas/current response:', data);
           if (data && data.id) {
             setBiodataId(data.id);
+            console.log('🔍 Setting biodataId to:', data.id);
           }
+        } else {
+          console.log('🔍 /api/biodatas/current failed:', response.status, response.statusText);
         }
       } catch (error) {
         console.error('Error fetching biodata ID:', error);
@@ -71,9 +75,9 @@ function Header() {
 
   return (
     <header>
-      <nav className="bg-white/95 ">
+      <nav className="  bg-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-20">
             {/* Left section */}
             <div className="flex items-center">
               {/* Mobile menu button */}
@@ -248,7 +252,7 @@ function Header() {
                       </Link>
                       <Link
                         href="/auth/signup"
-                        className="flex items-center px-4 py-2.5 text-sm text-rose-500 hover:text-white hover:bg-rose-500 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 rounded-lg mx-2 transition-all duration-200 shadow-md hover:shadow-lg"
+                        className="flex items-center px-4 py-2.5 text-sm text-rose-500 hover:text-white hover:bg-rose-500 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 rounded-lg mx-2 transition-all duration-200"
                       >
                         <UserPlus className="mr-3 h-4 w-4" />
                         Sign Up

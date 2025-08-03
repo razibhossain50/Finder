@@ -9,12 +9,23 @@ import { UpdateBiodataDto } from './dto/update-biodata.dto';
 export class BiodataService {
   constructor(
     @InjectRepository(Biodata)
-    private biodataRepository: Repository<Biodata>,
+    private biodataRepository: Repository<Biodata>
   ) {}
 
-  create(createBiodataDto: CreateBiodataDto & { userId: number }) {
+  async create(createBiodataDto: CreateBiodataDto & { userId: number }) {
+    console.log('=== BiodataService.create ===');
+    console.log('Input DTO:', createBiodataDto);
+    console.log('User ID in DTO:', createBiodataDto.userId);
+
     const biodata = this.biodataRepository.create(createBiodataDto);
-    return this.biodataRepository.save(biodata);
+    console.log('Created biodata entity:', biodata);
+    console.log('Biodata userId before save:', biodata.userId);
+
+    const savedBiodata = await this.biodataRepository.save(biodata);
+    console.log('Saved biodata:', savedBiodata);
+    console.log('Saved biodata userId:', savedBiodata.userId);
+
+    return savedBiodata;
   }
 
   findAll() {
@@ -26,7 +37,7 @@ export class BiodataService {
   }
 
   findByUserId(userId: number) {
-    return this.biodataRepository.findOne({ 
+    return this.biodataRepository.findOne({
       where: { userId },
       relations: ['user']
     });
@@ -41,11 +52,11 @@ export class BiodataService {
       console.log('=== updateByUserId called ===');
       console.log('userId:', userId);
       console.log('updateBiodataDto:', JSON.stringify(updateBiodataDto, null, 2));
-      
+
       // First check if user has existing biodata
       const existingBiodata = await this.findByUserId(userId);
       console.log('existingBiodata found:', !!existingBiodata);
-      
+
       if (existingBiodata) {
         // Update existing biodata
         console.log('Updating existing biodata with ID:', existingBiodata.id);
@@ -68,6 +79,12 @@ export class BiodataService {
     }
   }
 
+  // Validate that user owns the biodata before allowing operations
+  async validateOwnership(biodataId: number, userId: number): Promise<boolean> {
+    const biodata = await this.findOne(biodataId);
+    return !!(biodata && biodata.userId && biodata.userId === userId);
+  }
+
   remove(id: number) {
     return this.biodataRepository.delete(id);
   }
@@ -86,19 +103,11 @@ export class BiodataService {
       console.log('=== searchBiodatas called ===');
       console.log('filters:', JSON.stringify(filters, null, 2));
 
-      const {
-        gender,
-        maritalStatus,
-        location,
-        biodataNumber,
-        ageMin,
-        ageMax,
-        page = 1,
-        limit = 6
-      } = filters;
+      const { gender, maritalStatus, location, biodataNumber, ageMin, ageMax, page = 1, limit = 6 } = filters;
 
       // Build query with filters
-      const queryBuilder = this.biodataRepository.createQueryBuilder('biodata')
+      const queryBuilder = this.biodataRepository
+        .createQueryBuilder('biodata')
         .leftJoinAndSelect('biodata.user', 'user')
         .where('biodata.status = :status', { status: 'completed' }); // Only show completed biodatas
 
@@ -153,8 +162,8 @@ export class BiodataService {
           page,
           limit,
           total: totalCount,
-          totalPages: Math.ceil(totalCount / limit),
-        },
+          totalPages: Math.ceil(totalCount / limit)
+        }
       };
     } catch (error) {
       console.error('Error in searchBiodatas:', error);

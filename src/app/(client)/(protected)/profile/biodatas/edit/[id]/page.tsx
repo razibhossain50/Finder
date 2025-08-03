@@ -112,48 +112,56 @@ export default function BiodataForm() {
 
     // Mutation for saving step data
     const saveStepMutation = useMutation({
-        mutationFn: async ({ stepData, step }: { stepData: unknown; step: number }) => {
-            if (isCreateMode) {
-                // Create mode - use POST to create new biodata
-                const response = await apiRequest("POST", "/api/biodatas", {
-                    ...stepData,
-                    step,
-                    completedSteps: [step],
-                });
-
-                const result = await response.json();
-                if (!biodataIdRef.current && result.id) {
-                    biodataIdRef.current = result.id;
-                }
-                return result;
-            } else {
-                // Edit mode - use PUT to update existing biodata
-                const currentCompletedSteps = existingBiodata?.completedSteps || [];
-                const updatedCompletedSteps = currentCompletedSteps.includes(step)
-                    ? currentCompletedSteps
-                    : [...currentCompletedSteps, step];
-
-                const response = await apiRequest("PATCH", `/api/biodatas/${biodataId}`, {
-                    ...stepData,
-                    step,
-                    completedSteps: updatedCompletedSteps,
-                });
-
-                return response.json();
+        mutationFn: async ({ stepData, step }: { stepData: Record<string, unknown>; step: number }) => {
+            console.log('=== saveStepMutation called ===');
+            console.log('Step data:', stepData);
+            console.log('Step:', step);
+            console.log('Is create mode:', isCreateMode);
+            console.log('Current biodataIdRef:', biodataIdRef.current);
+            
+            // For both create and edit mode, we use PUT /current to update user's biodata
+            // This endpoint will create if doesn't exist, or update if exists
+            const payload = {
+                ...stepData,
+                step,
+                completedSteps: step === 1 ? [step] : [...(existingBiodata?.completedSteps || []), step].filter((s, i, arr) => arr.indexOf(s) === i), // Add current step to completed steps
+            };
+            console.log('PUT /current payload:', payload);
+            
+            const response = await apiRequest("PUT", "/api/biodatas/current", payload);
+            const result = await response.json();
+            console.log('PUT /current response:', result);
+            
+            // Update biodataIdRef if we got an ID back
+            if (result.id && !biodataIdRef.current) {
+                biodataIdRef.current = result.id;
+                console.log('Updated biodataIdRef to:', result.id);
             }
+            
+            return result;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
+            console.log('=== saveStepMutation SUCCESS ===');
+            console.log('Success data:', data);
+            
             // Invalidate and refetch biodata to update completed steps
             queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
+            
+            // Show success toast
             toast({
                 title: "Progress Saved",
                 description: "Your changes have been saved successfully.",
             });
+            
+            // IMPORTANT: Move to next step on successful save
+            console.log('Moving to next step...');
+            nextStep();
         },
         onError: (error: unknown) => {
+            console.error("saveStepMutation error:", error);
             toast({
                 title: "Save Error",
-                description: error.message || "Failed to save your changes. Please try again.",
+                description: (error as Error)?.message || "Failed to save your changes. Please try again.",
                 variant: "destructive",
             });
         },
@@ -161,31 +169,22 @@ export default function BiodataForm() {
 
     // Final submission mutation
     const submitMutation = useMutation({
-        mutationFn: async (data: unknown) => {
+        mutationFn: async (data: Record<string, unknown>) => {
             console.log("submitMutation.mutationFn called with:", data); // Debug log
-            if (isCreateMode) {
-                console.log("Create mode - sending POST request"); // Debug log
-                // Create mode - use POST to create new biodata
-                const response = await apiRequest("POST", "/api/biodatas", {
-                    ...data,
-                    status: 'completed',
-                    completedSteps: [1, 2, 3, 4, 5], // Mark all steps as completed
-                });
-                const result = await response.json();
-                console.log("Create response:", result); // Debug log
-                return result;
-            } else {
-                console.log("Edit mode - sending PATCH request"); // Debug log
-                // Edit mode - use PUT to update existing biodata
-                const response = await apiRequest("PATCH", `/api/biodatas/${biodataId}`, {
-                    ...data,
-                    status: 'completed',
-                    completedSteps: [1, 2, 3, 4, 5], // Mark all steps as completed
-                });
-                const result = await response.json();
-                console.log("Update response:", result); // Debug log
-                return result;
-            }
+            
+            // For both create and edit mode, use PUT /current for final submission
+            // This ensures the biodata is associated with the current logged-in user
+            const payload = {
+                ...data,
+                status: 'completed',
+                completedSteps: [1, 2, 3, 4, 5], // Mark all steps as completed
+            };
+            console.log("Final PUT /current payload:", payload);
+            
+            const response = await apiRequest("PUT", "/api/biodatas/current", payload);
+            const result = await response.json();
+            console.log("Final submission response:", result); // Debug log
+            return result;
         },
         onSuccess: (data) => {
             console.log("submitMutation.onSuccess called with:", data); // Debug log
@@ -219,19 +218,22 @@ export default function BiodataForm() {
     });
 
     const handleNext = async () => {
+        console.log('=== handleNext called ===');
+        console.log('Current step:', currentStep);
+        
         const isValid = validateCurrentStep();
-        if (!isValid) return;
-
-        // Save current step data
-        try {
-            await saveStepMutation.mutateAsync({
-                stepData: formData,
-                step: currentStep,
-            });
-            nextStep();
-        } catch (error) {
-            // Error is handled by the mutation's onError
+        if (!isValid) {
+            console.log('Validation failed, not proceeding');
+            return;
         }
+
+        console.log('Validation passed, triggering save mutation');
+        
+        // Save current step data - nextStep() will be called in onSuccess callback
+        saveStepMutation.mutate({
+            stepData: formData,
+            step: currentStep,
+        });
     };
 
     const handleSubmit = async () => {
