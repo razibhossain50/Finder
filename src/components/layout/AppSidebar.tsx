@@ -23,6 +23,11 @@ const navItems: NavItem[] = [
     icon: <BoxCubeIcon />,
     subItems: [{ name: "Users", path: "/admin/users" }],
   },
+  {
+    name: "Profile Management",
+    icon: <BoxCubeIcon />,
+    subItems: [{ name: "Biodatas", path: "/admin/biodatas" }],
+  },
 ];
 
 const othersItems: NavItem[] = [

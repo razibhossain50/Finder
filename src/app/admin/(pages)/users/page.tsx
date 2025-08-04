@@ -4,10 +4,9 @@ import type { Selection, ChipProps, SortDescriptor } from "@heroui/react";
 import React from "react";
 import {
     Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Input, Button, DropdownTrigger,
-    Dropdown, DropdownMenu, DropdownItem, Chip, User, Pagination,
+    Dropdown, DropdownMenu, DropdownItem, Chip, User, Pagination, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter
 } from "@heroui/react";
-import { Plus, EllipsisVertical, Search, ChevronDown } from "lucide-react";
-import { api } from "@/lib/api";
+import { Plus, EllipsisVertical, Search, ChevronDown, Trash2 } from "lucide-react";
 
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
     size?: number;
@@ -18,177 +17,147 @@ export function capitalize(s: string) {
 }
 
 
+// Columns based on your database schema
 export const columns = [
-    { name: "ID", uid: "id", sortable: false },
-    { name: "STEP", uid: "step", sortable: false },
-    { name: "USER ID", uid: "userId", sortable: false },
-    { name: "COMPLETED STEPS", uid: "completedSteps", sortable: false },
-    { name: "PARTNER AGE MIN", uid: "partnerAgeMin", sortable: false },
-    { name: "PARTNER AGE MAX", uid: "partnerAgeMax", sortable: false },
-    { name: "SAME AS PERMANENT", uid: "sameAsPermanent", sortable: false },
-    { name: "RELIGION", uid: "religion", sortable: false },
-    { name: "BIODATA TYPE", uid: "biodataType", sortable: false },
-    { name: "MARITAL STATUS", uid: "maritalStatus", sortable: true },
-    { name: "DATE OF BIRTH", uid: "dateOfBirth", sortable: false },
-    { name: "AGE", uid: "age", sortable: false },
-    { name: "HEIGHT", uid: "height", sortable: false },
-    { name: "WEIGHT", uid: "weight", sortable: false },
-    { name: "COMPLEXION", uid: "complexion", sortable: false },
-    { name: "PROFESSION", uid: "profession", sortable: false },
-    { name: "BLOOD GROUP", uid: "bloodGroup", sortable: false },
-    { name: "PERMANENT COUNTRY", uid: "permanentCountry", sortable: false },
-    { name: "PERMANENT DIVISION", uid: "permanentDivision", sortable: false },
-    { name: "PERMANENT ZILLA", uid: "permanentZilla", sortable: false },
-    { name: "PERMANENT UPAZILLA", uid: "permanentUpazilla", sortable: false },
-    { name: "PERMANENT AREA", uid: "permanentArea", sortable: false },
-    { name: "PRESENT COUNTRY", uid: "presentCountry", sortable: false },
-    { name: "PRESENT DIVISION", uid: "presentDivision", sortable: false },
-    { name: "PRESENT ZILLA", uid: "presentZilla", sortable: false },
-    { name: "PRESENT UPAZILLA", uid: "presentUpazilla", sortable: false },
-    { name: "PRESENT AREA", uid: "presentArea", sortable: false },
-    { name: "HEALTH ISSUES", uid: "healthIssues", sortable: false },
-    { name: "EDUCATION MEDIUM", uid: "educationMedium", sortable: false },
-    { name: "HIGHEST EDUCATION", uid: "highestEducation", sortable: false },
-    { name: "INSTITUTE NAME", uid: "instituteName", sortable: false },
-    { name: "SUBJECT", uid: "subject", sortable: false },
-    { name: "PASSING YEAR", uid: "passingYear", sortable: false },
-    { name: "RESULT", uid: "result", sortable: false },
-    { name: "ECONOMIC CONDITION", uid: "economicCondition", sortable: false },
-    { name: "FATHER NAME", uid: "fatherName", sortable: false },
-    { name: "FATHER PROFESSION", uid: "fatherProfession", sortable: false },
-    { name: "FATHER ALIVE", uid: "fatherAlive", sortable: false },
-    { name: "MOTHER NAME", uid: "motherName", sortable: false },
-    { name: "MOTHER PROFESSION", uid: "motherProfession", sortable: false },
-    { name: "MOTHER ALIVE", uid: "motherAlive", sortable: false },
-    { name: "BROTHERS COUNT", uid: "brothersCount", sortable: false },
-    { name: "SISTERS COUNT", uid: "sistersCount", sortable: false },
-    { name: "FAMILY DETAILS", uid: "familyDetails", sortable: false },
-    { name: "PARTNER COMPLEXION", uid: "partnerComplexion", sortable: false },
-    { name: "PARTNER HEIGHT", uid: "partnerHeight", sortable: false },
-    { name: "PARTNER EDUCATION", uid: "partnerEducation", sortable: false },
-    { name: "PARTNER PROFESSION", uid: "partnerProfession", sortable: false },
-    { name: "PARTNER LOCATION", uid: "partnerLocation", sortable: false },
-    { name: "PARTNER DETAILS", uid: "partnerDetails", sortable: false },
-    { name: "FULL NAME", uid: "fullName", sortable: false },
-    { name: "PROFILE PICTURE", uid: "profilePicture", sortable: false },
-    { name: "EMAIL", uid: "email", sortable: false },
-    { name: "GUARDIAN MOBILE", uid: "guardianMobile", sortable: false },
-    { name: "OWN MOBILE", uid: "ownMobile", sortable: false },
-    { name: "STATUS", uid: "status", sortable: false },
-    { name: "ACTIONS", uid: "actions", sortable: false },
+    { name: "ID", uid: "id", sortable: true },
+    { name: "FULL NAME", uid: "fullName", sortable: true },
+    { name: "EMAIL", uid: "email", sortable: true },
+    { name: "ROLE", uid: "role", sortable: true },
+    { name: "CREATED AT", uid: "createdAt", sortable: true },
+    { name: "UPDATED AT", uid: "updatedAt", sortable: true },
+    { name: "ACTIONS", uid: "actions" },
 ];
 
-export const statusOptions = [
-    { name: "Single", uid: "single" },
-    { name: "Married", uid: "married" },
-    { name: "Divorced", uid: "divorced" },
-    { name: "Widowed", uid: "widowed" },
+// Role options based on your database
+export const roleOptions = [
+    { name: "User", uid: "user" },
+    { name: "Admin", uid: "admin" },
+    { name: "Superadmin", uid: "superadmin" },
 ];
 
-interface Biodata {
+// User interface based on your database schema
+interface DatabaseUser {
     id: number;
-    step: number;
-    userId: number | null;
-    completedSteps: number | null;
-    partnerAgeMin: number;
-    partnerAgeMax: number;
-    sameAsPermanent: boolean;
-    religion: string;
-    biodataType: string;
-    maritalStatus: string;
-    dateOfBirth: string;
-    age: number;
-    height: string;
-    weight: number;
-    complexion: string;
-    profession: string;
-    bloodGroup: string;
-    permanentCountry: string;
-    permanentDivision: string;
-    permanentZilla: string;
-    permanentUpazilla: string;
-    permanentArea: string;
-    presentCountry: string;
-    presentDivision: string;
-    presentZilla: string;
-    presentUpazilla: string;
-    presentArea: string;
-    healthIssues: string;
-    educationMedium: string;
-    highestEducation: string;
-    instituteName: string;
-    subject: string;
-    passingYear: number;
-    result: string;
-    economicCondition: string;
-    fatherName: string;
-    fatherProfession: string;
-    fatherAlive: string;
-    motherName: string;
-    motherProfession: string;
-    motherAlive: string;
-    brothersCount: number;
-    sistersCount: number;
-    familyDetails: string;
-    partnerComplexion: string;
-    partnerHeight: string;
-    partnerEducation: string;
-    partnerProfession: string;
-    partnerLocation: string;
-    partnerDetails: string;
-    fullName: string;
-    profilePicture: string | null;
     email: string;
-    guardianMobile: string;
-    ownMobile: string;
-    status: string | null;
+    password: string; // Won't display this
+    role: string;
+    createdAt: string;
+    updatedAt: string;
+    fullName: string | null;
 }
 
-const statusColorMap: Record<string, ChipProps["color"]> = {
-    single: "primary",
-    married: "success",
-    divorced: "warning",
-    widowed: "danger",
+const roleColorMap: Record<string, ChipProps["color"]> = {
+    user: "default",
+    admin: "primary",
+    superadmin: "success",
 };
 
-
-
 export default function Users() {
-    const [biodatas, setBiodatas] = React.useState<Biodata[]>([]);
+    const [users, setUsers] = React.useState<DatabaseUser[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
     const [filterValue, setFilterValue] = React.useState("");
     const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
-    const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
+    const [roleFilter, setRoleFilter] = React.useState<Selection>("all");
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
     const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
-        column: "maritalStatus",
+        column: "id",
         direction: "ascending",
     });
     const [page, setPage] = React.useState(1);
 
-    // Fetch biodatas from API
+    // Delete confirmation modal state
+    const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
+    const [userToDelete, setUserToDelete] = React.useState<DatabaseUser | null>(null);
+    const [isDeleting, setIsDeleting] = React.useState(false);
+
+    // Fetch all users from API
     React.useEffect(() => {
-        const fetchBiodatas = async () => {
+        const fetchUsers = async () => {
             try {
                 setLoading(true);
-                const response = await api.biodata.get();
+                // Try admin_access_token first, then fall back to access_token
+                const adminToken = localStorage.getItem('admin_access_token');
+                const userToken = localStorage.getItem('access_token');
+                const token = adminToken || userToken;
+
+                if (!token) {
+                    setError('No authentication token found. Please login as admin.');
+                    setLoading(false);
+                    return;
+                }
+
+                console.log('Fetching users with token:', token ? 'Token found' : 'No token');
+
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    }
+                });
+
+                console.log('Users API response status:', response.status);
+
                 if (response.ok) {
                     const data = await response.json();
-                    setBiodatas(data);
+                    setUsers(data);
                 } else {
-                    setError('Failed to fetch biodatas');
+                    const errorText = await response.text();
+                    console.error('Users API error:', errorText);
+                    setError(`Failed to fetch users - ${response.status}: ${response.statusText}`);
                 }
             } catch (err) {
-                setError('Error fetching biodatas');
-                console.error('Error fetching biodatas:', err);
+                setError('Error fetching users');
+                console.error('Error fetching users:', err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchBiodatas();
+        fetchUsers();
     }, []);
+
+    // Handle user deletion
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
+
+        try {
+            setIsDeleting(true);
+            // Try admin_access_token first, then fall back to access_token
+            const adminToken = localStorage.getItem('admin_access_token');
+            const userToken = localStorage.getItem('access_token');
+            const token = adminToken || userToken;
+
+            if (!token) {
+                console.error('No authentication token found');
+                return;
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/${userToDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                // Remove user from local state
+                setUsers(prev => prev.filter(user => user.id !== userToDelete.id));
+                setDeleteModalOpen(false);
+                setUserToDelete(null);
+            } else {
+                const errorText = await response.text();
+                console.error('Failed to delete user:', response.status, errorText);
+                alert('Failed to delete user. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            alert('Error deleting user. Please try again.');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     const hasSearchFilter = Boolean(filterValue);
 
@@ -197,21 +166,22 @@ export default function Users() {
     }, []);
 
     const filteredItems = React.useMemo(() => {
-        let filteredBiodatas = [...biodatas];
+        let filteredUsers = [...users];
 
         if (hasSearchFilter) {
-            filteredBiodatas = filteredBiodatas.filter((biodata) =>
-                biodata.fullName.toLowerCase().includes(filterValue.toLowerCase()),
+            filteredUsers = filteredUsers.filter((user) =>
+                (user.fullName?.toLowerCase().includes(filterValue.toLowerCase()) || false) ||
+                user.email.toLowerCase().includes(filterValue.toLowerCase())
             );
         }
-        if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
-            filteredBiodatas = filteredBiodatas.filter((biodata) =>
-                Array.from(statusFilter).includes(biodata.maritalStatus.toLowerCase()),
+        if (roleFilter !== "all" && Array.from(roleFilter).length !== roleOptions.length) {
+            filteredUsers = filteredUsers.filter((user) =>
+                Array.from(roleFilter).includes(user.role),
             );
         }
 
-        return filteredBiodatas;
-    }, [biodatas, filterValue, hasSearchFilter, statusFilter]);
+        return filteredUsers;
+    }, [users, filterValue, roleFilter, hasSearchFilter]);
 
     const pages = Math.ceil(filteredItems.length / rowsPerPage) || 1;
 
@@ -223,45 +193,69 @@ export default function Users() {
     }, [page, filteredItems, rowsPerPage]);
 
     const sortedItems = React.useMemo(() => {
-        return [...items].sort((a: Biodata, b: Biodata) => {
-            // Only allow sorting on maritalStatus column
-            if (sortDescriptor.column !== "maritalStatus") {
-                return 0;
-            }
+        return [...items].sort((a: DatabaseUser, b: DatabaseUser) => {
+            let first: any = a[sortDescriptor.column as keyof DatabaseUser];
+            let second: unknown = b[sortDescriptor.column as keyof DatabaseUser];
 
-            const first = a.maritalStatus.toLowerCase();
-            const second = b.maritalStatus.toLowerCase();
+            // Handle null values
+            if (first === null) first = "";
+            if (second === null) second = "";
+
+            // Convert to string for comparison if needed
+            if (typeof first === 'string') first = first.toLowerCase();
+            if (typeof second === 'string') second = second.toLowerCase();
+
             const cmp = first < second ? -1 : first > second ? 1 : 0;
 
             return sortDescriptor.direction === "descending" ? -cmp : cmp;
         });
     }, [sortDescriptor, items]);
 
-    const renderCell = React.useCallback((biodata: Biodata, columnKey: React.Key) => {
-        const cellValue = biodata[columnKey as keyof Biodata];
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const renderCell = React.useCallback((user: DatabaseUser, columnKey: React.Key) => {
+        const cellValue = user[columnKey as keyof DatabaseUser];
 
         switch (columnKey) {
             case "fullName":
                 return (
-                        <div>{biodata.fullName}</div>
+                    <User
+                        avatarProps={{
+                            radius: "lg",
+                            src: `https://i.pravatar.cc/150?u=${user.email}`,
+                            name: user.fullName || user.email.charAt(0).toUpperCase()
+                        }}
+                        description={user.email}
+                        name={user.fullName || "No name"}
+                    >
+                        {user.email}
+                    </User>
                 );
-            case "biodataType":
-                return (
-                    <div className="flex flex-col">
-                        <p className="text-bold text-small capitalize">{cellValue}</p>
-                        <p className="text-bold text-tiny capitalize text-default-400">{biodata.religion}</p>
-                    </div>
-                );
-            case "maritalStatus":
+            case "role":
                 return (
                     <Chip
                         className="capitalize"
-                        color={statusColorMap[biodata.maritalStatus.toLowerCase()] || "default"}
+                        color={roleColorMap[user.role] || "default"}
                         size="sm"
                         variant="flat"
                     >
-                        {cellValue}
+                        {user.role}
                     </Chip>
+                );
+            case "createdAt":
+            case "updatedAt":
+                return (
+                    <span className="text-small">
+                        {formatDate(cellValue as string)}
+                    </span>
                 );
             case "actions":
                 return (
@@ -272,10 +266,22 @@ export default function Users() {
                                     <EllipsisVertical className="text-default-300" />
                                 </Button>
                             </DropdownTrigger>
-                            <DropdownMenu>
+                            <DropdownMenu onAction={(key) => {
+                                if (key === "delete") {
+                                    setUserToDelete(user);
+                                    setDeleteModalOpen(true);
+                                }
+                            }}>
                                 <DropdownItem key="view">View</DropdownItem>
                                 <DropdownItem key="edit">Edit</DropdownItem>
-                                <DropdownItem key="delete">Delete</DropdownItem>
+                                <DropdownItem
+                                    key="delete"
+                                    className="text-danger"
+                                    color="danger"
+                                    startContent={<Trash2 className="w-4 h-4" />}
+                                >
+                                    Delete
+                                </DropdownItem>
                             </DropdownMenu>
                         </Dropdown>
                     </div>
@@ -323,7 +329,7 @@ export default function Users() {
                     <Input
                         isClearable
                         className="w-full sm:max-w-[44%]"
-                        placeholder="Search by name..."
+                        placeholder="Search by name or email..."
                         startContent={<Search />}
                         value={filterValue}
                         onClear={() => onClear()}
@@ -333,20 +339,20 @@ export default function Users() {
                         <Dropdown>
                             <DropdownTrigger className="hidden sm:flex">
                                 <Button endContent={<ChevronDown className="text-small" />} variant="flat">
-                                    Marital Status
+                                    Role
                                 </Button>
                             </DropdownTrigger>
                             <DropdownMenu
                                 disallowEmptySelection
-                                aria-label="Table Columns"
+                                aria-label="Role Filter"
                                 closeOnSelect={false}
-                                selectedKeys={statusFilter}
+                                selectedKeys={roleFilter}
                                 selectionMode="multiple"
-                                onSelectionChange={setStatusFilter}
+                                onSelectionChange={setRoleFilter}
                             >
-                                {statusOptions.map((status) => (
-                                    <DropdownItem key={status.uid} className="capitalize">
-                                        {capitalize(status.name)}
+                                {roleOptions.map((role) => (
+                                    <DropdownItem key={role.uid} className="capitalize">
+                                        {capitalize(role.name)}
                                     </DropdownItem>
                                 ))}
                             </DropdownMenu>
@@ -358,7 +364,7 @@ export default function Users() {
                     </div>
                 </div>
                 <div className="flex justify-between items-center">
-                    <span className="text-default-400 text-small">Total {biodatas.length} biodatas</span>
+                    <span className="text-default-400 text-small">Total {users.length} users</span>
                     <label className="flex items-center text-default-400 text-small">
                         Rows per page:
                         <select
@@ -373,7 +379,7 @@ export default function Users() {
                 </div>
             </div>
         );
-    }, [filterValue, onSearchChange, statusFilter, biodatas.length, onRowsPerPageChange, onClear]);
+    }, [filterValue, roleFilter, onSearchChange, onRowsPerPageChange, users.length, onClear]);
 
     const bottomContent = React.useMemo(() => {
         return (
@@ -407,7 +413,7 @@ export default function Users() {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="text-lg">Loading biodatas...</div>
+                <div className="text-lg">Loading users...</div>
             </div>
         );
     }
@@ -421,40 +427,102 @@ export default function Users() {
     }
 
     return (
-        <Table
-            isHeaderSticky
-            aria-label="Example table with custom cells, pagination and sorting"
-            bottomContent={bottomContent}
-            bottomContentPlacement="outside"
-            classNames={{
-                wrapper: "max-h-[382px]",
-            }}
-            selectedKeys={selectedKeys}
-            selectionMode="multiple"
-            sortDescriptor={sortDescriptor}
-            topContent={topContent}
-            topContentPlacement="outside"
-            onSelectionChange={setSelectedKeys}
-            onSortChange={setSortDescriptor}
-        >
-            <TableHeader columns={headerColumns}>
-                {(column) => (
-                    <TableColumn
-                        key={column.uid}
-                        align={column.uid === "actions" ? "center" : "start"}
-                        allowsSorting={column.sortable}
-                    >
-                        {column.name}
-                    </TableColumn>
-                )}
-            </TableHeader>
-            <TableBody emptyContent={"No biodatas found"} items={sortedItems}>
-                {(item) => (
-                    <TableRow key={item.id}>
-                        {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
+        <>
+            <Table
+                isHeaderSticky
+                aria-label="Admin users table with delete functionality"
+                bottomContent={bottomContent}
+                bottomContentPlacement="outside"
+                classNames={{
+                    wrapper: "max-h-[382px]",
+                }}
+                selectedKeys={selectedKeys}
+                selectionMode="multiple"
+                sortDescriptor={sortDescriptor}
+                topContent={topContent}
+                topContentPlacement="outside"
+                onSelectionChange={setSelectedKeys}
+                onSortChange={setSortDescriptor}
+            >
+                <TableHeader columns={headerColumns}>
+                    {(column) => (
+                        <TableColumn
+                            key={column.uid}
+                            align={column.uid === "actions" ? "center" : "start"}
+                            allowsSorting={column.sortable}
+                        >
+                            {column.name}
+                        </TableColumn>
+                    )}
+                </TableHeader>
+                <TableBody emptyContent={"No users found"} items={sortedItems}>
+                    {(item) => (
+                        <TableRow key={item.id}>
+                            {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+
+            {/* Delete Confirmation Modal */}
+            <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)}>
+                <ModalContent>
+                    <ModalHeader>
+                        <h3 className="text-lg font-semibold text-danger">Confirm Delete User</h3>
+                    </ModalHeader>
+                    <ModalBody>
+                        {userToDelete && (
+                            <div className="space-y-4">
+                                <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <div className="space-y-2">
+                                        <div>
+                                            <span className="text-sm text-gray-600">ID:</span>
+                                            <span className="ml-2 font-semibold">{userToDelete.id}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Name:</span>
+                                            <span className="ml-2 font-semibold">{userToDelete.fullName || "No name"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Email:</span>
+                                            <span className="ml-2 font-semibold">{userToDelete.email}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Role:</span>
+                                            <Chip
+                                                className="ml-2"
+                                                color={roleColorMap[userToDelete.role] || "default"}
+                                                size="sm"
+                                                variant="flat"
+                                            >
+                                                {userToDelete.role}
+                                            </Chip>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="light"
+                            onPress={() => setDeleteModalOpen(false)}
+                            isDisabled={isDeleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            color="danger"
+                            onPress={handleDeleteUser}
+                            isLoading={isDeleting}
+                            startContent={!isDeleting ? <Trash2 className="w-4 h-4" /> : null}
+                        >
+                            {isDeleting ? "Deleting..." : "Delete User"}
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+        </>
     );
 }

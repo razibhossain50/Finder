@@ -29,11 +29,17 @@ export class BiodataService {
   }
 
   findAll() {
-    return this.biodataRepository.find();
+    return this.biodataRepository.find({
+      where: { status: 'Active' },
+      relations: ['user']
+    });
   }
 
   findOne(id: number) {
-    return this.biodataRepository.findOneBy({ id });
+    return this.biodataRepository.findOne({
+      where: { id, status: 'Active' },
+      relations: ['user']
+    });
   }
 
   findByUserId(userId: number) {
@@ -41,6 +47,36 @@ export class BiodataService {
       where: { userId },
       relations: ['user']
     });
+  }
+
+  // Internal method to find biodata without status filtering (for admin/owner access)
+  private findOneInternal(id: number) {
+    return this.biodataRepository.findOne({
+      where: { id },
+      relations: ['user']
+    });
+  }
+
+  // Admin method to get all biodatas regardless of status
+  findAllForAdmin() {
+    return this.biodataRepository.find({
+      relations: ['user'],
+      order: { id: 'DESC' }
+    });
+  }
+
+  // Owner method to get their own biodata regardless of status
+  findOneForOwner(id: number) {
+    return this.biodataRepository.findOne({
+      where: { id },
+      relations: ['user']
+    });
+  }
+
+  // Admin method to update biodata status
+  async updateStatus(id: number, status: string) {
+    await this.biodataRepository.update(id, { status });
+    return this.findOneInternal(id);
   }
 
   update(id: number, updateBiodataDto: UpdateBiodataDto) {
@@ -61,7 +97,7 @@ export class BiodataService {
         // Update existing biodata
         console.log('Updating existing biodata with ID:', existingBiodata.id);
         await this.biodataRepository.update(existingBiodata.id, updateBiodataDto);
-        const result = await this.findOne(existingBiodata.id);
+        const result = await this.findOneInternal(existingBiodata.id);
         console.log('Update successful, returning result');
         return result;
       } else {
@@ -81,7 +117,7 @@ export class BiodataService {
 
   // Validate that user owns the biodata before allowing operations
   async validateOwnership(biodataId: number, userId: number): Promise<boolean> {
-    const biodata = await this.findOne(biodataId);
+    const biodata = await this.findOneInternal(biodataId);
     return !!(biodata && biodata.userId && biodata.userId === userId);
   }
 
@@ -109,7 +145,7 @@ export class BiodataService {
       const queryBuilder = this.biodataRepository
         .createQueryBuilder('biodata')
         .leftJoinAndSelect('biodata.user', 'user')
-        .where('biodata.status = :status', { status: 'completed' }); // Only show completed biodatas
+        .where('biodata.status = :status', { status: 'Active' }); // Only show active biodatas
 
       // Filter by biodata number (ID)
       if (biodataNumber) {

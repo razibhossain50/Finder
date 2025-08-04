@@ -12,10 +12,15 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>
-  ) { }
+  ) {}
 
-  findAll() {
-    return this.userRepository.find();
+  async findAll() {
+    const users = await this.userRepository.find();
+    // Return users without passwords
+    return users.map((user) => {
+      const { password: _, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
   }
 
   async create(createUserDto: CreateUserDto) {
@@ -107,5 +112,20 @@ export class UserService {
     await this.userRepository.save(user);
 
     return { message: 'Password updated successfully' };
+  }
+
+  async delete(id: number) {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Prevent deletion of superadmin accounts (optional safety check)
+    if (user.role === 'superadmin') {
+      throw new BadRequestException('Cannot delete superadmin accounts');
+    }
+
+    await this.userRepository.remove(user);
+    return { message: 'User deleted successfully', deletedUser: { id: user.id, email: user.email } };
   }
 }

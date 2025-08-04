@@ -13,8 +13,8 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private jwtService: JwtService,
-  ) { }
+    private jwtService: JwtService
+  ) {}
 
   async signup(createUserDto: CreateUserDto) {
     const { fullName, email, password, confirmPassword } = createUserDto;
@@ -33,11 +33,11 @@ export class AuthService {
       fullName,
       email,
       password: hashedPassword,
-      role: 'user',
+      role: 'user'
     });
 
     const savedUser = await this.usersRepository.save(user);
-    
+
     // Generate JWT token for immediate login after signup
     const payload = { id: savedUser.id, email: savedUser.email, role: savedUser.role };
 
@@ -47,8 +47,8 @@ export class AuthService {
         id: savedUser.id,
         fullName: savedUser.fullName,
         email: savedUser.email,
-        role: savedUser.role,
-      },
+        role: savedUser.role
+      }
     };
   }
 
@@ -68,7 +68,7 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role
     };
   }
 
@@ -91,8 +91,8 @@ export class AuthService {
         id: user.id,
         fullName: fullUser?.fullName || null,
         email: user.email,
-        role: user.role,
-      },
+        role: user.role
+      }
     };
   }
 
@@ -105,10 +105,27 @@ export class AuthService {
         email: 'admin@example.com',
         password: hashedPassword,
         role: 'superadmin',
+        fullName: 'Super Admin'
       });
 
       await this.usersRepository.save(admin);
       console.log('Superadmin created');
+    }
+
+    // Also create a test regular user
+    const testUserExists = await this.usersRepository.findOne({ where: { email: 'user@example.com' } });
+
+    if (!testUserExists) {
+      const hashedPassword = await bcrypt.hash('12345', 10);
+      const testUser = this.usersRepository.create({
+        email: 'user@example.com',
+        password: hashedPassword,
+        role: 'user',
+        fullName: 'Test User'
+      });
+
+      await this.usersRepository.save(testUser);
+      console.log('Test user created');
     }
   }
 }

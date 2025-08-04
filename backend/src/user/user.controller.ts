@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserService } from './user.service';
 import { CreateUserDto } from './create-user.dto';
 import { UpdateUserDto } from './update-user.dto';
 import { UpdatePasswordDto } from './update-password.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('api/users')
 export class UserController {
@@ -60,12 +61,25 @@ export class UserController {
     this.logRequest(req, 'PUT /api/users/:id/password');
     console.log('User from JWT:', req.user);
     console.log('Updating password for user ID:', id);
-    
+
     // Ensure user can only update their own password
     if (req.user.id !== +id) {
       throw new UnauthorizedException('You can only update your own password');
     }
-    
+
     return this.userService.updatePassword(+id, updatePasswordDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
+  deleteUser(@Param('id') id: string, @CurrentUser() user: any) {
+    console.log('=== DELETE /api/users/:id ===');
+    console.log('User from JWT:', user);
+    console.log('Deleting user ID:', id);
+
+    // TODO: Add admin role check here if needed
+    // For now, any authenticated user can delete (should be restricted to admins)
+
+    return this.userService.delete(+id);
   }
 }

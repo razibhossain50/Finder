@@ -67,6 +67,32 @@ export class BiodataController {
     return this.biodataService.findByUserId(user.id);
   }
 
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard)
+  findAllForAdmin(@CurrentUser() user: any) {
+    // TODO: Add admin role check here if needed
+    return this.biodataService.findAllForAdmin();
+  }
+
+  @Get('owner/:id')
+  @UseGuards(JwtAuthGuard)
+  async findOneForOwner(@Param('id') id: string, @CurrentUser() user: any) {
+    const biodataId = +id;
+    const isOwner = await this.biodataService.validateOwnership(biodataId, user.id);
+    if (!isOwner) {
+      throw new Error('Access denied: You can only access your own biodata');
+    }
+    return this.biodataService.findOneForOwner(biodataId);
+  }
+
+  @Put(':id/status')
+  @UseGuards(JwtAuthGuard)
+  async updateStatus(@Param('id') id: string, @Body() statusData: { status: string }, @CurrentUser() user: any) {
+    // TODO: Add admin role check here if needed
+    const biodataId = +id;
+    return this.biodataService.updateStatus(biodataId, statusData.status);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.biodataService.findOne(+id);

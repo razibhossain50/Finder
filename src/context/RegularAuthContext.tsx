@@ -36,7 +36,9 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(JSON.parse(userData))
         } catch (error) {
           console.error('Failed to parse user data', error)
-          logout()
+          // Clear invalid data instead of calling logout
+          localStorage.removeItem('regular_access_token')
+          localStorage.removeItem('regular_user')
         }
       }
       setIsLoading(false)
@@ -87,9 +89,17 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.message || 'Login failed')
       }
 
-      // Only proceed if user role is 'user' (regular user)
+      // Allow users, but redirect admins to admin panel
+      if (data.user.role === 'admin' || data.user.role === 'superadmin') {
+        localStorage.setItem('access_token', data.access_token)
+        localStorage.setItem('user', JSON.stringify(data.user))
+        router.push('/admin')
+        return
+      }
+      
+      // Only proceed with regular user flow for 'user' role
       if (data.user.role !== 'user') {
-        throw new Error('Access denied. Please use admin login.')
+        throw new Error('Access denied. Invalid user role.')
       }
 
       localStorage.setItem('regular_access_token', data.access_token)

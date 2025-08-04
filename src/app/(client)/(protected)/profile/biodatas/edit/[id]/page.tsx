@@ -77,9 +77,9 @@ export default function BiodataForm() {
                     return null; // Error fetching, proceed with create
                 }
             } else {
-                // Edit mode - fetch specific biodata by ID
+                // Edit mode - fetch specific biodata by ID (owner endpoint)
                 try {
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/${biodataId}`, {
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/owner/${biodataId}`, {
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`,
@@ -141,7 +141,7 @@ export default function BiodataForm() {
             // This ensures the biodata is associated with the current logged-in user
             const payload = {
                 ...data,
-                status: 'completed',
+                status: 'Inactive',
                 completedSteps: [1, 2, 3, 4, 5], // Mark all steps as completed
             };
 
