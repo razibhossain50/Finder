@@ -100,8 +100,9 @@ export function LocationSelector({ onLocationSelect, value }: LocationSelectorPr
       case "division":
         if (value === "All Divisions") {
           // Close dropdown and set selection
-          setLocationSelection("All Divisions");
-          onLocationSelect("All Divisions");
+          const fullPath = `${newPath.country} > All Divisions`;
+          setLocationSelection(fullPath);
+          onLocationSelect(fullPath);
           setIsLocationDropdownOpen(false);
           return;
         }
@@ -114,7 +115,7 @@ export function LocationSelector({ onLocationSelect, value }: LocationSelectorPr
           // Close dropdown and set selection
           const fullPath = `${newPath.country} > ${newPath.division} > All Districts`;
           setLocationSelection(fullPath);
-          onLocationSelect("All Districts");
+          onLocationSelect(fullPath);
           setIsLocationDropdownOpen(false);
           return;
         }
@@ -127,7 +128,7 @@ export function LocationSelector({ onLocationSelect, value }: LocationSelectorPr
           // Close dropdown and set selection
           const fullPath = `${newPath.country} > ${newPath.division} > ${newPath.district} > All Upazilas`;
           setLocationSelection(fullPath);
-          onLocationSelect("All Upazilas");
+          onLocationSelect(fullPath);
           setIsLocationDropdownOpen(false);
           return;
         }
@@ -135,7 +136,7 @@ export function LocationSelector({ onLocationSelect, value }: LocationSelectorPr
         setSelectionPath(newPath);
         const fullPath = `${newPath.country} > ${newPath.division} > ${newPath.district} > ${value}`;
         setLocationSelection(fullPath);
-        onLocationSelect(value);
+        onLocationSelect(fullPath);
         setIsLocationDropdownOpen(false);
         break;
     }

@@ -24,10 +24,7 @@ import {
   Edit,
   Plus
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardBody, CardHeader, Button, Chip } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -256,12 +253,14 @@ export default function Profile() {
       <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 p-8">
         <div className="container max-w-6xl mx-auto space-y-8">
           <div className="text-center py-12">
-            <Alert className="max-w-md mx-auto">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-left">
-                {error}
-              </AlertDescription>
-            </Alert>
+            <div className="max-w-md mx-auto p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="text-left text-red-700">
+                  {error}
+                </div>
+              </div>
+            </div>
             <div className="mt-6 space-x-4">
               <Button onClick={handleRetry} variant="default" className="flex items-center gap-2">
                 <RefreshCw className="h-4 w-4" />
@@ -313,7 +312,7 @@ export default function Profile() {
             </div>
 
             {/* Content Section */}
-            <CardContent className="p-8">
+            <CardBody className="p-8">
               <div className="text-center space-y-6">
                 <div className="max-w-2xl mx-auto">
                   <h3 className="text-xl font-semibold text-gray-800 mb-4">
@@ -379,7 +378,7 @@ export default function Profile() {
                   </p>
                 </div>
               </div>
-            </CardContent>
+            </CardBody>
           </Card>
         </div>
       </div>
@@ -460,7 +459,7 @@ export default function Profile() {
             <Heart className="h-6 w-6 text-white animate-pulse delay-1000" />
           </div>
 
-          <CardContent className="relative p-8">
+          <CardBody className="relative p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
               {/* Enhanced Profile Picture */}
               <div className="relative">
@@ -510,19 +509,19 @@ export default function Profile() {
 
                 {/* Enhanced Badges */}
                 <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-colors px-4 py-2 text-sm font-medium">
+                  <Chip className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-colors px-4 py-2 text-sm font-medium">
                     {safeDisplay(profile.biodataType)}
-                  </Badge>
-                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-colors px-4 py-2 text-sm font-medium">
+                  </Chip>
+                  <Chip className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-colors px-4 py-2 text-sm font-medium">
                     {safeDisplay(profile.maritalStatus)}
-                  </Badge>
-                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-colors px-4 py-2 text-sm font-medium">
+                  </Chip>
+                  <Chip className="bg-white/20 text-white border-white/30 hover:bg-white/30 transition-colors px-4 py-2 text-sm font-medium">
                     {safeDisplay(profile.religion)}
-                  </Badge>
+                  </Chip>
                 </div>
               </div>
             </div>
-          </CardContent>
+          </CardBody>
         </Card>
 
         {/* Enhanced Main Content Grid */}
@@ -530,14 +529,14 @@ export default function Profile() {
           {/* Personal Information */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500 rounded-lg group-hover:scale-110 transition-transform">
                   <User className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xl font-bold text-gray-800">Personal Information</span>
-              </CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardBody className="p-6">
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
@@ -595,20 +594,20 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-            </CardContent>
+            </CardBody>
           </Card>
 
           {/* Contact Information */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
             <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-500 rounded-lg group-hover:scale-110 transition-transform">
                   <Phone className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xl font-bold text-gray-800">Contact Information</span>
-              </CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardBody className="p-6">
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
                   <p className="text-sm font-semibold text-gray-600 mb-2">Email Address</p>
@@ -632,20 +631,20 @@ export default function Profile() {
                   </p>
                 </div>
               </div>
-            </CardContent>
+            </CardBody>
           </Card>
 
           {/* Education */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
             <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-500 rounded-lg group-hover:scale-110 transition-transform">
                   <GraduationCap className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xl font-bold text-gray-800">Education Background</span>
-              </CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardBody className="p-6">
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
@@ -674,20 +673,20 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
-            </CardContent>
+            </CardBody>
           </Card>
 
           {/* Professional Information */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
             <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-500 rounded-lg group-hover:scale-110 transition-transform">
                   <Briefcase className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xl font-bold text-gray-800">Professional Details</span>
-              </CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardBody className="p-6">
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
                   <p className="text-sm font-semibold text-gray-600 mb-2">Profession</p>
@@ -701,7 +700,7 @@ export default function Profile() {
                   <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.economicCondition)}</p>
                 </div>
               </div>
-            </CardContent>
+            </CardBody>
           </Card>
         </div>
 
@@ -709,14 +708,14 @@ export default function Profile() {
         <div className="grid gap-8 lg:grid-cols-2">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
             <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-indigo-500 rounded-lg group-hover:scale-110 transition-transform">
                   <Home className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xl font-bold text-gray-800">Permanent Address</span>
-              </CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardBody className="p-6">
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
                   <p className="text-sm font-semibold text-gray-600 mb-2">Area & Upazilla</p>
@@ -740,19 +739,19 @@ export default function Profile() {
                   </p>
                 </div>
               </div>
-            </CardContent>
+            </CardBody>
           </Card>
 
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
             <CardHeader className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="p-2 bg-teal-500 rounded-lg group-hover:scale-110 transition-transform">
                   <MapPin className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xl font-bold text-gray-800">Present Address</span>
-              </CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardBody className="p-6">
               {profile.sameAsPermanent ? (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
                   <Home className="h-8 w-8 text-blue-500 mx-auto mb-3" />
@@ -784,21 +783,21 @@ export default function Profile() {
                   </div>
                 </div>
               )}
-            </CardContent>
+            </CardBody>
           </Card>
         </div>
 
         {/* Enhanced Family Information */}
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
           <CardHeader className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-t-lg">
-            <CardTitle className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <div className="p-2 bg-rose-500 rounded-lg group-hover:scale-110 transition-transform">
                 <Users className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gray-800">Family Information</span>
-            </CardTitle>
+            </div>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardBody className="p-6">
             <div className="grid gap-8 lg:grid-cols-2">
               {/* Parents Information */}
               <div className="space-y-6">
@@ -904,20 +903,20 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-          </CardContent>
+          </CardBody>
         </Card>
 
         {/* Enhanced Partner Preferences */}
         <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
           <CardHeader className="bg-gradient-to-r from-pink-50 via-rose-50 to-red-50 rounded-t-lg">
-            <CardTitle className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg group-hover:scale-110 transition-transform">
                 <Heart className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gray-800">Partner Preferences</span>
-            </CardTitle>
+            </div>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardBody className="p-6">
             <div className="grid gap-8 lg:grid-cols-2">
               {/* Basic Preferences */}
               <div className="space-y-6">
@@ -998,7 +997,7 @@ export default function Profile() {
                 )}
               </div>
             </div>
-          </CardContent>
+          </CardBody>
         </Card>
 
         {/* Call to Action Section */}
@@ -1011,7 +1010,7 @@ export default function Profile() {
             <Heart className="h-8 w-8 text-white animate-pulse delay-1000" />
           </div>
 
-          <CardContent className="relative p-8 text-center">
+          <CardBody className="relative p-8 text-center">
             <div className="max-w-2xl mx-auto space-y-6">
               <div className="space-y-4">
                 <h3 className="text-2xl md:text-3xl font-bold">
@@ -1051,7 +1050,7 @@ export default function Profile() {
                 </span>
               </div>
             </div>
-          </CardContent>
+          </CardBody>
         </Card>
       </div>
     </div>

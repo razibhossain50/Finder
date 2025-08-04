@@ -8,7 +8,6 @@ import { ContactInfoStep } from "@/components/profile/marriage/contact-info-step
 import { PartnerPreferencesStep } from "@/components/profile/marriage/partner-preferences-step";
 import { Button, Card, CardBody, addToast } from "@heroui/react";
 import { ChevronLeft, ChevronRight, Check, ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useRef, useEffect } from "react";
@@ -24,7 +23,6 @@ const steps = [
 ];
 
 export default function BiodataForm() {
-    const { toast } = useToast();
     const queryClient = useQueryClient();
     const router = useRouter();
     const params = useParams();
@@ -71,7 +69,7 @@ export default function BiodataForm() {
                         // If user already has biodata, redirect to edit mode
                         if (data && data.id) {
                             router.replace(`/profile/biodatas/edit/${data.id}`);
-                            return null;
+                            return { redirecting: true };
                         }
                     }
                     return null; // No existing biodata, proceed with create
@@ -102,23 +100,9 @@ export default function BiodataForm() {
         enabled: !!biodataId,
     });
 
-    // Load existing data when component mounts
-    useEffect(() => {
-        if (existingBiodata) {
-            biodataIdRef.current = existingBiodata.id;
-            loadFormData(existingBiodata);
-        }
-    }, [existingBiodata, loadFormData]);
-
     // Mutation for saving step data
     const saveStepMutation = useMutation({
         mutationFn: async ({ stepData, step }: { stepData: Record<string, unknown>; step: number }) => {
-            console.log('=== saveStepMutation called ===');
-            console.log('Step data:', stepData);
-            console.log('Step:', step);
-            console.log('Is create mode:', isCreateMode);
-            console.log('Current biodataIdRef:', biodataIdRef.current);
-            
             // For both create and edit mode, we use PUT /current to update user's biodata
             // This endpoint will create if doesn't exist, or update if exists
             const payload = {
@@ -126,52 +110,33 @@ export default function BiodataForm() {
                 step,
                 completedSteps: step === 1 ? [step] : [...(existingBiodata?.completedSteps || []), step].filter((s, i, arr) => arr.indexOf(s) === i), // Add current step to completed steps
             };
-            console.log('PUT /current payload:', payload);
-            
+
             const response = await apiRequest("PUT", "/api/biodatas/current", payload);
             const result = await response.json();
-            console.log('PUT /current response:', result);
-            
+
             // Update biodataIdRef if we got an ID back
             if (result.id && !biodataIdRef.current) {
                 biodataIdRef.current = result.id;
-                console.log('Updated biodataIdRef to:', result.id);
             }
-            
+
             return result;
         },
         onSuccess: (data) => {
-            console.log('=== saveStepMutation SUCCESS ===');
-            console.log('Success data:', data);
-            
             // Invalidate and refetch biodata to update completed steps
             queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
-            
-            // Show success toast
-            toast({
-                title: "Progress Saved",
-                description: "Your changes have been saved successfully.",
-            });
-            
-            // IMPORTANT: Move to next step on successful save
-            console.log('Moving to next step...');
+
+            // Move to next step on successful save (no toast for step saves)
             nextStep();
         },
         onError: (error: unknown) => {
             console.error("saveStepMutation error:", error);
-            toast({
-                title: "Save Error",
-                description: (error as Error)?.message || "Failed to save your changes. Please try again.",
-                variant: "destructive",
-            });
+            // No toast for step save errors - user will see validation errors in the form
         },
     });
 
     // Final submission mutation
     const submitMutation = useMutation({
         mutationFn: async (data: Record<string, unknown>) => {
-            console.log("submitMutation.mutationFn called with:", data); // Debug log
-            
             // For both create and edit mode, use PUT /current for final submission
             // This ensures the biodata is associated with the current logged-in user
             const payload = {
@@ -179,56 +144,66 @@ export default function BiodataForm() {
                 status: 'completed',
                 completedSteps: [1, 2, 3, 4, 5], // Mark all steps as completed
             };
-            console.log("Final PUT /current payload:", payload);
-            
+
             const response = await apiRequest("PUT", "/api/biodatas/current", payload);
             const result = await response.json();
-            console.log("Final submission response:", result); // Debug log
             return result;
         },
         onSuccess: (data) => {
-            console.log("submitMutation.onSuccess called with:", data); // Debug log
-
             // Show HeroUI success toast
             addToast({
-                title: "Your biodata submitted successfully!",
+                title: "Success!",
+                color:"success",
+                
                 description: isCreateMode
-                    ? "Your biodata has been created and submitted successfully."
-                    : "Your biodata has been updated and submitted successfully.",
-                color: "success",
+                    ? "Your biodata has been created and submitted successfully!"
+                    : "Your biodata has been updated and submitted successfully!",
+                timeout: 4000,
             });
-            console.log("HeroUI success toast displayed"); // Debug log
 
             // Redirect to the biodata view page after successful create/update
             setTimeout(() => {
                 const targetId = isCreateMode ? (data.id || biodataIdRef.current) : biodataId;
-                console.log("Redirecting to:", `/profile/biodatas/${targetId}`); // Debug log
                 router.push(`/profile/biodatas/${targetId}`);
             }, 2000);
         },
         onError: (error: unknown) => {
-            console.error("submitMutation.onError called with:", error); // Debug log
-            toast({
+            console.error("submitMutation.onError called with:", error);
+            const errorMessage = (error as Error)?.message ||
+                (isCreateMode ? "Failed to create biodata. Please try again." : "Failed to update biodata. Please try again.");
+            addToast({
                 title: "Error",
-                description: (error as Error)?.message ||
-                    (isCreateMode ? "Failed to create biodata. Please try again." : "Failed to update biodata. Please try again."),
-                variant: "destructive",
+                description: errorMessage,
             });
         },
     });
 
+    // Load existing data when component mounts
+    useEffect(() => {
+        if (existingBiodata && !existingBiodata.redirecting) {
+            biodataIdRef.current = existingBiodata.id;
+            loadFormData(existingBiodata);
+        }
+    }, [existingBiodata, loadFormData]);
+
+    // Show loading state if we're redirecting
+    if (existingBiodata?.redirecting) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Redirecting to your biodata...</p>
+                </div>
+            </div>
+        );
+    }
+
     const handleNext = async () => {
-        console.log('=== handleNext called ===');
-        console.log('Current step:', currentStep);
-        
         const isValid = validateCurrentStep();
         if (!isValid) {
-            console.log('Validation failed, not proceeding');
             return;
         }
 
-        console.log('Validation passed, triggering save mutation');
-        
         // Save current step data - nextStep() will be called in onSuccess callback
         saveStepMutation.mutate({
             stepData: formData,
@@ -237,18 +212,15 @@ export default function BiodataForm() {
     };
 
     const handleSubmit = async () => {
-        console.log("handleSubmit called"); // Debug log
         const isValid = validateCurrentStep();
         if (!isValid) {
-            console.log("Validation failed"); // Debug log
             return;
         }
 
-        console.log("Starting submission with data:", formData); // Debug log
         try {
             await submitMutation.mutateAsync(formData);
         } catch (error) {
-            console.error("Submission error:", error); // Debug log
+            console.error("Submission error:", error);
             // Error is handled by the mutation's onError
         }
     };
@@ -322,7 +294,7 @@ export default function BiodataForm() {
                                 View Biodatas
                             </Button>
                         </div>
-                    </CardBody> 
+                    </CardBody>
                 </Card>
             </div>
         );

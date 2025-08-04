@@ -1,12 +1,8 @@
 "use client";
 import { useState } from "react";
 import { Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 
 export default function ResetPassword() {
@@ -113,18 +109,18 @@ export default function ResetPassword() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Lock className="h-5 w-5 text-emerald-500" />
-              Change Your Password
-            </CardTitle>
-            <CardDescription>
+              <h3 className="text-lg font-semibold">Change Your Password</h3>
+            </div>
+            <p className="text-sm text-gray-600">
               Enter your current password and choose a new secure password
-            </CardDescription>
+            </p>
           </CardHeader>
-          <CardContent>
+          <CardBody>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="oldPassword">Current Password</Label>
+                <label htmlFor="oldPassword" className="text-sm font-medium">Current Password</label>
                 <div className="relative">
                   <Input
                     id="oldPassword"
@@ -151,7 +147,7 @@ export default function ResetPassword() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <label htmlFor="newPassword" className="text-sm font-medium">New Password</label>
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -178,7 +174,7 @@ export default function ResetPassword() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -204,18 +200,20 @@ export default function ResetPassword() {
                 </div>
               </div>
 
-              <Alert>
-                <Lock className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Password Requirements:</strong>
-                  <ul className="mt-2 space-y-1 text-sm">
-                    <li>• At least 8 characters long</li>
-                    <li>• Include uppercase and lowercase letters</li>
-                    <li>• Include at least one number</li>
-                    <li>• Include at least one special character</li>
-                  </ul>
-                </AlertDescription>
-              </Alert>
+              <div className="p-4 rounded-lg border border-blue-200 bg-blue-50">
+                <div className="flex items-start gap-2">
+                  <Lock className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <div>
+                    <strong className="text-blue-800">Password Requirements:</strong>
+                    <ul className="mt-2 space-y-1 text-sm text-blue-700">
+                      <li>• At least 8 characters long</li>
+                      <li>• Include uppercase and lowercase letters</li>
+                      <li>• Include at least one number</li>
+                      <li>• Include at least one special character</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
 
               <div className="flex gap-4 pt-4">
                 <Button type="submit" className="flex-1" disabled={isLoading}>
@@ -223,7 +221,7 @@ export default function ResetPassword() {
                 </Button>
               </div>
             </form>
-          </CardContent>
+          </CardBody>
         </Card>
 
         <div className="text-center">

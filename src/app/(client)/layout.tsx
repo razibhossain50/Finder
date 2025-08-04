@@ -15,7 +15,7 @@ export default function RootLayout({
     <html lang="en">
       <body className='min-h-screen bg-gray-50'>
         <HeroUIProvider>
-          <ToastProvider />
+          <ToastProvider placement="top-right" />
           <QueryProvider>
             <RegularAuthProvider>
               <Header />

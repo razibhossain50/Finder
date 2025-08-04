@@ -1,4 +1,4 @@
-import { Label } from "@/components/ui/label";
+// No need to import Label, we'll use native HTML label
 import { addressData } from "../../lib/address-data";
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, MapPin } from "lucide-react";
@@ -19,7 +19,7 @@ interface AddressLevel {
 export function CascadingSelect({ type, data, errors, updateData }: CascadingSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentLevel, setCurrentLevel] = useState<'country' | 'division' | 'zilla' | 'upazilla'>('country');
-  const [breadcrumb, setBreadcrumb] = useState<Array<{level: string, value: string, label: string}>>([]);
+  const [breadcrumb, setBreadcrumb] = useState<Array<{ level: string, value: string, label: string }>>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const countryKey = `${type}Country`;
@@ -55,7 +55,7 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
             label: addressData[code].name
           }))
         };
-      
+
       case 'division':
         if (!selectedCountry) return { type: 'division', title: 'Select Division', items: [] };
         return {
@@ -66,7 +66,7 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
             label: addressData[selectedCountry].divisions[code].name
           }))
         };
-      
+
       case 'zilla':
         if (!selectedCountry || !selectedDivision) return { type: 'zilla', title: 'Select Zilla', items: [] };
         return {
@@ -77,7 +77,7 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
             label: addressData[selectedCountry].divisions[selectedDivision].districts[code].name
           }))
         };
-      
+
       case 'upazilla':
         if (!selectedCountry || !selectedDivision || !selectedZilla) return { type: 'upazilla', title: 'Select Upazilla', items: [] };
         return {
@@ -88,15 +88,15 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
             label: name
           }))
         };
-      
+
       default:
         return { type: 'country', title: 'Select Country', items: [] };
     }
   };
 
   const handleSelect = (value: string, label: string) => {
-    const updates: any = {};
-    
+    const updates: unknown = {};
+
     switch (currentLevel) {
       case 'country':
         updates[countryKey] = value;
@@ -106,7 +106,7 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
         setBreadcrumb([{ level: 'country', value, label }]);
         setCurrentLevel('division');
         break;
-      
+
       case 'division':
         updates[divisionKey] = value;
         updates[zillaKey] = "";
@@ -114,14 +114,14 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
         setBreadcrumb(prev => [...prev.slice(0, 1), { level: 'division', value, label }]);
         setCurrentLevel('zilla');
         break;
-      
+
       case 'zilla':
         updates[zillaKey] = value;
         updates[upazillaKey] = "";
         setBreadcrumb(prev => [...prev.slice(0, 2), { level: 'zilla', value, label }]);
         setCurrentLevel('upazilla');
         break;
-      
+
       case 'upazilla':
         updates[upazillaKey] = value;
         setBreadcrumb(prev => [...prev.slice(0, 3), { level: 'upazilla', value, label }]);
@@ -129,14 +129,14 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
         setCurrentLevel('country');
         break;
     }
-    
+
     updateData(updates);
   };
 
   const handleBreadcrumbClick = (index: number) => {
     const newBreadcrumb = breadcrumb.slice(0, index + 1);
     setBreadcrumb(newBreadcrumb);
-    
+
     const levels = ['country', 'division', 'zilla', 'upazilla'];
     const nextLevel = levels[index + 1] as 'country' | 'division' | 'zilla' | 'upazilla';
     setCurrentLevel(nextLevel || 'country');
@@ -159,7 +159,7 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
     if (selectedDivision) parts.push(addressData[selectedCountry]?.divisions[selectedDivision]?.name);
     if (selectedZilla) parts.push(addressData[selectedCountry]?.divisions[selectedDivision]?.districts[selectedZilla]?.name);
     if (selectedUpazilla) parts.push(selectedUpazilla);
-    
+
     return parts.length > 0 ? parts.join(' → ') : '';
   };
 
@@ -167,11 +167,11 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
 
   return (
     <div className="space-y-2" ref={dropdownRef}>
-      <Label>
-        {type === "permanent" ? "Permanent" : "Present"} Address 
+      <label className="text-sm font-medium">
+        {type === "permanent" ? "Permanent" : "Present"} Address
         <span className="text-red-500">*</span>
-      </Label>
-      
+      </label>
+
       {/* Custom Dropdown */}
       <div className="relative">
         <button

@@ -7,7 +7,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('api/biodatas')
 export class BiodataController {
-  constructor(private readonly biodataService: BiodataService) {}
+  constructor(private readonly biodataService: BiodataService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -16,15 +16,15 @@ export class BiodataController {
     console.log('User from JWT:', user);
     console.log('User ID:', user?.id);
     console.log('Create DTO:', createBiodataDto);
-    
+
     if (!user?.id) {
       console.error('No user ID found in JWT payload');
       throw new Error('User authentication required');
     }
-    
+
     const dataWithUserId = { ...createBiodataDto, userId: user.id };
     console.log('Data being sent to service:', dataWithUserId);
-    
+
     return this.biodataService.create(dataWithUserId);
   }
 
@@ -61,7 +61,6 @@ export class BiodataController {
   @Get('current')
   @UseGuards(JwtAuthGuard)
   findCurrent(@CurrentUser() user: any) {
-    console.log('Current user:', user); // Debug log
     if (!user?.id) {
       throw new Error('User authentication required');
     }

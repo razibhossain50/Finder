@@ -1,10 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Lock, User } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 
@@ -80,18 +77,18 @@ export default function Settings() {
         {/* Profile Settings */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <User className="h-5 w-5 text-blue-500" />
-              Profile Settings
-            </CardTitle>
-            <CardDescription>
+              <h3 className="text-lg font-semibold">Profile Settings</h3>
+            </div>
+            <p className="text-sm text-gray-600">
               Manage your profile information and preferences
-            </CardDescription>
+            </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardBody className="space-y-4">
             <div className="grid gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Display Name</Label>
+                <label htmlFor="name" className="text-sm font-medium">Display Name</label>
                 <Input
                   id="name"
                   value={name}
@@ -100,7 +97,7 @@ export default function Settings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <label htmlFor="email" className="text-sm font-medium">Email Address</label>
                 <Input
                   id="email"
                   type="email"
@@ -110,7 +107,7 @@ export default function Settings() {
                 />
               </div>
             </div>
-          </CardContent>
+          </CardBody>
         </Card>
 
 
@@ -129,23 +126,23 @@ export default function Settings() {
         {/* Security Settings */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Lock className="h-5 w-5 text-emerald-500" />
-              Security
-            </CardTitle>
-            <CardDescription>
+              <h3 className="text-lg font-semibold">Security</h3>
+            </div>
+            <p className="text-sm text-gray-600">
               Manage your account security settings
-            </CardDescription>
+            </p>
           </CardHeader>
-          <CardContent>
+          <CardBody>
             <Button
-              variant="outline"
+              variant="bordered"
               className="w-full"
               onClick={() => router.push('/settings/reset-password')}
             >
               Reset Password
             </Button>
-          </CardContent>
+          </CardBody>
         </Card>
       </div>
     </div>
