@@ -20,7 +20,7 @@ const navItems: NavItem[] = [
   },
   {
     name: "Users Management",
-    icon: <ListIcon />,
+    icon: <BoxCubeIcon />,
     subItems: [{ name: "Users", path: "/admin/users" }],
   },
 ];
@@ -33,9 +33,6 @@ const othersItems: NavItem[] = [
     name: "UI Elements",
     subItems: [
       { name: "Data Table", path: "/admin/table", pro: false },
-      {name: "User Profile",path: "/admin/profile"},
-      { name: "Line Chart", path: "/admin/chart/line-chart", pro: false },
-      { name: "Bar Chart", path: "/admin/chart/bar-chart", pro: false },
       { name: "Blank Page", path: "/admin/blank", pro: false },
       { name: "404 Error", path: "/admin/error-404", pro: false },
     ],
