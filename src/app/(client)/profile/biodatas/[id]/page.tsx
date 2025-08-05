@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   User,
   Heart,
@@ -27,8 +27,9 @@ import {
 import { Card, CardBody, CardHeader, Button, Chip } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useRegularAuth } from "@/context/RegularAuthContext";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface BiodataProfile {
   id: number;
@@ -110,23 +111,20 @@ export default function Profile() {
   const [profile, setProfile] = useState<BiodataProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFavoriteProfile, setIsFavoriteProfile] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
   const params = useParams();
+  const router = useRouter();
   const biodataId = params.id as string;
   const { user, isAuthenticated } = useRegularAuth();
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
 
   // Check if the current user can edit this profile
-  const canEditProfile = () => {
-    console.log('🔍 Debug canEditProfile:', {
-      isAuthenticated,
-      user,
-      profile: profile ? { id: profile.id, userId: profile.userId } : null,
-      userIdMatch: profile && user ? profile.userId === user.id : false
-    });
-
+  const canEditProfile = useMemo(() => {
     if (!isAuthenticated || !user || !profile) return false;
     // User can edit if they own this profile (userId matches)
     return profile.userId === user.id;
-  };
+  }, [isAuthenticated, user, profile]);
 
   const fetchProfile = useCallback(async () => {
     if (!biodataId) return;
@@ -201,9 +199,55 @@ export default function Profile() {
     }
   }, [biodataId]);
 
+  // Check if profile is in favorites when profile loads
+  const checkFavoriteStatus = useCallback(async () => {
+    if (!profile || !isAuthenticated || !user) return;
+    
+    try {
+      const favoriteStatus = await isFavorite(profile.id);
+      setIsFavoriteProfile(favoriteStatus);
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+    }
+  }, [profile, isAuthenticated, user, isFavorite]);
+
+  // Handle add/remove favorites
+  const handleFavoriteToggle = async () => {
+    if (!profile) return;
+
+    if (!isAuthenticated || !user) {
+      router.push('/auth/login');
+      return;
+    }
+
+    try {
+      setFavoriteLoading(true);
+      
+      if (isFavoriteProfile) {
+        const success = await removeFromFavorites(profile.id);
+        if (success) {
+          setIsFavoriteProfile(false);
+        }
+      } else {
+        const success = await addToFavorites(profile.id);
+        if (success) {
+          setIsFavoriteProfile(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  useEffect(() => {
+    checkFavoriteStatus();
+  }, [checkFavoriteStatus]);
 
   const handleRetry = () => {
     setLoading(true);
@@ -403,31 +447,38 @@ export default function Profile() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
 
-            {canEditProfile() && (
+            {canEditProfile && (
               <Button
-                variant="outline"
+                variant="solid"
                 size="sm"
                 className="flex items-center gap-2 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 hover:shadow-md"
-                asChild
+                
               >
-                <Link href={`/profile/biodatas/edit/${biodataId}`}>
+                <Link className="flex gap-3" href={`/profile/biodatas/edit/${biodataId}`}>
                   <Edit className="h-4 w-4" />
                   Edit Profile
                 </Link>
               </Button>
             )}
             <Button
-              variant="outline"
+              variant="solid"
               size="sm"
-              className="flex items-center gap-2 border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700 transition-all duration-200 hover:shadow-md"
+              className={`flex items-center gap-2 transition-all duration-200 hover:shadow-md ${
+                isFavoriteProfile 
+                  ? 'bg-rose-500 text-white hover:bg-rose-600' 
+                  : 'border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700'
+              }`}
+              onPress={handleFavoriteToggle}
+              isLoading={favoriteLoading}
+              disabled={favoriteLoading}
             >
-              <Heart className="h-4 w-4" />
-              Save
+              <Heart className={`h-4 w-4 ${isFavoriteProfile ? 'fill-current' : ''}`} />
+              {isFavoriteProfile ? 'Remove from Favorites' : 'Add to Favorites'}
             </Button>
             <Button
-              variant="outline"
+              variant="flat"
               size="sm"
               className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 hover:shadow-md"
             >
@@ -435,7 +486,7 @@ export default function Profile() {
               Share
             </Button>
             <Button
-              variant="default"
+              variant="bordered"
               size="sm"
               className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white border-0 transition-all duration-200 hover:shadow-lg hover:scale-105"
             >
@@ -1021,21 +1072,29 @@ export default function Profile() {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
                 <Button
+                  variant="solid"
+                  size="lg"
+                  className={`font-semibold px-8 py-3 rounded-full transition-all duration-300 hover:shadow-xl group ${
+                    isFavoriteProfile 
+                      ? 'bg-white text-rose-600 hover:bg-rose-50' 
+                      : 'border-white text-rose-600 hover:bg-white hover:text-rose-600 hover:border-rose-600'
+                  }`}
+                  onPress={handleFavoriteToggle}
+                  isLoading={favoriteLoading}
+                  disabled={favoriteLoading}
+                >
+                  <Heart className={`h-4 w-4 mr-2 group-hover:text-rose-600 transition-colors duration-300 ${isFavoriteProfile ? 'fill-current' : ''}`} />
+                  {isFavoriteProfile ? 'Remove from Favorites' : 'Add to Favorites'}
+                </Button>
+                <Button
+                  variant="solid"
                   size="lg"
                   className="bg-white text-rose-600 hover:bg-rose-50 font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
-                  <MessageCircle className="h-5 w-5 mr-2" />
+                  <MessageCircle className="h-4 w-4 mr-2" />
                   Contact
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-white text-rose-600 hover:bg-white hover:text-rose-600 hover:border-rose-600 font-semibold px-8 py-3 rounded-full transition-all duration-300 hover:shadow-xl group"
-                >
-                  <Heart className="h-5 w-5 mr-2 group-hover:text-rose-600 transition-colors duration-300" />
-                  Add to Favorites
                 </Button>
               </div>
 

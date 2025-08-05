@@ -10,6 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { User } from './user/user.entity';
 import { Biodata } from './biodata/biodata.entity';
 import { BiodataModule } from './biodata/biodata.module';
+import { FavoritesModule } from './favorites/favorites.module';
+import { Favorite } from './favorites/favorites.entity';
 
 
 @Module({
@@ -27,7 +29,7 @@ import { BiodataModule } from './biodata/biodata.module';
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASS'),
         database: config.get<string>('DB_NAME'),
-        entities: [User, Biodata],
+        entities: [User, Biodata, Favorite],
         autoLoadEntities: true,
         synchronize: true,
       }),
@@ -35,6 +37,7 @@ import { BiodataModule } from './biodata/biodata.module';
     UserModule,
     AuthModule,
     BiodataModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

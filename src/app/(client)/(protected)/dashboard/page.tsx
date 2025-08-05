@@ -15,7 +15,7 @@ export default function Dashboard() {
             <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4 leading-tight">
               Welcome back, {user?.fullName || user?.email}!
             </h1>
-            <p className="text-slate-600 text-xl leading-relaxed">Here's what's happening with your account</p>
+            <p className="text-slate-600 text-xl leading-relaxed">Here's what&apos;s happening with your account</p>
           </div>
         </div>
 
@@ -83,8 +83,8 @@ export default function Dashboard() {
           </Card>
 
           {/* Favorites Card */}
-          <Card className="bg-white/80 backdrop-blur-sm hover:bg-white/95 transition-all duration-500 border-0 shadow-xl hover:shadow-2xl group overflow-hidden">
-            <CardBody className="p-8">
+          <Card className="bg-white/80 backdrop-blur-sm hover:bg-white/95 transition-all duration-500 border-0 shadow-xl hover:shadow-2xl group overflow-hidden cursor-pointer">
+            <CardBody className="p-8" onClick={() => window.location.href = '/favorites'}>
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
@@ -96,7 +96,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <h3 className="text-2xl font-bold text-slate-800">Your Favorites</h3>
+                  <h3 className="text-2xl font-bold text-slate-800 group-hover:text-rose-600 transition-colors">Your Favorites</h3>
                   <p className="text-slate-600 text-lg">Profiles you&apos;ve liked</p>
                   <div className="text-5xl font-bold text-rose-600 mb-2">36</div>
                   <p className="text-slate-500 font-medium">8 added this week</p>

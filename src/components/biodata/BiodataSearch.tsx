@@ -7,6 +7,9 @@ import {
 } from "@heroui/react";
 import { Search, User, Eye, Heart, Sparkles, Star } from "lucide-react";
 import { LocationSelector } from "@/components/form/LocationSelector";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useRegularAuth } from "@/context/RegularAuthContext";
+import { useRouter } from "next/navigation";
 
 interface Biodata {
     id: number;
@@ -41,8 +44,14 @@ export const BiodataSearch = () => {
     const [selectedLocation, setSelectedLocation] = useState<string>("");
     const [biodataNumber, setBiodataNumber] = useState<string>("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [favorites, setFavorites] = useState<Set<number>>(new Set());
     const [hasSearched, setHasSearched] = useState(false);
+    const [favoriteStates, setFavoriteStates] = useState<{[key: number]: boolean}>({});
+    const [favoriteLoading, setFavoriteLoading] = useState<{[key: number]: boolean}>({});
+    
+    // Add hooks for authentication and favorites
+    const { user, isAuthenticated } = useRegularAuth();
+    const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+    const router = useRouter();
 
     const itemsPerPage = 12;
 
@@ -119,17 +128,55 @@ export const BiodataSearch = () => {
     const endIndex = startIndex + itemsPerPage;
     const currentBiodatas = filteredBiodatas.slice(startIndex, endIndex);
 
-    // Handle favorite toggle
-    const toggleFavorite = (id: number) => {
-        setFavorites(prev => {
-            const newFavorites = new Set(prev);
-            if (newFavorites.has(id)) {
-                newFavorites.delete(id);
-            } else {
-                newFavorites.add(id);
+    // Check favorite status for each biodata when they load
+    useEffect(() => {
+        const checkFavoriteStatuses = async () => {
+            if (!isAuthenticated || !user || currentBiodatas.length === 0) return;
+            
+            const statuses: {[key: number]: boolean} = {};
+            for (const biodata of currentBiodatas) {
+                try {
+                    const status = await isFavorite(biodata.id);
+                    statuses[biodata.id] = status;
+                } catch (error) {
+                    console.error(`Error checking favorite status for biodata ${biodata.id}:`, error);
+                    statuses[biodata.id] = false;
+                }
             }
-            return newFavorites;
-        });
+            setFavoriteStates(statuses);
+        };
+
+        checkFavoriteStatuses();
+    }, [currentBiodatas, isAuthenticated, user, isFavorite]);
+
+    // Handle favorite toggle with backend integration
+    const handleFavoriteToggle = async (biodataId: number) => {
+        if (!isAuthenticated || !user) {
+            router.push('/auth/login');
+            return;
+        }
+
+        try {
+            setFavoriteLoading(prev => ({ ...prev, [biodataId]: true }));
+            
+            const isCurrentlyFavorite = favoriteStates[biodataId] || false;
+            
+            if (isCurrentlyFavorite) {
+                const success = await removeFromFavorites(biodataId);
+                if (success) {
+                    setFavoriteStates(prev => ({ ...prev, [biodataId]: false }));
+                }
+            } else {
+                const success = await addToFavorites(biodataId);
+                if (success) {
+                    setFavoriteStates(prev => ({ ...prev, [biodataId]: true }));
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        } finally {
+            setFavoriteLoading(prev => ({ ...prev, [biodataId]: false }));
+        }
     };
 
     // Reset pagination when filters change
@@ -357,11 +404,13 @@ export const BiodataSearch = () => {
                                         isIconOnly
                                         variant="ghost"
                                         size="sm"
-                                        onPress={() => toggleFavorite(biodata.id)}
-                                        className={`${favorites.has(biodata.id) ? "bg-white/90" : "bg-white/90 text-gray-400 hover:text-red-500"} transition-all duration-200`}
+                                        onPress={() => handleFavoriteToggle(biodata.id)}
+                                        isLoading={favoriteLoading[biodata.id]}
+                                        disabled={favoriteLoading[biodata.id]}
+                                        className={`${favoriteStates[biodata.id] ? "bg-white/90" : "bg-white/90 text-gray-400 hover:text-red-500"} transition-all duration-200`}
                                     >
                                         <Heart
-                                            className={`h-4 w-4 ${favorites.has(biodata.id) ? "fill-rose-500 stroke-rose-500" : ""} group-hover:scale-110 transition-transform`}
+                                            className={`h-4 w-4 ${favoriteStates[biodata.id] ? "fill-rose-500 stroke-rose-500" : ""} group-hover:scale-110 transition-transform`}
                                         />
                                     </Button>
                                 </div>

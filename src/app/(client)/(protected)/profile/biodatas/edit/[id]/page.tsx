@@ -153,8 +153,8 @@ export default function BiodataForm() {
             // Show HeroUI success toast
             addToast({
                 title: "Success!",
-                color:"success",
-                
+                color: "success",
+
                 description: isCreateMode
                     ? "Your biodata has been created and submitted successfully!"
                     : "Your biodata has been updated and submitted successfully!",
