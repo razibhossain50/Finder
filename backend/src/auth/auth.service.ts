@@ -97,19 +97,64 @@ export class AuthService {
   }
 
   async createSuperAdmin() {
-    const adminExists = await this.usersRepository.findOne({ where: { email: 'admin@example.com' } });
+    try {
+      // First, check if superadmin@example.com already exists
+      const superAdminExists = await this.usersRepository.findOne({ where: { email: 'superadmin@example.com' } });
 
-    if (!adminExists) {
-      const hashedPassword = await bcrypt.hash('aaaaa', 10);
-      const admin = this.usersRepository.create({
-        email: 'admin@example.com',
-        password: hashedPassword,
-        role: 'superadmin',
-        fullName: 'Super Admin'
-      });
+      if (superAdminExists) {
+        // Just update the password if account exists
+        const hashedPassword = await bcrypt.hash('superadmin', 10);
+        superAdminExists.password = hashedPassword;
+        await this.usersRepository.save(superAdminExists);
+        console.log('Superadmin password updated for superadmin@example.com');
+        return;
+      }
 
-      await this.usersRepository.save(admin);
-      console.log('Superadmin created');
+      // Check if old admin@example.com exists
+      const oldAdminExists = await this.usersRepository.findOne({ where: { email: 'admin@example.com' } });
+
+      if (oldAdminExists) {
+        // Update the old admin account credentials
+        const hashedPassword = await bcrypt.hash('superadmin', 10);
+        oldAdminExists.email = 'superadmin@example.com';
+        oldAdminExists.password = hashedPassword;
+        oldAdminExists.fullName = 'Super Admin';
+
+        await this.usersRepository.save(oldAdminExists);
+        console.log('Admin account migrated: admin@example.com → superadmin@example.com');
+      } else {
+        // Create new superadmin account
+        const hashedPassword = await bcrypt.hash('superadmin', 10);
+        const admin = this.usersRepository.create({
+          email: 'superadmin@example.com',
+          password: hashedPassword,
+          role: 'superadmin',
+          fullName: 'Super Admin'
+        });
+
+        await this.usersRepository.save(admin);
+        console.log('New superadmin created: superadmin@example.com');
+      }
+    } catch (error) {
+      console.error('Error in createSuperAdmin:', error.message);
+
+      // Fallback: ensure we have at least one working superadmin
+      try {
+        const anySuperAdmin = await this.usersRepository.findOne({ where: { role: 'superadmin' } });
+        if (!anySuperAdmin) {
+          const hashedPassword = await bcrypt.hash('admin123', 10);
+          const fallbackAdmin = this.usersRepository.create({
+            email: 'admin@example.com',
+            password: hashedPassword,
+            role: 'superadmin',
+            fullName: 'Super Admin'
+          });
+          await this.usersRepository.save(fallbackAdmin);
+          console.log('Fallback superadmin created: admin@example.com / admin123');
+        }
+      } catch (fallbackError) {
+        console.error('Failed to create fallback admin:', fallbackError.message);
+      }
     }
 
     // Also create a test regular user

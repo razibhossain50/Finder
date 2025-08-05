@@ -24,7 +24,7 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const { fullName, email, password, confirmPassword } = createUserDto;
+    const { fullName, email, password, confirmPassword, role } = createUserDto;
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Password and confirm password do not match');
@@ -40,7 +40,7 @@ export class UserService {
       fullName,
       email,
       password: hashedPassword,
-      role: 'user'
+      role: role || 'user' // Use provided role or default to 'user'
     });
 
     const savedUser = await this.userRepository.save(user);

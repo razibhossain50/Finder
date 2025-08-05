@@ -26,6 +26,9 @@ export class UserController {
 
   @Post()
   createUser(@Body() createUserDto: CreateUserDto) {
+    console.log('=== POST /api/users ===');
+    console.log('Create user data:', createUserDto);
+    console.log('Role being set:', createUserDto.role || 'user (default)');
     return this.userService.create(createUserDto);
   }
 

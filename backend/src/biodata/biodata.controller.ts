@@ -7,7 +7,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('api/biodatas')
 export class BiodataController {
-  constructor(private readonly biodataService: BiodataService) { }
+  constructor(private readonly biodataService: BiodataService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -70,7 +70,15 @@ export class BiodataController {
   @Get('admin/all')
   @UseGuards(JwtAuthGuard)
   findAllForAdmin(@CurrentUser() user: any) {
-    // TODO: Add admin role check here if needed
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+
+    // Only superadmin can access all biodatas
+    if (user.role !== 'superadmin') {
+      throw new Error('Access denied: Only superadmin can view all biodatas');
+    }
+
     return this.biodataService.findAllForAdmin();
   }
 
@@ -88,7 +96,15 @@ export class BiodataController {
   @Put(':id/status')
   @UseGuards(JwtAuthGuard)
   async updateStatus(@Param('id') id: string, @Body() statusData: { status: string }, @CurrentUser() user: any) {
-    // TODO: Add admin role check here if needed
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+
+    // Only superadmin can update biodata status
+    if (user.role !== 'superadmin') {
+      throw new Error('Access denied: Only superadmin can update biodata status');
+    }
+
     const biodataId = +id;
     return this.biodataService.updateStatus(biodataId, statusData.status);
   }
@@ -146,10 +162,12 @@ export class BiodataController {
       throw new Error('User authentication required');
     }
 
-    // Validate ownership
-    const isOwner = await this.biodataService.validateOwnership(+id, user.id);
-    if (!isOwner) {
-      throw new Error('You can only delete your own biodata');
+    // Allow superadmin to delete any biodata, otherwise validate ownership
+    if (user.role !== 'superadmin') {
+      const isOwner = await this.biodataService.validateOwnership(+id, user.id);
+      if (!isOwner) {
+        throw new Error('You can only delete your own biodata');
+      }
     }
 
     return this.biodataService.remove(+id);

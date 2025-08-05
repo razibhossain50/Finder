@@ -157,21 +157,25 @@ export default function Biodatas() {
     const [filterValue, setFilterValue] = React.useState("");
     const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
     const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
         column: "status",
-        direction: "ascending",
+        direction: "descending",
     });
     const [page, setPage] = React.useState(1);
-    const [editModalOpen, setEditModalOpen] = React.useState(false);
+    const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
+    const [viewModalOpen, setViewModalOpen] = React.useState(false);
     const [selectedBiodata, setSelectedBiodata] = React.useState<Biodata | null>(null);
     const [newStatus, setNewStatus] = React.useState<string>("");
+    const [isDeleting, setIsDeleting] = React.useState(false);
+    const [isUpdatingStatus, setIsUpdatingStatus] = React.useState(false);
 
     // Handle status update
     const handleStatusUpdate = async () => {
-        if (!selectedBiodata || !newStatus) return;
+        if (!selectedBiodata || !newStatus || newStatus === selectedBiodata.status) return;
 
         try {
+            setIsUpdatingStatus(true);
             // Try admin_access_token first, then fall back to access_token
             const adminToken = localStorage.getItem('admin_access_token');
             const userToken = localStorage.getItem('access_token');
@@ -198,15 +202,58 @@ export default function Biodatas() {
                         ? { ...biodata, status: newStatus }
                         : biodata
                 ));
-                setEditModalOpen(false);
-                setSelectedBiodata(null);
-                setNewStatus("");
+                // Update the selected biodata to reflect the change
+                setSelectedBiodata(prev => prev ? { ...prev, status: newStatus } : null);
+                // Close the modal after successful update
+                setViewModalOpen(false);
             } else {
                 const errorText = await response.text();
                 console.error('Failed to update status:', response.status, errorText);
             }
         } catch (error) {
             console.error('Error updating status:', error);
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
+
+    // Handle delete biodata
+    const handleDeleteBiodata = async () => {
+        if (!selectedBiodata) return;
+
+        try {
+            setIsDeleting(true);
+            // Try admin_access_token first, then fall back to access_token
+            const adminToken = localStorage.getItem('admin_access_token');
+            const userToken = localStorage.getItem('access_token');
+            const token = adminToken || userToken;
+
+            if (!token) {
+                console.error('No authentication token found');
+                return;
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/${selectedBiodata.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                // Remove from local state
+                setBiodatas(prev => prev.filter(biodata => biodata.id !== selectedBiodata.id));
+                setDeleteModalOpen(false);
+                setSelectedBiodata(null);
+            } else {
+                const errorText = await response.text();
+                console.error('Failed to delete biodata:', response.status, errorText);
+            }
+        } catch (error) {
+            console.error('Error deleting biodata:', error);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -351,15 +398,18 @@ export default function Biodatas() {
                             </DropdownTrigger>
                             <DropdownMenu onAction={(key) => {
                                 if (key === "view") {
-                                    window.open(`/profile/biodatas/${biodata.id}`, '_blank');
-                                } else if (key === "edit") {
                                     setSelectedBiodata(biodata);
                                     setNewStatus(biodata.status || 'Inactive');
-                                    setEditModalOpen(true);
+                                    setViewModalOpen(true);
+                                } else if (key === "delete") {
+                                    setSelectedBiodata(biodata);
+                                    setDeleteModalOpen(true);
                                 }
                             }}>
-                                <DropdownItem key="view">View</DropdownItem>
-                                <DropdownItem key="edit">Edit Status</DropdownItem>
+                                <DropdownItem key="view">View & Edit</DropdownItem>
+                                <DropdownItem key="delete" className="text-danger" color="danger">
+                                    Delete
+                                </DropdownItem>
                             </DropdownMenu>
                         </Dropdown>
                     </div>
@@ -528,6 +578,7 @@ export default function Biodatas() {
                             key={column.uid}
                             align={column.uid === "actions" ? "center" : "start"}
                             allowsSorting={column.sortable}
+                            className={column.uid === "actions" ? "sticky right-0 bg-background z-10" : ""}
                         >
                             {column.name}
                         </TableColumn>
@@ -536,55 +587,394 @@ export default function Biodatas() {
                 <TableBody emptyContent={"No biodatas found"} items={sortedItems}>
                     {(item) => (
                         <TableRow key={item.id}>
-                            {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+                            {(columnKey) => (
+                                <TableCell
+                                    className={columnKey === "actions" ? "sticky right-0 bg-background z-10" : ""}
+                                >
+                                    {renderCell(item, columnKey)}
+                                </TableCell>
+                            )}
                         </TableRow>
                     )}
                 </TableBody>
             </Table>
 
-            {/* Status Edit Modal */}
-            <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)}>
+            {/* View & Edit Biodata Modal */}
+            <Modal
+                isOpen={viewModalOpen}
+                onClose={() => setViewModalOpen(false)}
+                size="5xl"
+                scrollBehavior="inside"
+            >
                 <ModalContent>
                     <ModalHeader>
-                        <h3>Edit Biodata Status</h3>
+                        <h3 className="text-xl font-bold">Biodata Details & Status Management</h3>
                     </ModalHeader>
                     <ModalBody>
                         {selectedBiodata && (
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-sm text-gray-600">Biodata ID:</p>
-                                    <p className="font-semibold">{selectedBiodata.id}</p>
+                            <div className="space-y-6">
+                                {/* Header Section with Status Update */}
+                                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h4 className="text-2xl font-bold text-gray-800">{selectedBiodata.fullName}</h4>
+                                            <p className="text-gray-600">Biodata ID: #{selectedBiodata.id}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <Chip
+                                                color={statusColorMap[selectedBiodata.status || 'Inactive']}
+                                                size="lg"
+                                                variant="flat"
+                                                className="mb-2"
+                                            >
+                                                {selectedBiodata.status || 'Inactive'}
+                                            </Chip>
+                                            <p className="text-sm text-gray-600">Step: {selectedBiodata.step}/8</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Status Update Section */}
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3">Update Status</h5>
+                                        <div className="flex items-center gap-4">
+                                            <Select
+                                                label="Change Status"
+                                                placeholder="Select new status"
+                                                selectedKeys={newStatus ? [newStatus] : []}
+                                                onSelectionChange={(keys) => {
+                                                    const selectedKey = Array.from(keys)[0] as string;
+                                                    setNewStatus(selectedKey);
+                                                }}
+                                                className="flex-1"
+                                            >
+                                                {statusOptions.map((status) => (
+                                                    <SelectItem key={status.uid}>
+                                                        {status.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </Select>
+                                            <Button
+                                                color="primary"
+                                                onPress={handleStatusUpdate}
+                                                isDisabled={!newStatus || newStatus === selectedBiodata.status || isUpdatingStatus}
+                                                isLoading={isUpdatingStatus}
+                                            >
+                                                {isUpdatingStatus ? "Updating..." : "Update"}
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-600">Name:</p>
-                                    <p className="font-semibold">{selectedBiodata.fullName}</p>
+
+                                {/* Basic Information */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Basic Information</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Biodata Type:</span>
+                                                <p className="font-medium">{selectedBiodata.biodataType}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Religion:</span>
+                                                <p className="font-medium">{selectedBiodata.religion}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Marital Status:</span>
+                                                <Chip color="primary" size="sm" variant="flat">
+                                                    {selectedBiodata.maritalStatus}
+                                                </Chip>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Date of Birth:</span>
+                                                <p className="font-medium">{selectedBiodata.dateOfBirth}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Age:</span>
+                                                <p className="font-medium">{selectedBiodata.age} years</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Physical Information */}
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Physical Information</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Height:</span>
+                                                <p className="font-medium">{selectedBiodata.height}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Weight:</span>
+                                                <p className="font-medium">{selectedBiodata.weight} kg</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Complexion:</span>
+                                                <p className="font-medium">{selectedBiodata.complexion}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Blood Group:</span>
+                                                <p className="font-medium">{selectedBiodata.bloodGroup}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Health Issues:</span>
+                                                <p className="font-medium">{selectedBiodata.healthIssues || 'None'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contact Information */}
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Contact Information</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Email:</span>
+                                                <p className="font-medium">{selectedBiodata.email}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Own Mobile:</span>
+                                                <p className="font-medium">{selectedBiodata.ownMobile}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Guardian Mobile:</span>
+                                                <p className="font-medium">{selectedBiodata.guardianMobile}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">User ID:</span>
+                                                <p className="font-medium">{selectedBiodata.userId || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-600">Current Status:</p>
-                                    <Chip
-                                        color={statusColorMap[selectedBiodata.status || 'Inactive']}
-                                        size="sm"
-                                        variant="flat"
-                                    >
-                                        {selectedBiodata.status || 'Inactive'}
-                                    </Chip>
+
+                                {/* Education & Profession */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Education</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Education Medium:</span>
+                                                <p className="font-medium">{selectedBiodata.educationMedium}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Highest Education:</span>
+                                                <p className="font-medium">{selectedBiodata.highestEducation}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Institute:</span>
+                                                <p className="font-medium">{selectedBiodata.instituteName}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Subject:</span>
+                                                <p className="font-medium">{selectedBiodata.subject}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Passing Year:</span>
+                                                <p className="font-medium">{selectedBiodata.passingYear}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Result:</span>
+                                                <p className="font-medium">{selectedBiodata.result}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Profession & Economic</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Profession:</span>
+                                                <p className="font-medium">{selectedBiodata.profession}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Economic Condition:</span>
+                                                <p className="font-medium">{selectedBiodata.economicCondition}</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <Select
-                                        label="New Status"
-                                        placeholder="Select new status"
-                                        selectedKeys={newStatus ? [newStatus] : []}
-                                        onSelectionChange={(keys) => {
-                                            const selectedKey = Array.from(keys)[0] as string;
-                                            setNewStatus(selectedKey);
-                                        }}
-                                    >
-                                        {statusOptions.map((status) => (
-                                            <SelectItem key={status.uid}>
-                                                {status.name}
-                                            </SelectItem>
-                                        ))}
-                                    </Select>
+
+                                {/* Address Information */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Permanent Address</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Country:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentCountry}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Division:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentDivision}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Zilla:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentZilla}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Upazilla:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentUpazilla}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Area:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentArea}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Present Address</h5>
+                                        <div className="space-y-2">
+                                            {selectedBiodata.sameAsPermanent ? (
+                                                <p className="text-gray-600 italic">Same as permanent address</p>
+                                            ) : (
+                                                <>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Country:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentCountry}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Division:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentDivision}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Zilla:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentZilla}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Upazilla:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentUpazilla}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Area:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentArea}</p>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Family Information */}
+                                <div className="bg-white p-4 rounded-lg border">
+                                    <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Family Information</h5>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <div>
+                                            <span className="text-sm text-gray-600">Father's Name:</span>
+                                            <p className="font-medium">{selectedBiodata.fatherName}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Father's Profession:</span>
+                                            <p className="font-medium">{selectedBiodata.fatherProfession}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Father Status:</span>
+                                            <p className="font-medium">{selectedBiodata.fatherAlive}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Mother's Name:</span>
+                                            <p className="font-medium">{selectedBiodata.motherName}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Mother's Profession:</span>
+                                            <p className="font-medium">{selectedBiodata.motherProfession}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Mother Status:</span>
+                                            <p className="font-medium">{selectedBiodata.motherAlive}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Brothers:</span>
+                                            <p className="font-medium">{selectedBiodata.brothersCount}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Sisters:</span>
+                                            <p className="font-medium">{selectedBiodata.sistersCount}</p>
+                                        </div>
+                                    </div>
+                                    {selectedBiodata.familyDetails && (
+                                        <div className="mt-4">
+                                            <span className="text-sm text-gray-600">Family Details:</span>
+                                            <p className="font-medium mt-1 p-3 bg-gray-50 rounded">{selectedBiodata.familyDetails}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Partner Preferences */}
+                                <div className="bg-white p-4 rounded-lg border">
+                                    <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Partner Preferences</h5>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <div>
+                                            <span className="text-sm text-gray-600">Age Range:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerAgeMin} - {selectedBiodata.partnerAgeMax} years</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Complexion:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerComplexion}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Height:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerHeight}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Education:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerEducation}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Profession:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerProfession}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Location:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerLocation}</p>
+                                        </div>
+                                    </div>
+                                    {selectedBiodata.partnerDetails && (
+                                        <div className="mt-4">
+                                            <span className="text-sm text-gray-600">Additional Partner Details:</span>
+                                            <p className="font-medium mt-1 p-3 bg-gray-50 rounded">{selectedBiodata.partnerDetails}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Profile Picture */}
+                                {selectedBiodata.profilePicture && (
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Profile Picture</h5>
+                                        <div className="flex justify-center">
+                                            <img
+                                                src={selectedBiodata.profilePicture}
+                                                alt="Profile"
+                                                className="max-w-xs max-h-64 object-cover rounded-lg shadow-md"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Progress Information */}
+                                <div className="bg-white p-4 rounded-lg border">
+                                    <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Progress Information</h5>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <span className="text-sm text-gray-600">Current Step:</span>
+                                            <p className="font-medium">{selectedBiodata.step} of 8</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Completed Steps:</span>
+                                            <p className="font-medium">{selectedBiodata.completedSteps || 0}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Progress:</span>
+                                            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
+                                                <div
+                                                    className="bg-blue-600 h-2.5 rounded-full"
+                                                    style={{ width: `${((selectedBiodata.completedSteps || 0) / 8) * 100}%` }}
+                                                ></div>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {Math.round(((selectedBiodata.completedSteps || 0) / 8) * 100)}% Complete
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -592,20 +982,514 @@ export default function Biodatas() {
                     <ModalFooter>
                         <Button
                             variant="light"
-                            onPress={() => setEditModalOpen(false)}
+                            onPress={() => setViewModalOpen(false)}
                         >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="primary"
-                            onPress={handleStatusUpdate}
-                            isDisabled={!newStatus || newStatus === selectedBiodata?.status}
-                        >
-                            Update Status
+                            Close
                         </Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)}>
+                <ModalContent>
+                    <ModalHeader>
+                        <h3 className="text-danger">Delete Biodata</h3>
+                    </ModalHeader>
+                    <ModalBody>
+                        {selectedBiodata && (
+                            <div className="space-y-4">
+                                <div className="text-center">
+                                    <p className="text-lg font-semibold text-danger mb-2">
+                                        Are you sure you want to delete this biodata?
+                                    </p>
+                                    <p className="text-sm text-gray-600 mb-4">
+                                        This action cannot be undone.
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-sm text-gray-600">Biodata ID:</p>
+                                            <p className="font-semibold">{selectedBiodata.id}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-600">Name:</p>
+                                            <p className="font-semibold">{selectedBiodata.fullName}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-600">Email:</p>
+                                            <p className="font-semibold">{selectedBiodata.email}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-600">Status:</p>
+                                            <Chip
+                                                color={statusColorMap[selectedBiodata.status || 'Inactive']}
+                                                size="sm"
+                                                variant="flat"
+                                            >
+                                                {selectedBiodata.status || 'Inactive'}
+                                            </Chip>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="light"
+                            onPress={() => setDeleteModalOpen(false)}
+                            isDisabled={isDeleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            color="danger"
+                            onPress={handleDeleteBiodata}
+                            isLoading={isDeleting}
+                            isDisabled={isDeleting}
+                        >
+                            {isDeleting ? "Deleting..." : "Delete Biodata"}
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+            {/* View Biodata Modal */}
+            <Modal
+                isOpen={viewModalOpen}
+                onClose={() => setViewModalOpen(false)}
+                size="5xl"
+                scrollBehavior="inside"
+                classNames={{
+                    base: "bg-background",
+                    backdrop: "bg-black/50 backdrop-blur-sm",
+                    header: "border-b border-divider",
+                    body: "py-6",
+                    footer: "border-t border-divider"
+                }}
+            >
+                <ModalContent>
+                    <ModalHeader className="flex flex-col gap-1">
+                        <h2 className="text-2xl font-bold text-foreground">Biodata Details</h2>
+                        <p className="text-sm text-default-500">View and manage biodata information</p>
+                    </ModalHeader>
+                    <ModalBody>
+                        {selectedBiodata && (
+                            <div className="space-y-8">
+                                {/* Header Section */}
+                                <div className="bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 p-6 rounded-large border border-divider">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <h3 className="text-3xl font-bold text-foreground mb-2">{selectedBiodata.fullName}</h3>
+                                            <div className="flex items-center gap-4 text-default-600">
+                                                <span className="flex items-center gap-2">
+                                                    <span className="w-2 h-2 bg-primary rounded-full"></span>
+                                                    Biodata ID: #{selectedBiodata.id}
+                                                </span>
+                                                <span className="flex items-center gap-2">
+                                                    <span className="w-2 h-2 bg-secondary rounded-full"></span>
+                                                    Step: {selectedBiodata.step}/8
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-3">
+                                            <Chip
+                                                color={statusColorMap[selectedBiodata.status || 'Inactive']}
+                                                size="lg"
+                                                variant="shadow"
+                                                className="font-semibold"
+                                            >
+                                                {selectedBiodata.status || 'Inactive'}
+                                            </Chip>
+                                            <div className="bg-content2 px-3 py-1 rounded-full">
+                                                <span className="text-xs font-medium text-default-700">
+                                                    {Math.round(((selectedBiodata.completedSteps || 0) / 8) * 100)}% Complete
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Basic Information */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Basic Information</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Biodata Type:</span>
+                                                <p className="font-medium">{selectedBiodata.biodataType}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Religion:</span>
+                                                <p className="font-medium">{selectedBiodata.religion}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Marital Status:</span>
+                                                <Chip color="primary" size="sm" variant="flat">
+                                                    {selectedBiodata.maritalStatus}
+                                                </Chip>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Date of Birth:</span>
+                                                <p className="font-medium">{selectedBiodata.dateOfBirth}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Age:</span>
+                                                <p className="font-medium">{selectedBiodata.age} years</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Physical Information */}
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Physical Information</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Height:</span>
+                                                <p className="font-medium">{selectedBiodata.height}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Weight:</span>
+                                                <p className="font-medium">{selectedBiodata.weight} kg</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Complexion:</span>
+                                                <p className="font-medium">{selectedBiodata.complexion}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Blood Group:</span>
+                                                <p className="font-medium">{selectedBiodata.bloodGroup}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Health Issues:</span>
+                                                <p className="font-medium">{selectedBiodata.healthIssues || 'None'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contact Information */}
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Contact Information</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Email:</span>
+                                                <p className="font-medium">{selectedBiodata.email}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Own Mobile:</span>
+                                                <p className="font-medium">{selectedBiodata.ownMobile}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Guardian Mobile:</span>
+                                                <p className="font-medium">{selectedBiodata.guardianMobile}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">User ID:</span>
+                                                <p className="font-medium">{selectedBiodata.userId || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Education & Profession */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Education</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Education Medium:</span>
+                                                <p className="font-medium">{selectedBiodata.educationMedium}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Highest Education:</span>
+                                                <p className="font-medium">{selectedBiodata.highestEducation}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Institute:</span>
+                                                <p className="font-medium">{selectedBiodata.instituteName}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Subject:</span>
+                                                <p className="font-medium">{selectedBiodata.subject}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Passing Year:</span>
+                                                <p className="font-medium">{selectedBiodata.passingYear}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Result:</span>
+                                                <p className="font-medium">{selectedBiodata.result}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Profession & Economic</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Profession:</span>
+                                                <p className="font-medium">{selectedBiodata.profession}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Economic Condition:</span>
+                                                <p className="font-medium">{selectedBiodata.economicCondition}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Address Information */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Permanent Address</h5>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Country:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentCountry}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Division:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentDivision}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Zilla:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentZilla}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Upazilla:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentUpazilla}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Area:</span>
+                                                <p className="font-medium">{selectedBiodata.permanentArea}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Present Address</h5>
+                                        <div className="space-y-2">
+                                            {selectedBiodata.sameAsPermanent ? (
+                                                <p className="text-gray-600 italic">Same as permanent address</p>
+                                            ) : (
+                                                <>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Country:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentCountry}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Division:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentDivision}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Zilla:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentZilla}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Upazilla:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentUpazilla}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm text-gray-600">Area:</span>
+                                                        <p className="font-medium">{selectedBiodata.presentArea}</p>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Family Information */}
+                                <div className="bg-white p-4 rounded-lg border">
+                                    <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Family Information</h5>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <div>
+                                            <span className="text-sm text-gray-600">Father's Name:</span>
+                                            <p className="font-medium">{selectedBiodata.fatherName}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Father&apos;s Profession:</span>
+                                            <p className="font-medium">{selectedBiodata.fatherProfession}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Father Status:</span>
+                                            <p className="font-medium">{selectedBiodata.fatherAlive}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Mother&apos;s Name:</span>
+                                            <p className="font-medium">{selectedBiodata.motherName}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Mother&apos;s Profession:</span>
+                                            <p className="font-medium">{selectedBiodata.motherProfession}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Mother Status:</span>
+                                            <p className="font-medium">{selectedBiodata.motherAlive}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Brothers:</span>
+                                            <p className="font-medium">{selectedBiodata.brothersCount}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Sisters:</span>
+                                            <p className="font-medium">{selectedBiodata.sistersCount}</p>
+                                        </div>
+                                    </div>
+                                    {selectedBiodata.familyDetails && (
+                                        <div className="mt-4">
+                                            <span className="text-sm text-gray-600">Family Details:</span>
+                                            <p className="font-medium mt-1 p-3 bg-gray-50 rounded">{selectedBiodata.familyDetails}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Partner Preferences */}
+                                <div className="bg-white p-4 rounded-lg border">
+                                    <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Partner Preferences</h5>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <div>
+                                            <span className="text-sm text-gray-600">Age Range:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerAgeMin} - {selectedBiodata.partnerAgeMax} years</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Complexion:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerComplexion}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Height:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerHeight}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Education:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerEducation}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Profession:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerProfession}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Location:</span>
+                                            <p className="font-medium">{selectedBiodata.partnerLocation}</p>
+                                        </div>
+                                    </div>
+                                    {selectedBiodata.partnerDetails && (
+                                        <div className="mt-4">
+                                            <span className="text-sm text-gray-600">Additional Partner Details:</span>
+                                            <p className="font-medium mt-1 p-3 bg-gray-50 rounded">{selectedBiodata.partnerDetails}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Profile Picture */}
+                                {selectedBiodata.profilePicture && (
+                                    <div className="bg-white p-4 rounded-lg border">
+                                        <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Profile Picture</h5>
+                                        <div className="flex justify-center">
+                                            <img
+                                                src={selectedBiodata.profilePicture}
+                                                alt="Profile"
+                                                className="max-w-xs max-h-64 object-cover rounded-lg shadow-md"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Progress Information */}
+                                <div className="bg-white p-4 rounded-lg border">
+                                    <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Progress Information</h5>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <span className="text-sm text-gray-600">Current Step:</span>
+                                            <p className="font-medium">{selectedBiodata.step} of 8</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Completed Steps:</span>
+                                            <p className="font-medium">{selectedBiodata.completedSteps || 0}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Progress:</span>
+                                            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
+                                                <div
+                                                    className="bg-blue-600 h-2.5 rounded-full"
+                                                    style={{ width: `${((selectedBiodata.completedSteps || 0) / 8) * 100}%` }}
+                                                ></div>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {Math.round(((selectedBiodata.completedSteps || 0) / 8) * 100)}% Complete
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </ModalBody>
+                    <ModalFooter className="flex justify-between items-center px-6 py-4 bg-content1/50">
+                        <Button
+                            variant="light"
+                            onPress={() => setViewModalOpen(false)}
+                            size="md"
+                            className="font-medium text-default-600 hover:text-foreground"
+                            startContent={<span>✕</span>}
+                        >
+                            Close
+                        </Button>
+
+                        {/* Status Update Section */}
+                        <div className="flex items-center gap-4 bg-content2 px-5 py-3 rounded-large border border-divider">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                                <span className="text-sm font-semibold text-default-700">Update Status:</span>
+                            </div>
+                            <Select
+                                size="md"
+                                placeholder="Select new status"
+                                selectedKeys={newStatus ? [newStatus] : []}
+                                onSelectionChange={(keys) => {
+                                    const selectedKey = Array.from(keys)[0] as string;
+                                    setNewStatus(selectedKey);
+                                }}
+                                className="min-w-[160px]"
+                                variant="bordered"
+                                classNames={{
+                                    trigger: "bg-background border-divider hover:border-primary transition-colors",
+                                    value: "text-foreground font-medium",
+                                    popoverContent: "bg-content1 border-divider"
+                                }}
+                            >
+                                {statusOptions.map((status) => (
+                                    <SelectItem
+                                        key={status.uid}
+                                        className="text-foreground hover:bg-primary/10"
+                                        startContent={
+                                            <Chip
+                                                size="sm"
+                                                variant="dot"
+                                                color={statusColorMap[status.uid] || 'default'}
+                                            />
+                                        }
+                                    >
+                                        {status.name}
+                                    </SelectItem>
+                                ))}
+                            </Select>
+                            <Button
+                                color="primary"
+                                size="md"
+                                onPress={handleStatusUpdate}
+                                isDisabled={!newStatus || newStatus === selectedBiodata?.status || isUpdatingStatus}
+                                isLoading={isUpdatingStatus}
+                                variant="shadow"
+                                className="font-semibold px-6 min-w-[120px]"
+                                startContent={!isUpdatingStatus ? <span>✓</span> : undefined}
+                            >
+                                {isUpdatingStatus ? "Updating..." : "Update Status"}
+                            </Button>
+                        </div>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal >
         </>
     );
 }

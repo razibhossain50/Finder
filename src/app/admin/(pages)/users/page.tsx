@@ -4,7 +4,7 @@ import type { Selection, ChipProps, SortDescriptor } from "@heroui/react";
 import React from "react";
 import {
     Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Input, Button, DropdownTrigger,
-    Dropdown, DropdownMenu, DropdownItem, Chip, User, Pagination, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter
+    Dropdown, DropdownMenu, DropdownItem, Chip, User, Pagination, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Select, SelectItem
 } from "@heroui/react";
 import { Plus, EllipsisVertical, Search, ChevronDown, Trash2 } from "lucide-react";
 
@@ -70,6 +70,55 @@ export default function Users() {
     const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
     const [userToDelete, setUserToDelete] = React.useState<DatabaseUser | null>(null);
     const [isDeleting, setIsDeleting] = React.useState(false);
+
+    // Add user modal state
+    const [addUserModalOpen, setAddUserModalOpen] = React.useState(false);
+    const [isCreatingUser, setIsCreatingUser] = React.useState(false);
+    const [currentUser, setCurrentUser] = React.useState<DatabaseUser | null>(null);
+
+    // Add user form state
+    const [newUserForm, setNewUserForm] = React.useState({
+        fullName: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    });
+    const [formErrors, setFormErrors] = React.useState<Record<string, string>>({});
+
+    // Edit user modal state
+    const [editUserModalOpen, setEditUserModalOpen] = React.useState(false);
+    const [userToEdit, setUserToEdit] = React.useState<DatabaseUser | null>(null);
+    const [isUpdatingUser, setIsUpdatingUser] = React.useState(false);
+
+    // Edit user form state
+    const [editUserForm, setEditUserForm] = React.useState({
+        fullName: '',
+        email: '',
+        role: ''
+    });
+    const [editFormErrors, setEditFormErrors] = React.useState<Record<string, string>>({});
+
+    // Get current user from localStorage
+    React.useEffect(() => {
+        const userData = localStorage.getItem('user');
+        const regularUserData = localStorage.getItem('regular_user');
+
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                setCurrentUser(user);
+            } catch (error) {
+                console.error('Failed to parse user data:', error);
+            }
+        } else if (regularUserData) {
+            try {
+                const user = JSON.parse(regularUserData);
+                setCurrentUser(user);
+            } catch (error) {
+                console.error('Failed to parse regular user data:', error);
+            }
+        }
+    }, []);
 
     // Fetch all users from API
     React.useEffect(() => {
@@ -159,6 +208,216 @@ export default function Users() {
         }
     };
 
+    // Validate add user form
+    const validateForm = () => {
+        const errors: Record<string, string> = {};
+
+        if (!newUserForm.fullName.trim()) {
+            errors.fullName = 'Full name is required';
+        }
+
+        if (!newUserForm.email.trim()) {
+            errors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUserForm.email)) {
+            errors.email = 'Please enter a valid email address';
+        }
+
+        if (!newUserForm.password) {
+            errors.password = 'Password is required';
+        } else if (newUserForm.password.length < 5) {
+            errors.password = 'Password must be at least 5 characters long';
+        }
+
+        if (!newUserForm.confirmPassword) {
+            errors.confirmPassword = 'Please confirm your password';
+        } else if (newUserForm.password !== newUserForm.confirmPassword) {
+            errors.confirmPassword = 'Passwords do not match';
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    // Handle add user form submission
+    const handleAddUser = async () => {
+        if (!validateForm()) return;
+
+        try {
+            setIsCreatingUser(true);
+            // Try admin_access_token first, then fall back to access_token
+            const adminToken = localStorage.getItem('admin_access_token');
+            const userToken = localStorage.getItem('access_token');
+            const token = adminToken || userToken;
+
+            if (!token) {
+                console.error('No authentication token found');
+                return;
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    fullName: newUserForm.fullName,
+                    email: newUserForm.email,
+                    password: newUserForm.password,
+                    confirmPassword: newUserForm.confirmPassword,
+                    role: 'admin' // Set role to admin as specified
+                }),
+            });
+
+            if (response.ok) {
+                const newUser = await response.json();
+                // Add new user to local state
+                setUsers(prev => [...prev, newUser]);
+                // Reset form and close modal
+                setNewUserForm({
+                    fullName: '',
+                    email: '',
+                    password: '',
+                    confirmPassword: ''
+                });
+                setFormErrors({});
+                setAddUserModalOpen(false);
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to create user:', response.status, errorData);
+                alert(errorData.message || 'Failed to create user. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error creating user:', error);
+            alert('Error creating user. Please try again.');
+        } finally {
+            setIsCreatingUser(false);
+        }
+    };
+
+    // Handle form input changes
+    const handleFormChange = (field: string, value: string) => {
+        setNewUserForm(prev => ({
+            ...prev,
+            [field]: value
+        }));
+        // Clear error for this field when user starts typing
+        if (formErrors[field]) {
+            setFormErrors(prev => ({
+                ...prev,
+                [field]: ''
+            }));
+        }
+    };
+
+    // Handle edit form input changes
+    const handleEditFormChange = (field: string, value: string) => {
+        setEditUserForm(prev => ({
+            ...prev,
+            [field]: value
+        }));
+        // Clear error for this field when user starts typing
+        if (editFormErrors[field]) {
+            setEditFormErrors(prev => ({
+                ...prev,
+                [field]: ''
+            }));
+        }
+    };
+
+    // Validate edit user form
+    const validateEditForm = () => {
+        const errors: Record<string, string> = {};
+
+        if (!editUserForm.fullName.trim()) {
+            errors.fullName = 'Full name is required';
+        }
+
+        if (!editUserForm.email.trim()) {
+            errors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editUserForm.email)) {
+            errors.email = 'Please enter a valid email address';
+        }
+
+        if (!editUserForm.role) {
+            errors.role = 'Role is required';
+        }
+
+        setEditFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    // Handle edit user form submission
+    const handleEditUser = async () => {
+        if (!validateEditForm() || !userToEdit) return;
+
+        try {
+            setIsUpdatingUser(true);
+            // Try admin_access_token first, then fall back to access_token
+            const adminToken = localStorage.getItem('admin_access_token');
+            const userToken = localStorage.getItem('access_token');
+            const token = adminToken || userToken;
+
+            if (!token) {
+                console.error('No authentication token found');
+                return;
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/${userToEdit.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    fullName: editUserForm.fullName,
+                    email: editUserForm.email,
+                    role: editUserForm.role
+                }),
+            });
+
+            if (response.ok) {
+                const updatedUser = await response.json();
+                // Update user in local state
+                setUsers(prev => prev.map(user =>
+                    user.id === userToEdit.id
+                        ? { ...user, ...updatedUser }
+                        : user
+                ));
+                // Reset form and close modal
+                setEditUserForm({
+                    fullName: '',
+                    email: '',
+                    role: ''
+                });
+                setEditFormErrors({});
+                setEditUserModalOpen(false);
+                setUserToEdit(null);
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to update user:', response.status, errorData);
+                alert(errorData.message || 'Failed to update user. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error updating user:', error);
+            alert('Error updating user. Please try again.');
+        } finally {
+            setIsUpdatingUser(false);
+        }
+    };
+
+    // Handle opening edit modal
+    const handleOpenEditModal = (user: DatabaseUser) => {
+        setUserToEdit(user);
+        setEditUserForm({
+            fullName: user.fullName || '',
+            email: user.email,
+            role: user.role
+        });
+        setEditFormErrors({});
+        setEditUserModalOpen(true);
+    };
+
     const hasSearchFilter = Boolean(filterValue);
 
     const headerColumns = React.useMemo(() => {
@@ -194,7 +453,7 @@ export default function Users() {
 
     const sortedItems = React.useMemo(() => {
         return [...items].sort((a: DatabaseUser, b: DatabaseUser) => {
-            let first: any = a[sortDescriptor.column as keyof DatabaseUser];
+            let first: unknown = a[sortDescriptor.column as keyof DatabaseUser];
             let second: unknown = b[sortDescriptor.column as keyof DatabaseUser];
 
             // Handle null values
@@ -227,17 +486,10 @@ export default function Users() {
         switch (columnKey) {
             case "fullName":
                 return (
-                    <User
-                        avatarProps={{
-                            radius: "lg",
-                            src: `https://i.pravatar.cc/150?u=${user.email}`,
-                            name: user.fullName || user.email.charAt(0).toUpperCase()
-                        }}
-                        description={user.email}
-                        name={user.fullName || "No name"}
-                    >
-                        {user.email}
-                    </User>
+                    <div>
+                        {user.fullName || "No name"}
+                    </div>
+
                 );
             case "role":
                 return (
@@ -258,38 +510,45 @@ export default function Users() {
                     </span>
                 );
             case "actions":
-                return (
-                    <div className="relative flex justify-end items-center gap-2">
-                        <Dropdown>
-                            <DropdownTrigger>
-                                <Button isIconOnly size="sm" variant="light">
-                                    <EllipsisVertical className="text-default-300" />
-                                </Button>
-                            </DropdownTrigger>
-                            <DropdownMenu onAction={(key) => {
-                                if (key === "delete") {
-                                    setUserToDelete(user);
-                                    setDeleteModalOpen(true);
-                                }
-                            }}>
-                                <DropdownItem key="view">View</DropdownItem>
-                                <DropdownItem key="edit">Edit</DropdownItem>
-                                <DropdownItem
-                                    key="delete"
-                                    className="text-danger"
-                                    color="danger"
-                                    startContent={<Trash2 className="w-4 h-4" />}
-                                >
-                                    Delete
-                                </DropdownItem>
-                            </DropdownMenu>
-                        </Dropdown>
-                    </div>
-                );
+                // Only show actions dropdown for superadmins
+                if (currentUser?.role === 'superadmin') {
+                    return (
+                        <div className="relative flex justify-end items-center gap-2">
+                            <Dropdown>
+                                <DropdownTrigger>
+                                    <Button isIconOnly size="sm" variant="light">
+                                        <EllipsisVertical className="text-default-300" />
+                                    </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu onAction={(key) => {
+                                    if (key === "edit") {
+                                        handleOpenEditModal(user);
+                                    } else if (key === "delete") {
+                                        setUserToDelete(user);
+                                        setDeleteModalOpen(true);
+                                    }
+                                }}>
+                                    <DropdownItem key="edit">Edit</DropdownItem>
+                                    <DropdownItem
+                                        key="delete"
+                                        className="text-danger"
+                                        color="danger"
+                                        startContent={<Trash2 className="w-4 h-4" />}
+                                    >
+                                        Delete
+                                    </DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+                        </div>
+                    );
+                } else {
+                    // Return empty div for non-superadmins (no actions available)
+                    return <div></div>;
+                }
             default:
                 return cellValue;
         }
-    }, []);
+    }, [currentUser]);
 
     const onNextPage = React.useCallback(() => {
         if (page < pages) {
@@ -325,6 +584,7 @@ export default function Users() {
     const topContent = React.useMemo(() => {
         return (
             <div className="flex flex-col gap-4">
+
                 <div className="flex justify-between gap-3 items-end">
                     <Input
                         isClearable
@@ -358,9 +618,16 @@ export default function Users() {
                             </DropdownMenu>
                         </Dropdown>
 
-                        <Button color="primary" endContent={<Plus />}>
-                            Add New
-                        </Button>
+                        {/* Only show Add New User button for superadmins */}
+                        {currentUser?.role === 'superadmin' && (
+                            <Button
+                                color="primary"
+                                endContent={<Plus />}
+                                onPress={() => setAddUserModalOpen(true)}
+                            >
+                                Add New User
+                            </Button>
+                        )}
                     </div>
                 </div>
                 <div className="flex justify-between items-center">
@@ -379,7 +646,7 @@ export default function Users() {
                 </div>
             </div>
         );
-    }, [filterValue, roleFilter, onSearchChange, onRowsPerPageChange, users.length, onClear]);
+    }, [currentUser, filterValue, onSearchChange, roleFilter, users.length, onRowsPerPageChange, onClear]);
 
     const bottomContent = React.useMemo(() => {
         return (
@@ -519,6 +786,221 @@ export default function Users() {
                             startContent={!isDeleting ? <Trash2 className="w-4 h-4" /> : null}
                         >
                             {isDeleting ? "Deleting..." : "Delete User"}
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* Add User Modal */}
+            <Modal
+                isOpen={addUserModalOpen}
+                onClose={() => {
+                    setAddUserModalOpen(false);
+                    setNewUserForm({
+                        fullName: '',
+                        email: '',
+                        password: '',
+                        confirmPassword: ''
+                    });
+                    setFormErrors({});
+                }}
+                size="md"
+            >
+                <ModalContent>
+                    <ModalHeader>
+                        <h3 className="text-lg font-semibold text-primary">Add New Admin User</h3>
+                    </ModalHeader>
+                    <ModalBody>
+                        <div className="space-y-4">
+                            <div>
+                                <Input
+                                    label="Full Name"
+                                    placeholder="Enter full name"
+                                    value={newUserForm.fullName}
+                                    onValueChange={(value) => handleFormChange('fullName', value)}
+                                    isInvalid={!!formErrors.fullName}
+                                    errorMessage={formErrors.fullName}
+                                    variant="bordered"
+                                />
+                            </div>
+
+                            <div>
+                                <Input
+                                    label="Email"
+                                    placeholder="Enter email address"
+                                    type="email"
+                                    value={newUserForm.email}
+                                    onValueChange={(value) => handleFormChange('email', value)}
+                                    isInvalid={!!formErrors.email}
+                                    errorMessage={formErrors.email}
+                                    variant="bordered"
+                                />
+                            </div>
+
+                            <div>
+                                <Input
+                                    label="Password"
+                                    placeholder="Enter password"
+                                    type="password"
+                                    value={newUserForm.password}
+                                    onValueChange={(value) => handleFormChange('password', value)}
+                                    isInvalid={!!formErrors.password}
+                                    errorMessage={formErrors.password}
+                                    variant="bordered"
+                                />
+                            </div>
+
+                            <div>
+                                <Input
+                                    label="Confirm Password"
+                                    placeholder="Confirm password"
+                                    type="password"
+                                    value={newUserForm.confirmPassword}
+                                    onValueChange={(value) => handleFormChange('confirmPassword', value)}
+                                    isInvalid={!!formErrors.confirmPassword}
+                                    errorMessage={formErrors.confirmPassword}
+                                    variant="bordered"
+                                />
+                            </div>
+
+                            <div className="bg-blue-50 p-3 rounded-lg">
+                                <p className="text-sm text-blue-700">
+                                    <strong>Note:</strong> The new user will be created with <strong>Admin</strong> role and will have access to the admin panel.
+                                </p>
+                            </div>
+                        </div>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="light"
+                            onPress={() => {
+                                setAddUserModalOpen(false);
+                                setNewUserForm({
+                                    fullName: '',
+                                    email: '',
+                                    password: '',
+                                    confirmPassword: ''
+                                });
+                                setFormErrors({});
+                            }}
+                            isDisabled={isCreatingUser}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            color="primary"
+                            onPress={handleAddUser}
+                            isLoading={isCreatingUser}
+                            startContent={!isCreatingUser ? <Plus className="w-4 h-4" /> : null}
+                        >
+                            {isCreatingUser ? "Creating..." : "Create Admin User"}
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* Edit User Modal */}
+            <Modal
+                isOpen={editUserModalOpen}
+                onClose={() => {
+                    setEditUserModalOpen(false);
+                    setEditUserForm({
+                        fullName: '',
+                        email: '',
+                        role: ''
+                    });
+                    setEditFormErrors({});
+                    setUserToEdit(null);
+                }}
+                size="md"
+            >
+                <ModalContent>
+                    <ModalHeader>
+                        <h3 className="text-lg font-semibold text-warning">Edit User</h3>
+                    </ModalHeader>
+                    <ModalBody>
+                        <div className="space-y-4">
+                            <div>
+                                <Input
+                                    label="Full Name"
+                                    placeholder="Enter full name"
+                                    value={editUserForm.fullName}
+                                    onValueChange={(value) => handleEditFormChange('fullName', value)}
+                                    isInvalid={!!editFormErrors.fullName}
+                                    errorMessage={editFormErrors.fullName}
+                                    variant="bordered"
+                                />
+                            </div>
+
+                            <div>
+                                <Input
+                                    label="Email"
+                                    placeholder="Enter email address"
+                                    type="email"
+                                    value={editUserForm.email}
+                                    onValueChange={(value) => handleEditFormChange('email', value)}
+                                    isInvalid={!!editFormErrors.email}
+                                    errorMessage={editFormErrors.email}
+                                    variant="bordered"
+                                />
+                            </div>
+
+                            <div>
+                                <Select
+                                    label="Role"
+                                    placeholder="Select user role"
+                                    selectedKeys={editUserForm.role ? [editUserForm.role] : []}
+                                    onSelectionChange={(keys) => {
+                                        const selectedKey = Array.from(keys)[0] as string;
+                                        handleEditFormChange('role', selectedKey);
+                                    }}
+                                    isInvalid={!!editFormErrors.role}
+                                    errorMessage={editFormErrors.role}
+                                    variant="bordered"
+                                >
+                                    {roleOptions.map((role) => (
+                                        <SelectItem key={role.uid}>
+                                            {role.name}
+                                        </SelectItem>
+                                    ))}
+                                </Select>
+                            </div>
+
+                            {userToEdit && (
+                                <div className="bg-yellow-50 p-3 rounded-lg">
+                                    <p className="text-sm text-yellow-700">
+                                        <strong>Editing User:</strong> {userToEdit.fullName || "No name"} ({userToEdit.email})
+                                    </p>
+                                    <p className="text-xs text-yellow-600 mt-1">
+                                        Current Role: <strong>{userToEdit.role}</strong>
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="light"
+                            onPress={() => {
+                                setEditUserModalOpen(false);
+                                setEditUserForm({
+                                    fullName: '',
+                                    email: '',
+                                    role: ''
+                                });
+                                setEditFormErrors({});
+                                setUserToEdit(null);
+                            }}
+                            isDisabled={isUpdatingUser}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            color="warning"
+                            onPress={handleEditUser}
+                            isLoading={isUpdatingUser}
+                        >
+                            {isUpdatingUser ? "Updating..." : "Update User"}
                         </Button>
                     </ModalFooter>
                 </ModalContent>
