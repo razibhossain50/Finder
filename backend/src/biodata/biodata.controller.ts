@@ -43,7 +43,8 @@ export class BiodataController {
     @Query('ageMin') ageMin?: string,
     @Query('ageMax') ageMax?: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string
+    @Query('limit') limit?: string,
+    @Req() req?: Request
   ) {
     const filters = {
       gender,
@@ -56,7 +57,9 @@ export class BiodataController {
       limit: limit ? parseInt(limit) : 6
     };
 
-    return this.biodataService.searchBiodatas(filters);
+    // Extract user ID from JWT if available (for filtering contact info)
+    const viewerId = req?.user?.id;
+    return this.biodataService.searchBiodatasWithContactFilter(filters, viewerId);
   }
 
   @Get('current')
@@ -111,8 +114,10 @@ export class BiodataController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.biodataService.findOne(+id);
+  findOne(@Param('id') id: string, @Req() req?: Request) {
+    // Extract user ID from JWT if available (for filtering contact info)
+    const viewerId = req?.user?.id;
+    return this.biodataService.findOne(+id, viewerId);
   }
 
   @Put('current')

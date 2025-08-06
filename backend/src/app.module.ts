@@ -12,6 +12,11 @@ import { Biodata } from './biodata/biodata.entity';
 import { BiodataModule } from './biodata/biodata.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { Favorite } from './favorites/favorites.entity';
+import { PaymentModule } from './payment/payment.module';
+import { ConnectionModule } from './connection/connection.module';
+import { Payment } from './payment/payment.entity';
+import { Connection } from './connection/connection.entity';
+import { ProfileView } from './biodata/entities/profile-view.entity';
 
 
 @Module({
@@ -29,7 +34,7 @@ import { Favorite } from './favorites/favorites.entity';
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASS'),
         database: config.get<string>('DB_NAME'),
-        entities: [User, Biodata, Favorite],
+        entities: [User, Biodata, Favorite, Payment, Connection, ProfileView],
         autoLoadEntities: true,
         synchronize: true,
       }),
@@ -38,6 +43,8 @@ import { Favorite } from './favorites/favorites.entity';
     AuthModule,
     BiodataModule,
     FavoritesModule,
+    PaymentModule,
+    ConnectionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

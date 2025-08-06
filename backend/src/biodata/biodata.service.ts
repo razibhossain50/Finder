@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Biodata } from './biodata.entity';
 import { ProfileView } from './entities/profile-view.entity';
+import { Connection } from '../connection/connection.entity';
 import { CreateBiodataDto } from './dto/create-biodata.dto';
 import { UpdateBiodataDto } from './dto/update-biodata.dto';
 
@@ -12,7 +13,9 @@ export class BiodataService {
     @InjectRepository(Biodata)
     private biodataRepository: Repository<Biodata>,
     @InjectRepository(ProfileView)
-    private profileViewRepository: Repository<ProfileView>
+    private profileViewRepository: Repository<ProfileView>,
+    @InjectRepository(Connection)
+    private connectionRepository: Repository<Connection>
   ) {}
 
   async create(createBiodataDto: CreateBiodataDto & { userId: number }) {
@@ -38,11 +41,18 @@ export class BiodataService {
     });
   }
 
-  findOne(id: number) {
-    return this.biodataRepository.findOne({
+  async findOne(id: number, viewerId?: number) {
+    const biodata = await this.biodataRepository.findOne({
       where: { id, status: 'Active' },
       relations: ['user']
     });
+
+    if (!biodata) {
+      return null;
+    }
+
+    // Filter contact information based on access
+    return this.filterContactInfo(biodata, viewerId);
   }
 
   findByUserId(userId: number) {
@@ -321,6 +331,73 @@ export class BiodataService {
       totalViews,
       recentViews,
       viewsThisMonth
+    };
+  }
+
+  // Filter contact information based on connection access
+  private async filterContactInfo(biodata: Biodata, viewerId?: number) {
+    if (!viewerId) {
+      // Anonymous user - hide contact info
+      return {
+        ...biodata,
+        email: null,
+        ownMobile: null,
+        guardianMobile: null,
+        contactInfoHidden: true,
+      };
+    }
+
+    // Check if viewer is the owner
+    if (biodata.userId === viewerId) {
+      return {
+        ...biodata,
+        contactInfoHidden: false,
+      };
+    }
+
+    // Check if viewer has purchased access
+    const connection = await this.connectionRepository.findOne({
+      where: { buyerId: viewerId, biodataId: biodata.id, status: 'active' },
+    });
+
+    if (connection) {
+      return {
+        ...biodata,
+        contactInfoHidden: false,
+      };
+    }
+
+    // Hide contact info for users without access
+    return {
+      ...biodata,
+      email: null,
+      ownMobile: null,
+      guardianMobile: null,
+      contactInfoHidden: true,
+    };
+  }
+
+  // Update search results to filter contact info
+  async searchBiodatasWithContactFilter(filters: {
+    gender?: string;
+    maritalStatus?: string;
+    location?: string;
+    biodataNumber?: string;
+    ageMin?: number;
+    ageMax?: number;
+    page?: number;
+    limit?: number;
+  }, viewerId?: number) {
+    const result = await this.searchBiodatas(filters);
+    
+    // Filter contact info for each biodata
+    const filteredData = await Promise.all(
+      result.data.map(biodata => this.filterContactInfo(biodata, viewerId))
+    );
+
+    return {
+      ...result,
+      data: filteredData,
     };
   }
 }

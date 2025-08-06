@@ -17,6 +17,9 @@ export class User {
   @Column({ default: 'user' })
   role: string;
 
+  @Column({ default: 0 })
+  connectionTokens: number; // Available connection tokens
+
   @CreateDateColumn()
   createdAt: Date;
 
