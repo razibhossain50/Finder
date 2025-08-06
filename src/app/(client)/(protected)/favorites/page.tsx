@@ -47,7 +47,7 @@ export default function FavoritesPage() {
                 setLoading(true);
                 setError(null);
 
-                const token = localStorage.getItem('regular_access_token');
+                const token = localStorage.getItem('regular_user_access_token');
                 const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorites`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -115,7 +115,7 @@ export default function FavoritesPage() {
         if (!isAuthenticated || !user) return;
 
         try {
-            const token = localStorage.getItem('regular_access_token');
+            const token = localStorage.getItem('regular_user_access_token');
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorites/${id}`, {
                 method: 'DELETE',
                 headers: {

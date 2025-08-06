@@ -49,7 +49,7 @@ export default function BiodataForm() {
     const { data: existingBiodata, isLoading, error } = useQuery({
         queryKey: ['biodata', biodataId],
         queryFn: async () => {
-            const token = localStorage.getItem('regular_access_token');
+            const token = localStorage.getItem('regular_user_access_token');
             if (!token) {
                 throw new Error('Authentication required');
             }

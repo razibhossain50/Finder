@@ -125,10 +125,8 @@ export default function Users() {
         const fetchUsers = async () => {
             try {
                 setLoading(true);
-                // Try admin_access_token first, then fall back to access_token
-                const adminToken = localStorage.getItem('admin_access_token');
-                const userToken = localStorage.getItem('access_token');
-                const token = adminToken || userToken;
+                // Get admin authentication token
+                const token = localStorage.getItem('admin_user_access_token');
 
                 if (!token) {
                     setError('No authentication token found. Please login as admin.');
@@ -172,10 +170,8 @@ export default function Users() {
 
         try {
             setIsDeleting(true);
-            // Try admin_access_token first, then fall back to access_token
-            const adminToken = localStorage.getItem('admin_access_token');
-            const userToken = localStorage.getItem('access_token');
-            const token = adminToken || userToken;
+            // Get admin authentication token
+            const token = localStorage.getItem('admin_user_access_token');
 
             if (!token) {
                 console.error('No authentication token found');
@@ -244,10 +240,8 @@ export default function Users() {
 
         try {
             setIsCreatingUser(true);
-            // Try admin_access_token first, then fall back to access_token
-            const adminToken = localStorage.getItem('admin_access_token');
-            const userToken = localStorage.getItem('access_token');
-            const token = adminToken || userToken;
+            // Get admin authentication token
+            const token = localStorage.getItem('admin_user_access_token');
 
             if (!token) {
                 console.error('No authentication token found');
@@ -353,10 +347,8 @@ export default function Users() {
 
         try {
             setIsUpdatingUser(true);
-            // Try admin_access_token first, then fall back to access_token
-            const adminToken = localStorage.getItem('admin_access_token');
-            const userToken = localStorage.getItem('access_token');
-            const token = adminToken || userToken;
+            // Get admin authentication token
+            const token = localStorage.getItem('admin_user_access_token');
 
             if (!token) {
                 console.error('No authentication token found');

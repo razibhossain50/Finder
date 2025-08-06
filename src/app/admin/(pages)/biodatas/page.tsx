@@ -176,10 +176,8 @@ export default function Biodatas() {
 
         try {
             setIsUpdatingStatus(true);
-            // Try admin_access_token first, then fall back to access_token
-            const adminToken = localStorage.getItem('admin_access_token');
-            const userToken = localStorage.getItem('access_token');
-            const token = adminToken || userToken;
+            // Get admin authentication token
+            const token = localStorage.getItem('admin_user_access_token');
 
             if (!token) {
                 console.error('No authentication token found');
@@ -223,10 +221,8 @@ export default function Biodatas() {
 
         try {
             setIsDeleting(true);
-            // Try admin_access_token first, then fall back to access_token
-            const adminToken = localStorage.getItem('admin_access_token');
-            const userToken = localStorage.getItem('access_token');
-            const token = adminToken || userToken;
+            // Get admin authentication token
+            const token = localStorage.getItem('admin_user_access_token');
 
             if (!token) {
                 console.error('No authentication token found');
@@ -262,10 +258,8 @@ export default function Biodatas() {
         const fetchBiodatas = async () => {
             try {
                 setLoading(true);
-                // Try admin_access_token first, then fall back to access_token
-                const adminToken = localStorage.getItem('admin_access_token');
-                const userToken = localStorage.getItem('access_token');
-                const token = adminToken || userToken;
+                // Get admin authentication token
+                const token = localStorage.getItem('admin_user_access_token');
 
                 if (!token) {
                     setError('No authentication token found. Please login as admin.');
@@ -1305,7 +1299,7 @@ export default function Biodatas() {
                                     <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Family Information</h5>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         <div>
-                                            <span className="text-sm text-gray-600">Father's Name:</span>
+                                            <span className="text-sm text-gray-600">Father&apos;s Name:</span>
                                             <p className="font-medium">{selectedBiodata.fatherName}</p>
                                         </div>
                                         <div>

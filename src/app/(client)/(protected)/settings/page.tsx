@@ -30,7 +30,7 @@ export default function Settings() {
     setMessage("");
 
     try {
-      const token = localStorage.getItem('regular_access_token');
+      const token = localStorage.getItem('regular_user_access_token');
       console.log('Token from localStorage:', token);
       console.log('User ID:', user.id);
       console.log('Request URL:', `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/${user.id}`);

@@ -34,7 +34,7 @@ const Login = () => {
       }
 
       // Store token and user data
-      localStorage.setItem('access_token', data.access_token)
+      localStorage.setItem('admin_user_access_token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
       // Redirect to admin dashboard

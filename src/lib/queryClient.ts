@@ -13,18 +13,18 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   // Get the appropriate token based on the current context
-  const regularToken = localStorage.getItem('regular_access_token');
-  const adminToken = localStorage.getItem('access_token');
-  
+  const regularToken = localStorage.getItem('regular_user_access_token');
+  const adminToken = localStorage.getItem('admin_user_access_token');
+
   // Use regular token first, fallback to admin token
   const token = regularToken || adminToken;
-  
+
   const headers: Record<string, string> = {};
-  
+
   if (data) {
     headers["Content-Type"] = "application/json";
   }
-  
+
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -45,32 +45,32 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    // Get the appropriate token based on the current context
-    const regularToken = localStorage.getItem('regular_access_token');
-    const adminToken = localStorage.getItem('access_token');
-    
-    // Use regular token first, fallback to admin token
-    const token = regularToken || adminToken;
-    
-    const headers: Record<string, string> = {};
-    
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+    async ({ queryKey }) => {
+      // Get the appropriate token based on the current context
+      const regularToken = localStorage.getItem('regular_user_access_token');
+      const adminToken = localStorage.getItem('admin_user_access_token');
 
-    const res = await fetch(queryKey[0] as string, {
-      headers,
-      credentials: "include",
-    });
+      // Use regular token first, fallback to admin token
+      const token = regularToken || adminToken;
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
+      const headers: Record<string, string> = {};
 
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(queryKey[0] as string, {
+        headers,
+        credentials: "include",
+      });
+
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      return await res.json();
+    };
 
 export const queryClient = new QueryClient({
   defaultOptions: {

@@ -107,7 +107,7 @@ export default function AuthRedirect({ children }) {
 ## 🔐 Authentication Context
 
 ### RegularAuthContext Features
-- **Separate Storage**: Uses `regular_access_token` and `regular_user`
+- **Separate Storage**: Uses `regular_user_access_token` and `regular_user`
 - **Role Validation**: Only allows users with `role: 'user'`
 - **Auto Redirect**: Redirects to `/dashboard` on successful auth
 - **Token Management**: Handles JWT token storage and cleanup

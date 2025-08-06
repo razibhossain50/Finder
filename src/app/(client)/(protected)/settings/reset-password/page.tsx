@@ -40,7 +40,7 @@ export default function ResetPassword() {
     setMessage("");
 
     try {
-      const token = localStorage.getItem('regular_access_token');
+      const token = localStorage.getItem('regular_user_access_token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/${user.id}/password`, {
         method: 'PUT',
         headers: {

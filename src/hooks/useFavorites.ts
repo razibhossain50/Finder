@@ -27,7 +27,7 @@ export const useFavorites = () => {
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('regular_access_token');
+    return localStorage.getItem('regular_user_access_token');
   };
 
   // Fetch user's favorites

@@ -28,7 +28,7 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('regular_access_token')
+      const token = localStorage.getItem('regular_user_access_token')
       const userData = localStorage.getItem('regular_user')
 
       if (token && userData) {
@@ -37,7 +37,7 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
           console.error('Failed to parse user data', error)
           // Clear invalid data instead of calling logout
-          localStorage.removeItem('regular_access_token')
+          localStorage.removeItem('regular_user_access_token')
           localStorage.removeItem('regular_user')
         }
       }
@@ -63,7 +63,7 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.message || 'Signup failed')
       }
 
-      localStorage.setItem('regular_access_token', data.access_token)
+      localStorage.setItem('regular_user_access_token', data.access_token)
       localStorage.setItem('regular_user', JSON.stringify(data.user))
       setUser(data.user)
       
@@ -91,7 +91,7 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Allow users, but redirect admins to admin panel
       if (data.user.role === 'admin' || data.user.role === 'superadmin') {
-        localStorage.setItem('access_token', data.access_token)
+        localStorage.setItem('admin_user_access_token', data.access_token)
         localStorage.setItem('user', JSON.stringify(data.user))
         router.push('/admin')
         return
@@ -102,7 +102,7 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Access denied. Invalid user role.')
       }
 
-      localStorage.setItem('regular_access_token', data.access_token)
+      localStorage.setItem('regular_user_access_token', data.access_token)
       localStorage.setItem('regular_user', JSON.stringify(data.user))
       setUser(data.user)
       
@@ -117,13 +117,13 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
       await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('regular_access_token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('regular_user_access_token')}`,
         },
       });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('regular_access_token');
+      localStorage.removeItem('regular_user_access_token');
       localStorage.removeItem('regular_user');
       setUser(null);
       router.push('/auth/login');

@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('admin_user_access_token')
       const userData = localStorage.getItem('user')
 
       if (token && userData) {
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.message || 'Login failed')
       }
 
-      localStorage.setItem('access_token', data.access_token)
+      localStorage.setItem('admin_user_access_token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
       setUser(data.user)
     } catch (error) {
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   // const logout = () => {
-  //   localStorage.removeItem('access_token')
+  //   localStorage.removeItem('admin_user_access_token')
   //   localStorage.removeItem('user')
   //   setUser(null)
   //   router.push('/admin/login')
@@ -79,13 +79,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        'Authorization': `Bearer ${localStorage.getItem('admin_user_access_token')}`,
       },
     });
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
-    localStorage.removeItem('access_token');
+    localStorage.removeItem('admin_user_access_token');
     localStorage.removeItem('user');
     setUser(null);
     router.push('/admin/login');

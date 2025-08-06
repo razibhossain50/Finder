@@ -26,7 +26,7 @@ function Header() {
       }
 
       try {
-        const token = localStorage.getItem('regular_access_token');
+        const token = localStorage.getItem('regular_user_access_token');
         if (!token) {
           setBiodataLoading(false);
           return;

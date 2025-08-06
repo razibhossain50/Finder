@@ -29,7 +29,7 @@ This implementation provides a complete authentication system for regular users,
 ### Frontend (Next.js)
 1. **Regular User Auth Context**
    - `RegularAuthProvider` - separate from admin auth
-   - Uses different localStorage keys (`regular_access_token`, `regular_user`)
+   - Uses different localStorage keys (`regular_user_access_token`, `regular_user`)
    - Automatic redirect to dashboard on successful auth
    - Role validation (only allows 'user' role)
 
