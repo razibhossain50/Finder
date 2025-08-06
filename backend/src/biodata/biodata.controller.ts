@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseGuards, Query, Req, Optional } from '@nestjs/common';
 import { BiodataService } from './biodata.service';
 import { CreateBiodataDto } from './dto/create-biodata.dto';
 import { UpdateBiodataDto } from './dto/update-biodata.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Request } from 'express';
 
 @Controller('api/biodatas')
 export class BiodataController {
@@ -193,5 +194,33 @@ export class BiodataController {
     }
 
     return this.biodataService.updateStep(+id, +step, partialData);
+  }
+
+  // Profile view tracking endpoints
+  @Post(':id/view')
+  async trackProfileView(
+    @Param('id') id: string,
+    @Req() req: Request
+  ) {
+    const biodataId = +id;
+    const viewerId: number | undefined = undefined; // For now, we'll handle anonymous tracking
+    const ipAddress = req.ip || req.connection.remoteAddress || undefined;
+    const userAgent = req.get('User-Agent') || undefined;
+
+    return this.biodataService.trackProfileView(biodataId, viewerId, ipAddress, userAgent);
+  }
+
+  @Get(':id/view-count')
+  async getProfileViewCount(@Param('id') id: string) {
+    return { viewCount: await this.biodataService.getProfileViewCount(+id) };
+  }
+
+  @Get('current/view-stats')
+  @UseGuards(JwtAuthGuard)
+  async getUserProfileViewStats(@CurrentUser() user: any) {
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+    return this.biodataService.getUserProfileViewStats(user.id);
   }
 }

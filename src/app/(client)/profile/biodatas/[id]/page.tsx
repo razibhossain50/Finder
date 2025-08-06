@@ -30,6 +30,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useProfileView } from "@/hooks/useProfileView";
 
 interface BiodataProfile {
   id: number;
@@ -118,6 +119,7 @@ export default function Profile() {
   const biodataId = params.id as string;
   const { user, isAuthenticated } = useRegularAuth();
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { trackProfileView } = useProfileView();
 
   // Check if the current user can edit this profile
   const canEditProfile = useMemo(() => {
@@ -248,6 +250,21 @@ export default function Profile() {
   useEffect(() => {
     checkFavoriteStatus();
   }, [checkFavoriteStatus]);
+
+  // Track profile view when profile loads successfully
+  useEffect(() => {
+    if (profile && biodataId) {
+      const trackView = async () => {
+        try {
+          await trackProfileView(parseInt(biodataId));
+        } catch (error) {
+          console.error('Failed to track profile view:', error);
+        }
+      };
+      
+      trackView();
+    }
+  }, [profile, biodataId, trackProfileView]);
 
   const handleRetry = () => {
     setLoading(true);

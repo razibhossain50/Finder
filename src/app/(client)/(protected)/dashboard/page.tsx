@@ -1,10 +1,94 @@
 "use client";
+import { useState, useEffect, useCallback } from "react";
 import { Users, Heart, BookmarkCheck, ShoppingCart, Plus, TrendingUp, Eye, Star } from "lucide-react";
 import { Card, CardBody, CardHeader, Button } from "@heroui/react";
 import { useRegularAuth } from "@/context/RegularAuthContext";
+import { useProfileView } from "@/hooks/useProfileView";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export default function Dashboard() {
   const { user } = useRegularAuth();
+  const { getProfileViewStats } = useProfileView();
+  const { favorites, getFavoriteCount } = useFavorites();
+  const [viewStats, setViewStats] = useState({
+    totalViews: 0,
+    recentViews: 0,
+    viewsThisMonth: 0
+  });
+  const [favoritesStats, setFavoritesStats] = useState({
+    totalFavorites: 0,
+    newThisWeek: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [favoritesLoading, setFavoritesLoading] = useState(true);
+
+  // Fetch profile view statistics
+  useEffect(() => {
+    const fetchViewStats = async () => {
+      try {
+        setStatsLoading(true);
+        const result = await getProfileViewStats();
+        if (result.success && result.data) {
+          setViewStats(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch view stats:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchViewStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Fetch favorites statistics
+  useEffect(() => {
+    const fetchFavoritesStats = async () => {
+      try {
+        setFavoritesLoading(true);
+        const totalCount = await getFavoriteCount();
+        setFavoritesStats({
+          totalFavorites: totalCount,
+          newThisWeek: 0 // We'll calculate this separately
+        });
+      } catch (error) {
+        console.error('Failed to fetch favorites stats:', error);
+      } finally {
+        setFavoritesLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchFavoritesStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Calculate new favorites this week when favorites array changes
+  useEffect(() => {
+    if (favorites.length >= 0) { // Changed to >= 0 to handle empty arrays
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const newThisWeek = favorites.filter(fav =>
+        new Date(fav.createdAt) >= oneWeekAgo
+      ).length;
+
+      setFavoritesStats(prev => {
+        // Only update if the value actually changed to prevent unnecessary re-renders
+        if (prev.newThisWeek !== newThisWeek) {
+          return {
+            ...prev,
+            newThisWeek
+          };
+        }
+        return prev;
+      });
+    }
+  }, [favorites]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -15,7 +99,7 @@ export default function Dashboard() {
             <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4 leading-tight">
               Welcome back, {user?.fullName || user?.email}!
             </h1>
-            <p className="text-slate-600 text-xl leading-relaxed">Here's what&apos;s happening with your account</p>
+            <p className="text-slate-600 text-xl leading-relaxed">Here&apos;s what&apos;s happening with your account</p>
           </div>
         </div>
 
@@ -69,14 +153,32 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
                     <TrendingUp className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-bold text-green-700">+12%</span>
+                    <span className="text-sm font-bold text-green-700">
+                      {statsLoading ? (
+                        <div className="animate-pulse bg-green-200 rounded h-3 w-8"></div>
+                      ) : (
+                        `+${viewStats.recentViews} recent`
+                      )}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <h3 className="text-2xl font-bold text-slate-800">Profile Visits</h3>
                   <p className="text-slate-600 text-lg">Total views on your profile</p>
-                  <div className="text-5xl font-bold text-blue-600 mb-2">247</div>
-                  <p className="text-slate-500 font-medium">+29 from last month</p>
+                  <div className="text-5xl font-bold text-blue-600 mb-2">
+                    {statsLoading ? (
+                      <div className="animate-pulse bg-blue-200 rounded h-12 w-24"></div>
+                    ) : (
+                      viewStats.totalViews
+                    )}
+                  </div>
+                  <p className="text-slate-500 font-medium">
+                    {statsLoading ? (
+                      <div className="animate-pulse bg-gray-200 rounded h-4 w-32"></div>
+                    ) : (
+                      `+${viewStats.viewsThisMonth} this month`
+                    )}
+                  </p>
                 </div>
               </div>
             </CardBody>
@@ -92,21 +194,39 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center gap-2 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-200">
                     <Star className="h-4 w-4 text-rose-600" />
-                    <span className="text-sm font-bold text-rose-700">8 new</span>
+                    <span className="text-sm font-bold text-rose-700">
+                      {favoritesLoading ? (
+                        <div className="animate-pulse bg-rose-200 rounded h-3 w-8"></div>
+                      ) : (
+                        `${favoritesStats.newThisWeek} new`
+                      )}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <h3 className="text-2xl font-bold text-slate-800 group-hover:text-rose-600 transition-colors">Your Favorites</h3>
                   <p className="text-slate-600 text-lg">Profiles you&apos;ve liked</p>
-                  <div className="text-5xl font-bold text-rose-600 mb-2">36</div>
-                  <p className="text-slate-500 font-medium">8 added this week</p>
+                  <div className="text-5xl font-bold text-rose-600 mb-2">
+                    {favoritesLoading ? (
+                      <div className="animate-pulse bg-rose-200 rounded h-12 w-24"></div>
+                    ) : (
+                      favoritesStats.totalFavorites
+                    )}
+                  </div>
+                  <p className="text-slate-500 font-medium">
+                    {favoritesLoading ? (
+                      <div className="animate-pulse bg-gray-200 rounded h-4 w-32"></div>
+                    ) : (
+                      `${favoritesStats.newThisWeek} added this week`
+                    )}
+                  </p>
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Shortlisted Card */}
-          <Card className="bg-white/80 backdrop-blur-sm hover:bg-white/95 transition-all duration-500 border-0 shadow-xl hover:shadow-2xl group overflow-hidden">
+          {/* <Card className="bg-white/80 backdrop-blur-sm hover:bg-white/95 transition-all duration-500 border-0 shadow-xl hover:shadow-2xl group overflow-hidden">
             <CardBody className="p-8">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -126,7 +246,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </CardBody>
-          </Card>
+          </Card> */}
         </div>
 
 
