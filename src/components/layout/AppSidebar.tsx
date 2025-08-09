@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
-import { BoxCubeIcon,ChevronDownIcon,GridIcon, HorizontaLDots,ListIcon} from "@/icons/index";
+import { Box,ChevronDownIcon,GridIcon, EllipsisVertical,ListIcon} from "lucide-react";
 
 type NavItem = {
   name: string;
@@ -20,12 +20,12 @@ const navItems: NavItem[] = [
   },
   {
     name: "Users Management",
-    icon: <BoxCubeIcon />,
+    icon: <Box />,
     subItems: [{ name: "Users", path: "/admin/users" }],
   },
   {
     name: "Profile Management",
-    icon: <BoxCubeIcon />,
+    icon: <Box />,
     subItems: [{ name: "Biodatas", path: "/admin/biodatas" }],
   },
 ];
@@ -34,7 +34,7 @@ const othersItems: NavItem[] = [
 
 
   {
-    icon: <BoxCubeIcon />,
+    icon: <Box />,
     name: "UI Elements",
     subItems: [
       { name: "Data Table", path: "/admin/table", pro: false },
@@ -293,7 +293,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
                 ) : (
-                  <HorizontaLDots />
+                  <EllipsisVertical />
                 )}
               </h2>
               {renderMenuItems(navItems, "main")}
@@ -309,7 +309,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Others"
                 ) : (
-                  <HorizontaLDots />
+                  <EllipsisVertical />
                 )}
               </h2>
               {renderMenuItems(othersItems, "others")}

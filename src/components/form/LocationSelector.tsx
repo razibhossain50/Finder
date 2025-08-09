@@ -77,7 +77,7 @@ export function LocationSelector({ onLocationSelect, value }: LocationSelectorPr
       case "upazila":
         const division = data.divisions.find((div) => div.name === selectionPath.division);
         const selectedDistrict = division?.districts?.find((dist) => dist.name === selectionPath.district);
-        return selectedDistrict?.upazilas.map((upazila) => ({
+        return selectedDistrict?.upazilas?.map((upazila) => ({
           name: upazila,
           value: upazila,
           hasChildren: false

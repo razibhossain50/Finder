@@ -9,15 +9,15 @@ import {
 import { Plus, EllipsisVertical, Search, ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
- type IconSvgProps = SVGProps<SVGSVGElement> & {
+type IconSvgProps = SVGProps<SVGSVGElement> & {
     size?: number;
 };
 
- function capitalize(s: string) {
+function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 }
 
- const columns = [
+const columns = [
     { name: "ID", uid: "id", sortable: false },
     { name: "STEP", uid: "step", sortable: false },
     { name: "USER ID", uid: "userId", sortable: false },
@@ -77,7 +77,7 @@ import { useAuth } from "@/context/AuthContext";
     { name: "ACTIONS", uid: "actions", sortable: false },
 ];
 
- const statusOptions = [
+const statusOptions = [
     { name: "Active", uid: "Active" },
     { name: "Inactive", uid: "Inactive" },
     { name: "Pending", uid: "Pending" },
@@ -405,11 +405,11 @@ export default function Biodatas() {
                                 }
                             }}>
                                 <DropdownItem key="view">View & Edit</DropdownItem>
-                                {isSuperAdmin && (
+                                {isSuperAdmin ? (
                                     <DropdownItem key="delete" className="text-danger" color="danger">
                                         Delete
                                     </DropdownItem>
-                                )}
+                                ) : null}
                             </DropdownMenu>
                         </Dropdown>
                     </div>

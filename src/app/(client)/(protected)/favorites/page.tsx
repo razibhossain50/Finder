@@ -27,6 +27,29 @@ interface Biodata {
     dateAdded?: string;
 }
 
+// API response types
+interface FavoriteApiResponse {
+    biodata: {
+        id: number;
+        fullName?: string;
+        profilePicture?: string;
+        age?: number;
+        biodataType?: string;
+        profession?: string;
+        presentCountry?: string;
+        presentDivision?: string;
+        presentZilla?: string;
+        presentArea?: string;
+        maritalStatus?: string;
+        height?: string;
+        complexion?: string;
+        religion?: string;
+        educationMedium?: string;
+        highestEducation?: string;
+    };
+    createdAt: string;
+}
+
 export default function FavoritesPage() {
     const { user, isAuthenticated } = useRegularAuth();
     const [favorites, setFavorites] = useState<Biodata[]>([]);
@@ -61,9 +84,9 @@ export default function FavoritesPage() {
 
                 const data = await response.json();
                 const favoritesData = data.data || [];
-                
+
                 // Transform the API response to match our interface
-                const transformedFavorites: Biodata[] = favoritesData.map((fav: unknown) => ({
+                const transformedFavorites: Biodata[] = favoritesData.map((fav: FavoriteApiResponse) => ({
                     id: fav.biodata.id,
                     fullName: fav.biodata.fullName || "Unknown User",
                     profilePicture: fav.biodata.profilePicture,
@@ -82,7 +105,7 @@ export default function FavoritesPage() {
                     highestEducation: fav.biodata.highestEducation,
                     dateAdded: fav.createdAt
                 }));
-                
+
                 setFavorites(transformedFavorites);
                 setFilteredFavorites(transformedFavorites);
             } catch (error) {
@@ -245,7 +268,7 @@ export default function FavoritesPage() {
                                 {favorites.length} profile{favorites.length !== 1 ? 's' : ''} saved for later
                             </p>
                         </div>
-                        
+
                         {/* Search Bar */}
                         {favorites.length > 0 && (
                             <div className="w-full lg:w-96">
@@ -266,7 +289,7 @@ export default function FavoritesPage() {
                 {filteredFavorites.length > 0 ? (
                     <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl">
                         <CardBody className="p-0">
-                            <Table 
+                            <Table
                                 aria-label="Favorites table"
                                 className="min-h-[400px]"
                                 removeWrapper
@@ -303,8 +326,8 @@ export default function FavoritesPage() {
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     <Avatar
-                                                        src={biodata.profilePicture ? 
-                                                            `${process.env.NEXT_PUBLIC_API_BASE_URL}${biodata.profilePicture}` : 
+                                                        src={biodata.profilePicture ?
+                                                            `${process.env.NEXT_PUBLIC_API_BASE_URL}${biodata.profilePicture}` :
                                                             (biodata.biodataType === "Male" ? "/icons/male.png" : "/icons/female.png")}
                                                         name={biodata.fullName}
                                                         size="md"

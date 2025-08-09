@@ -9,19 +9,19 @@ import {
 import { Plus, EllipsisVertical, Search, ChevronDown, Trash2 } from "lucide-react";
 
 
- type IconSvgProps = SVGProps<SVGSVGElement> & {
+type IconSvgProps = SVGProps<SVGSVGElement> & {
     size?: number;
 };
 
 
- function capitalize(s: string) {
+function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 }
 
 
 // Columns based on your database schema
 
- const columns = [
+const columns = [
     { name: "ID", uid: "id", sortable: true },
     { name: "FULL NAME", uid: "fullName", sortable: true },
     { name: "EMAIL", uid: "email", sortable: true },
@@ -33,7 +33,7 @@ import { Plus, EllipsisVertical, Search, ChevronDown, Trash2 } from "lucide-reac
 
 // Role options based on your database
 
- const roleOptions = [
+const roleOptions = [
     { name: "User", uid: "user" },
     { name: "Admin", uid: "admin" },
     { name: "Superadmin", uid: "superadmin" },
@@ -449,12 +449,12 @@ export default function Users() {
 
     const sortedItems = React.useMemo(() => {
         return [...items].sort((a: DatabaseUser, b: DatabaseUser) => {
-            let first: unknown = a[sortDescriptor.column as keyof DatabaseUser];
-            let second: unknown = b[sortDescriptor.column as keyof DatabaseUser];
+            let first: string | number = a[sortDescriptor.column as keyof DatabaseUser] as string | number;
+            let second: string | number = b[sortDescriptor.column as keyof DatabaseUser] as string | number;
 
             // Handle null values
-            if (first === null) first = "";
-            if (second === null) second = "";
+            if (first === null || first === undefined) first = "";
+            if (second === null || second === undefined) second = "";
 
             // Convert to string for comparison if needed
             if (typeof first === 'string') first = first.toLowerCase();

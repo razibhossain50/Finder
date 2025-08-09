@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Post,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
-  UseGuards,
+import {Controller,Post,UseInterceptors,UploadedFile,BadRequestException,UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';

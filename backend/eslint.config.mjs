@@ -1,6 +1,5 @@
 // @ts-check
 import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import { dirname } from 'path';
@@ -15,7 +14,6 @@ export default tseslint.config(
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
-  eslintPluginPrettierRecommended,
   {
     languageOptions: {
       globals: {
@@ -38,18 +36,6 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
-       'prettier/prettier': [
-        'warn',
-        {
-          tabWidth: 2,
-          useTabs: false,
-          printWidth: 120,
-          trailingComma: 'none',
-          bracketSpacing: true,
-          bracketSameLine: false,
-          
-        }
-      ],
     },
   },
 );

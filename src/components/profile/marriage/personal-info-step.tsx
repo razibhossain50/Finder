@@ -1,6 +1,6 @@
 'use client';
 import { Input, Select, SelectItem, Textarea, Checkbox, Card, CardBody, CardHeader } from "@heroui/react";
-import { CascadingSelect } from "@/components/ui/cascading-select";
+import { CascadingSelect } from "@/components/form/cascading-select";
 import { useState, useEffect } from "react";
 
 interface PersonalInfoStepProps {

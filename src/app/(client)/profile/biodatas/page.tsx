@@ -171,7 +171,7 @@ const AllBiodatas = () => {
                                 {/* Right Button Section */}
                                 <div className="flex flex-col sm:flex-row gap-4 lg:flex-col xl:flex-row">
                                     {/* Primary CTA Button */}
-                                    <Button className="group/btn relative px-10 py-6 bg-white text-rose-600 hover:bg-rose-50 font-bold text-lg rounded-2xl transition-all duration-300 transform hover:scale-110 hover:shadow-2xl overflow-hidden" asChild>
+                                    <Button className="group/btn relative px-10 py-6 bg-white text-rose-600 hover:bg-rose-50 font-bold text-lg rounded-2xl transition-all duration-300 transform hover:scale-110 hover:shadow-2xl overflow-hidden" >
                                         <Link href="/profile/biodatas/edit/new">
                                             {/* Button Background Effect */}
                                             <div className="absolute inset-0 bg-gradient-to-r from-rose-50 to-pink-50 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>

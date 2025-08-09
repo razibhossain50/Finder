@@ -40,7 +40,7 @@ const Login = () => {
       // Redirect to admin dashboard
       router.push('/admin/')
     } catch (err) {
-      setError(err.message || 'An error occurred. Please try again.')
+      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }

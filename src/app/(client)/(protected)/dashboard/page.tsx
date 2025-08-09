@@ -41,7 +41,6 @@ export default function Dashboard() {
     if (user) {
       fetchViewStats();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Fetch favorites statistics
@@ -64,7 +63,6 @@ export default function Dashboard() {
     if (user) {
       fetchFavoritesStats();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Calculate new favorites this week when favorites array changes

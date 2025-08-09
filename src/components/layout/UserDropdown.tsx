@@ -2,8 +2,8 @@
 import Image from "next/image";
 
 import React, { useState } from "react";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { Dropdown } from "../common/Dropdown";
+import { DropdownItem } from "../common/DropdownItem";
 import { useAuth } from '@/context/AuthContext';
 
 

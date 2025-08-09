@@ -95,7 +95,7 @@ export function CascadingSelect({ type, data, errors, updateData }: CascadingSel
   };
 
   const handleSelect = (value: string, label: string) => {
-    const updates: unknown = {};
+    const updates: Record<string, string> = {};
 
     switch (currentLevel) {
       case 'country':

@@ -340,11 +340,11 @@ export default function Profile() {
               </div>
             </div>
             <div className="mt-6 space-x-4">
-              <Button onClick={handleRetry} variant="default" className="flex items-center gap-2">
+              <Button onClick={handleRetry} variant="flat" className="flex items-center gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Retry
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="flat">
                 <Link href="/profile/biodatas">
                   Back to All Profiles
                 </Link>
@@ -426,7 +426,7 @@ export default function Profile() {
                   <Button
                     size="lg"
                     className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white px-8 py-3 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                    asChild
+                    
                   >
                     <Link href="/profile/biodatas/edit/new">
                       <Plus className="h-5 w-5 mr-2" />
@@ -435,12 +435,12 @@ export default function Profile() {
                   </Button>
 
                   <div className="flex justify-center gap-4">
-                    <Button variant="outline" asChild>
+                    <Button variant="flat" >
                       <Link href="/profile/biodatas">
                         Browse All Profiles
                       </Link>
                     </Button>
-                    <Button variant="outline" asChild>
+                    <Button variant="flat" >
                       <Link href="/dashboard">
                         Go to Dashboard
                       </Link>
