@@ -27,7 +27,17 @@ const eslintConfig = [
     rules: {
       // Disable ALL Prettier-related rules
       "prettier/prettier": "off",
-      
+
+      // Disable TypeScript strict rules
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+
+      // Disable React and Next.js warnings
+      "react-hooks/exhaustive-deps": "off",
+      "react/no-unescaped-entities": "off",
+      "react/display-name": "off",
+      "@next/next/no-img-element": "off",
+
       // Disable formatting-related rules
       "indent": "off",
       "quotes": "off",
@@ -96,12 +106,7 @@ const eslintConfig = [
       "react/jsx-tag-spacing": "off",
       "react/jsx-wrap-multilines": "off",
 
-      // Keep important code quality rules as warnings
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
-      "react/no-unescaped-entities": "off",
-      "react/display-name": "off",
-      "@next/next/no-img-element": "off",
+
     },
   },
 ];

@@ -8,16 +8,16 @@ import {
 } from "@heroui/react";
 import { Plus, EllipsisVertical, Search, ChevronDown } from "lucide-react";
 
-export type IconSvgProps = SVGProps<SVGSVGElement> & {
+ type IconSvgProps = SVGProps<SVGSVGElement> & {
     size?: number;
 };
 
-export function capitalize(s: string) {
+ function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 }
 
 
-export const columns = [
+ const columns = [
     { name: "ID", uid: "id", sortable: true },
     { name: "NAME", uid: "name", sortable: true },
     { name: "AGE", uid: "age", sortable: true },
@@ -28,13 +28,13 @@ export const columns = [
     { name: "ACTIONS", uid: "actions" },
 ];
 
-export const statusOptions = [
+ const statusOptions = [
     { name: "Active", uid: "active" },
     { name: "Paused", uid: "paused" },
     { name: "Vacation", uid: "vacation" },
 ];
 
-export const users = [
+ const users = [
     {
         id: 1,
         name: "Tony Reichert",

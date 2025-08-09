@@ -8,17 +8,20 @@ import {
 } from "@heroui/react";
 import { Plus, EllipsisVertical, Search, ChevronDown, Trash2 } from "lucide-react";
 
-export type IconSvgProps = SVGProps<SVGSVGElement> & {
+
+ type IconSvgProps = SVGProps<SVGSVGElement> & {
     size?: number;
 };
 
-export function capitalize(s: string) {
+
+ function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 }
 
 
 // Columns based on your database schema
-export const columns = [
+
+ const columns = [
     { name: "ID", uid: "id", sortable: true },
     { name: "FULL NAME", uid: "fullName", sortable: true },
     { name: "EMAIL", uid: "email", sortable: true },
@@ -29,7 +32,8 @@ export const columns = [
 ];
 
 // Role options based on your database
-export const roleOptions = [
+
+ const roleOptions = [
     { name: "User", uid: "user" },
     { name: "Admin", uid: "admin" },
     { name: "Superadmin", uid: "superadmin" },

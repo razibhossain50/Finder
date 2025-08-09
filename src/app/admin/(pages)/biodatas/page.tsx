@@ -9,16 +9,15 @@ import {
 import { Plus, EllipsisVertical, Search, ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
-export type IconSvgProps = SVGProps<SVGSVGElement> & {
+ type IconSvgProps = SVGProps<SVGSVGElement> & {
     size?: number;
 };
 
-export function capitalize(s: string) {
+ function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 }
 
-
-export const columns = [
+ const columns = [
     { name: "ID", uid: "id", sortable: false },
     { name: "STEP", uid: "step", sortable: false },
     { name: "USER ID", uid: "userId", sortable: false },
@@ -78,7 +77,7 @@ export const columns = [
     { name: "ACTIONS", uid: "actions", sortable: false },
 ];
 
-export const statusOptions = [
+ const statusOptions = [
     { name: "Active", uid: "Active" },
     { name: "Inactive", uid: "Inactive" },
     { name: "Pending", uid: "Pending" },

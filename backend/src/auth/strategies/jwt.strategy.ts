@@ -6,15 +6,15 @@ import { AuthPayload } from '../interfaces/auth-payload.interface';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
-    console.log('JWT Strategy initialized with secret:', 'your-secret-key');
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'your-secret-key',
+      secretOrKey: 'your-secret-key'
     });
+    console.log('JWT Strategy initialized with secret:', 'your-secret-key');
   }
 
-  async validate(payload: AuthPayload) {
+  validate(payload: AuthPayload) {
     console.log('=== JWT VALIDATION ===');
     console.log('JWT Strategy - validating payload:', payload);
     console.log('JWT Strategy - payload type:', typeof payload);
