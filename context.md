@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Finder** is a comprehensive matrimony/biodata platform built with Next.js and NestJS, designed to help people find their perfect life partners. The platform features a complete biodata management system with advanced search capabilities, admin panel for user management, and role-based authentication system.
+**Finder** is a comprehensive matrimony/biodata platform built with Next.js and NestJS, designed to help people find their perfect life partners. The platform features a complete biodata management system with advanced search capabilities, admin panel for user management, role-based authentication system, and profile picture upload functionality.
 
 ## Technology Stack
 
@@ -29,6 +29,7 @@
 - **Database**: PostgreSQL with TypeORM 0.3.25
 - **Authentication**: JWT 11.0.0 with Passport 0.7.0
 - **Password Hashing**: bcryptjs 3.0.2
+- **File Upload**: Multer with @nestjs/platform-express
 - **Validation**: Class Validator 0.14.2 & Class Transformer 0.5.1
 - **Configuration**: NestJS Config 4.0.2
 
@@ -386,12 +387,190 @@ cd backend && npm run dev  # Backend
 - Database connection strings for backend
 - JWT secrets for authentication
 
+## Role-Based Access Control System
+
+### User Roles & Permissions
+
+| Feature | User | Admin | Superadmin |
+|---------|------|-------|------------|
+| **Authentication** |
+| Login to user dashboard | ✅ | ❌ | ❌ |
+| Login to admin dashboard | ❌ | ✅ | ✅ |
+| **Biodata Management** |
+| Create own biodata | ✅ | ✅ | ✅ |
+| View own biodata | ✅ | ✅ | ✅ |
+| Edit own biodata | ✅ | ✅ | ✅ |
+| Delete own biodata | ✅ | ✅ | ✅ |
+| View all biodatas (admin) | ❌ | ✅ | ✅ |
+| Approve/reject biodatas | ❌ | ✅ | ✅ |
+| Delete any biodata | ❌ | ❌ | ✅ |
+| **User Management** |
+| View all users | ❌ | ✅ | ✅ |
+| Edit user information | ❌ | ✅ | ✅ |
+| Delete users | ❌ | ❌ | ✅ |
+| Create admin accounts | ❌ | ❌ | ✅ |
+
+### Test Accounts
+
+The system automatically creates these test accounts on startup:
+
+#### Regular User
+- **Email**: `user@example.com`
+- **Password**: `12345`
+- **Role**: `user`
+- **Access**: User dashboard only
+
+#### Admin User
+- **Email**: `admin@example.com`
+- **Password**: `aaaaa`
+- **Role**: `admin`
+- **Access**: Admin dashboard with limited permissions
+
+#### Superadmin User
+- **Email**: `superadmin@example.com`
+- **Password**: `superadmin`
+- **Role**: `superadmin`
+- **Access**: Full admin dashboard access
+
+## Profile Picture Upload System
+
+### Implementation Overview
+The profile picture upload functionality allows users to upload JPEG/PNG images during biodata creation. Images are stored in the `public/uploads/profile-pictures/` directory and URLs are saved in the database.
+
+### Backend Implementation
+
+#### Upload Service (`backend/src/upload/upload.service.ts`)
+- **File Storage**: Uses multer with disk storage
+- **Directory**: `public/uploads/profile-pictures/`
+- **File Naming**: `profile-{timestamp}-{random}.{ext}`
+- **Validation**: Only JPEG/PNG files, max 5MB
+- **URL Generation**: Returns `/uploads/profile-pictures/{filename}`
+
+#### Upload Controller (`backend/src/upload/upload.controller.ts`)
+- **Endpoint**: `POST /api/upload/profile-picture`
+- **Authentication**: Requires JWT token
+- **File Field**: `profilePicture`
+- **Response**: Returns filename, original name, URL, and size
+
+#### Static File Serving
+- **Configuration**: Added to `main.ts` using `useStaticAssets`
+- **Path**: Serves files from `public/` directory
+- **Access**: Files accessible via `http://localhost:2000/uploads/profile-pictures/{filename}`
+
+### Frontend Implementation
+
+#### Contact Info Step Component (`src/components/profile/marriage/contact-info-step.tsx`)
+- **File Upload**: Drag & drop or click to upload
+- **Validation**: Client-side validation for file type and size
+- **Loading States**: Shows upload progress with spinner
+- **Success Feedback**: Displays uploaded file name with success message
+- **Error Handling**: Shows user-friendly error messages
+
+#### Profile Picture Display
+Updated all components to use correct URLs:
+- **BiodataSearch**: `${process.env.NEXT_PUBLIC_API_BASE_URL}${biodata.profilePicture}`
+- **Profile Detail Page**: Same URL pattern
+- **Favorites Page**: Same URL pattern
+- **Admin Biodata Page**: Same URL pattern
+
+### Upload API Endpoint
+
+```http
+POST /api/upload/profile-picture
+Authorization: Bearer {jwt_token}
+Content-Type: multipart/form-data
+
+Body:
+- profilePicture: File (JPEG/PNG, max 5MB)
+```
+
+**Response:**
+```json
+{
+  "message": "File uploaded successfully",
+  "filename": "profile-1704123456789-123456789.jpg",
+  "originalName": "my-photo.jpg",
+  "url": "/uploads/profile-pictures/profile-1704123456789-123456789.jpg",
+  "size": 1234567
+}
+```
+
+### Security Features
+- **File Type Validation**: Only JPEG and PNG images allowed
+- **File Size Limit**: Maximum 5MB
+- **Unique Filenames**: Prevents conflicts with timestamp and random suffix
+- **Authentication Required**: JWT token required for uploads
+- **Isolated Storage**: Files stored in dedicated uploads folder
+
+## Route Protection System
+
+### Route Structure
+```
+src/app/(client)/
+├── auth/                    # 🔓 Public auth routes
+│   ├── login/
+│   └── signup/
+├── search/                  # 🔓 Public search routes
+│   ├── partner/
+│   └── doctor/
+├── (protected)/            # 🔒 Protected route group
+│   ├── layout.tsx          # ProtectedRoute wrapper
+│   ├── dashboard/
+│   ├── profile/
+│   ├── messages/
+│   └── settings/
+├── layout.tsx              # RegularAuthProvider wrapper
+└── page.tsx                # 🔓 Public home page
+```
+
+### Protection Implementation
+
+#### Route Group Protection
+```typescript
+// src/app/(client)/(protected)/layout.tsx
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+
+export default function ProtectedLayout({ children }) {
+  return (
+    <ProtectedRoute>
+      {children}
+    </ProtectedRoute>
+  );
+}
+```
+
+#### ProtectedRoute Component
+```typescript
+// src/components/auth/ProtectedRoute.tsx
+export default function ProtectedRoute({ children }) {
+  const { isAuthenticated, isLoading } = useRegularAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading) return <LoadingSpinner />;
+  if (!isAuthenticated) return null;
+  
+  return <>{children}</>;
+}
+```
+
+### Authentication Context Features
+- **Separate Storage**: Uses `regular_user_access_token` and `regular_user`
+- **Role Validation**: Only allows users with `role: 'user'`
+- **Auto Redirect**: Redirects to `/dashboard` on successful auth
+- **Token Management**: Handles JWT token storage and cleanup
+
 ## Recent Updates & Implementations
 
 ### Authentication System Overhaul
 - **Fixed Circular Dependencies**: Resolved RegularAuthContext initialization issues
 - **Smart Role-based Routing**: Automatic redirection based on user roles
-- **Dual Token System**: Separate token management for users and admins
+- **Dual Token System**: Separate token management for users and admins (`regular_user_access_token` vs `admin_user_access_token`)
 - **Auto-created Test Accounts**: Superadmin and test user accounts for development
 
 ### Admin Panel Implementation
@@ -399,18 +578,28 @@ cd backend && npm run dev  # Backend
 - **User Deletion System**: Confirmation dialogs with superadmin protection
 - **Biodata Status Management**: Complete approval workflow for biodata submissions
 - **Professional Data Tables**: Sorting, filtering, pagination, and search capabilities
+- **Role-based UI**: Delete options only visible to superadmin users
 
 ### BiodataSearch Component Refactor
 - **Complete Self-containment**: Moved all search logic, API calls, and pagination into the component
 - **Removed Dependencies**: Component no longer requires props or external state management
 - **Enhanced UX**: Real-time filtering without manual search button clicks
+- **Improved Loading States**: Skeleton cards with proper background handling
 - **Simplified Integration**: Can be dropped into any page with `<BiodataSearch />`
 
 ### Backend API Enhancements
 - **User Management Endpoints**: Complete CRUD operations for user accounts
 - **Biodata Admin Endpoints**: Admin-specific biodata management APIs
 - **Status Update System**: Real-time biodata status management
+- **File Upload System**: Complete profile picture upload with multer
 - **Security Improvements**: Role-based access control and input validation
+
+### Frontend Improvements
+- **Profile Picture Upload**: Functional upload with drag & drop interface
+- **Loading States**: Improved skeleton screens and loading indicators
+- **Error Handling**: Better user feedback and error messages
+- **Responsive Design**: Mobile-optimized biodata cards and forms
+- **Image Configuration**: Next.js image optimization for uploaded files
 
 ## Future Enhancements
 

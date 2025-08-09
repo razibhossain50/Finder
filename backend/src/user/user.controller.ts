@@ -20,7 +20,12 @@ export class UserController {
   }
 
   @Get()
-  getAll() {
+  @UseGuards(AuthGuard('jwt'))
+  getAll(@CurrentUser() user: any) {
+    // Allow both admin and superadmin to view all users
+    if (user.role !== 'admin' && user.role !== 'superadmin') {
+      throw new UnauthorizedException('Access denied: Only admin and superadmin can view all users');
+    }
     return this.userService.findAll();
   }
 
@@ -80,8 +85,10 @@ export class UserController {
     console.log('User from JWT:', user);
     console.log('Deleting user ID:', id);
 
-    // TODO: Add admin role check here if needed
-    // For now, any authenticated user can delete (should be restricted to admins)
+    // Only superadmin can delete users
+    if (user.role !== 'superadmin') {
+      throw new UnauthorizedException('Access denied: Only superadmin can delete users');
+    }
 
     return this.userService.delete(+id);
   }

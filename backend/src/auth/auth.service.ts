@@ -14,7 +14,7 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private jwtService: JwtService
-  ) {}
+  ) { }
 
   async signup(createUserDto: CreateUserDto) {
     const { fullName, email, password, confirmPassword } = createUserDto;
@@ -171,6 +171,22 @@ export class AuthService {
 
       await this.usersRepository.save(testUser);
       console.log('Test user created');
+    }
+
+    // Create a test admin user
+    const testAdminExists = await this.usersRepository.findOne({ where: { email: 'admin@example.com' } });
+
+    if (!testAdminExists) {
+      const hashedPassword = await bcrypt.hash('aaaaa', 10);
+      const testAdmin = this.usersRepository.create({
+        email: 'admin@example.com',
+        password: hashedPassword,
+        role: 'admin',
+        fullName: 'Test Admin'
+      });
+
+      await this.usersRepository.save(testAdmin);
+      console.log('Test admin created: admin@example.com / aaaaa');
     }
   }
 }

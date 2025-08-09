@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseGuards, Query, Req, Optional } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Put,
+  UseGuards,
+  Query,
+  Req,
+  Optional
+} from '@nestjs/common';
 import { BiodataService } from './biodata.service';
 import { CreateBiodataDto } from './dto/create-biodata.dto';
 import { UpdateBiodataDto } from './dto/update-biodata.dto';
@@ -75,9 +88,9 @@ export class BiodataController {
       throw new Error('User authentication required');
     }
 
-    // Only superadmin can access all biodatas
-    if (user.role !== 'superadmin') {
-      throw new Error('Access denied: Only superadmin can view all biodatas');
+    // Allow both admin and superadmin to access all biodatas
+    if (user.role !== 'admin' && user.role !== 'superadmin') {
+      throw new Error('Access denied: Only admin and superadmin can view all biodatas');
     }
 
     return this.biodataService.findAllForAdmin();
@@ -101,9 +114,9 @@ export class BiodataController {
       throw new Error('User authentication required');
     }
 
-    // Only superadmin can update biodata status
-    if (user.role !== 'superadmin') {
-      throw new Error('Access denied: Only superadmin can update biodata status');
+    // Allow both admin and superadmin to update biodata status
+    if (user.role !== 'admin' && user.role !== 'superadmin') {
+      throw new Error('Access denied: Only admin and superadmin can update biodata status');
     }
 
     const biodataId = +id;
@@ -198,10 +211,7 @@ export class BiodataController {
 
   // Profile view tracking endpoints
   @Post(':id/view')
-  async trackProfileView(
-    @Param('id') id: string,
-    @Req() req: Request
-  ) {
+  async trackProfileView(@Param('id') id: string, @Req() req: Request) {
     const biodataId = +id;
     const viewerId: number | undefined = undefined; // For now, we'll handle anonymous tracking
     const ipAddress = req.ip || req.connection.remoteAddress || undefined;

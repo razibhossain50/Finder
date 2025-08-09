@@ -7,6 +7,7 @@ import {
     Dropdown, DropdownMenu, DropdownItem, Chip, Pagination, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Select, SelectItem
 } from "@heroui/react";
 import { Plus, EllipsisVertical, Search, ChevronDown } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
     size?: number;
@@ -151,6 +152,7 @@ const statusColorMap: Record<string, ChipProps["color"]> = {
 
 
 export default function Biodatas() {
+    const { user } = useAuth();
     const [biodatas, setBiodatas] = React.useState<Biodata[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
@@ -169,6 +171,9 @@ export default function Biodatas() {
     const [newStatus, setNewStatus] = React.useState<string>("");
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = React.useState(false);
+
+    // Check if current user is superadmin
+    const isSuperAdmin = user?.role === 'superadmin';
 
     // Handle status update
     const handleStatusUpdate = async () => {
@@ -401,9 +406,11 @@ export default function Biodatas() {
                                 }
                             }}>
                                 <DropdownItem key="view">View & Edit</DropdownItem>
-                                <DropdownItem key="delete" className="text-danger" color="danger">
-                                    Delete
-                                </DropdownItem>
+                                {isSuperAdmin && (
+                                    <DropdownItem key="delete" className="text-danger" color="danger">
+                                        Delete
+                                    </DropdownItem>
+                                )}
                             </DropdownMenu>
                         </Dropdown>
                     </div>
@@ -411,7 +418,7 @@ export default function Biodatas() {
             default:
                 return cellValue;
         }
-    }, []);
+    }, [isSuperAdmin]);
 
     const onNextPage = React.useCallback(() => {
         if (page < pages) {
@@ -936,7 +943,7 @@ export default function Biodatas() {
                                         <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Profile Picture</h5>
                                         <div className="flex justify-center">
                                             <img
-                                                src={selectedBiodata.profilePicture}
+                                                src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${selectedBiodata.profilePicture}`}
                                                 alt="Profile"
                                                 className="max-w-xs max-h-64 object-cover rounded-lg shadow-md"
                                             />
@@ -1382,7 +1389,7 @@ export default function Biodatas() {
                                         <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Profile Picture</h5>
                                         <div className="flex justify-center">
                                             <img
-                                                src={selectedBiodata.profilePicture}
+                                                src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${selectedBiodata.profilePicture}`}
                                                 alt="Profile"
                                                 className="max-w-xs max-h-64 object-cover rounded-lg shadow-md"
                                             />

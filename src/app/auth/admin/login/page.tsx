@@ -155,9 +155,12 @@ const Login = () => {
 
             {/* Demo Credentials */}
             <div className="mt-6 pt-6 border-t border-gray-100">
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <p className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-md">
-                  <span className="font-medium">Demo credentials:</span> admin@example.com / aaaaa
+                  <span className="font-medium">Admin:</span> admin@example.com / aaaaa
+                </p>
+                <p className="text-xs text-gray-500 bg-blue-50 px-3 py-2 rounded-md">
+                  <span className="font-medium">Superadmin:</span> superadmin@example.com / superadmin
                 </p>
               </div>
             </div>

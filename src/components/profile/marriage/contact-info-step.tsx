@@ -11,8 +11,9 @@ interface ContactInfoStepProps {
 
 export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepProps) {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // Validate file type
@@ -27,8 +28,39 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
         return;
       }
 
-      setUploadedFile(file);
-      updateData({ profilePicture: file.name });
+      try {
+        setIsUploading(true);
+        
+        // Upload file to backend
+        const formData = new FormData();
+        formData.append('profilePicture', file);
+
+        const token = localStorage.getItem('regular_user_access_token');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/upload/profile-picture`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const result = await response.json();
+        
+        setUploadedFile(file);
+        // Store the URL returned from backend
+        updateData({ profilePicture: result.url });
+        
+        console.log('File uploaded successfully:', result);
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('Failed to upload file. Please try again.');
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -80,16 +112,38 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
               </Tooltip>
             </div>
 
-            <Card className="border-2 border-dashed border-slate-300 hover:border-slate-400 transition-colors">
+            <Card className={`border-2 border-dashed transition-colors ${
+              isUploading ? 'border-blue-300 bg-blue-50' : 
+              uploadedFile ? 'border-emerald-300 bg-emerald-50' : 
+              'border-slate-300 hover:border-slate-400'
+            }`}>
               <CardBody className="p-6">
                 <div className="text-center">
-                  {uploadedFile ? (
+                  {isUploading ? (
+                    <div className="space-y-2">
+                      <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                      <p className="text-sm font-medium text-blue-900">Uploading...</p>
+                      <p className="text-xs text-blue-600">Please wait while we upload your image</p>
+                    </div>
+                  ) : uploadedFile ? (
                     <div className="space-y-2">
                       <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
                         <Upload className="w-8 h-8 text-emerald-600" />
                       </div>
-                      <p className="text-sm font-medium text-slate-900">{uploadedFile.name}</p>
-                      <p className="text-xs text-slate-500">File uploaded successfully</p>
+                      <p className="text-sm font-medium text-emerald-900">{uploadedFile.name}</p>
+                      <p className="text-xs text-emerald-600">✓ File uploaded successfully</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUploadedFile(null);
+                          updateData({ profilePicture: null });
+                        }}
+                        className="text-xs text-slate-500 hover:text-slate-700 underline"
+                      >
+                        Upload different image
+                      </button>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -113,6 +167,7 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
                     className="hidden"
                     accept="image/jpeg,image/jpg,image/png"
                     onChange={handleFileUpload}
+                    disabled={isUploading}
                   />
                 </div>
               </CardBody>

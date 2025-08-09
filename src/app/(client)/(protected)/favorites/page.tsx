@@ -303,7 +303,9 @@ export default function FavoritesPage() {
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     <Avatar
-                                                        src={biodata.profilePicture || (biodata.biodataType === "Male" ? "/icons/male.png" : "/icons/female.png")}
+                                                        src={biodata.profilePicture ? 
+                                                            `${process.env.NEXT_PUBLIC_API_BASE_URL}${biodata.profilePicture}` : 
+                                                            (biodata.biodataType === "Male" ? "/icons/male.png" : "/icons/female.png")}
                                                         name={biodata.fullName}
                                                         size="md"
                                                         className="border-2 border-rose-200"

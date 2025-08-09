@@ -204,7 +204,7 @@ export default function Profile() {
   // Check if profile is in favorites when profile loads
   const checkFavoriteStatus = useCallback(async () => {
     if (!profile || !isAuthenticated || !user) return;
-    
+
     try {
       const favoriteStatus = await isFavorite(profile.id);
       setIsFavoriteProfile(favoriteStatus);
@@ -224,7 +224,7 @@ export default function Profile() {
 
     try {
       setFavoriteLoading(true);
-      
+
       if (isFavoriteProfile) {
         const success = await removeFromFavorites(profile.id);
         if (success) {
@@ -240,6 +240,23 @@ export default function Profile() {
       console.error('Error toggling favorite:', error);
     } finally {
       setFavoriteLoading(false);
+    }
+  };
+
+  // Handle contact button click
+  const handleContactClick = () => {
+    if (!isAuthenticated || !user) {
+      router.push('/auth/login');
+      return;
+    }
+
+    // Scroll to contact information section
+    const contactSection = document.getElementById('contact-information');
+    if (contactSection) {
+      contactSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
     }
   };
 
@@ -261,7 +278,7 @@ export default function Profile() {
           console.error('Failed to track profile view:', error);
         }
       };
-      
+
       trackView();
     }
   }, [profile, biodataId, trackProfileView]);
@@ -471,7 +488,7 @@ export default function Profile() {
                 variant="solid"
                 size="sm"
                 className="flex items-center gap-2 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 hover:shadow-md"
-                
+
               >
                 <Link className="flex gap-3" href={`/profile/biodatas/edit/${biodataId}`}>
                   <Edit className="h-4 w-4" />
@@ -482,11 +499,10 @@ export default function Profile() {
             <Button
               variant="solid"
               size="sm"
-              className={`flex items-center gap-2 transition-all duration-200 hover:shadow-md ${
-                isFavoriteProfile 
-                  ? 'bg-rose-500 text-white hover:bg-rose-600' 
-                  : 'border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700'
-              }`}
+              className={`flex items-center gap-2 transition-all duration-200 hover:shadow-md ${isFavoriteProfile
+                ? 'bg-rose-500 text-white hover:bg-rose-600'
+                : 'border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700'
+                }`}
               onPress={handleFavoriteToggle}
               isLoading={favoriteLoading}
               disabled={favoriteLoading}
@@ -506,6 +522,7 @@ export default function Profile() {
               variant="bordered"
               size="sm"
               className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white border-0 transition-all duration-200 hover:shadow-lg hover:scale-105"
+              onPress={handleContactClick}
             >
               <MessageCircle className="h-4 w-4" />
               Contact
@@ -534,7 +551,7 @@ export default function Profile() {
                 <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border-4 border-white/30 shadow-xl">
                   {profile.profilePicture ? (
                     <Image
-                      src={profile.profilePicture}
+                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${profile.profilePicture}`}
                       alt="Profile"
                       width={128}
                       height={128}
@@ -665,42 +682,7 @@ export default function Profile() {
             </CardBody>
           </Card>
 
-          {/* Contact Information */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-            <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500 rounded-lg group-hover:scale-110 transition-transform">
-                  <Phone className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-800">Contact Information</span>
-              </div>
-            </CardHeader>
-            <CardBody className="p-6">
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">Email Address</p>
-                  <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-emerald-500" />
-                    <span className="break-all">{safeDisplay(profile.email, "Not provided")}</span>
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">Personal Mobile</p>
-                  <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-blue-500" />
-                    {safeDisplay(profile.ownMobile)}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">Guardian Mobile</p>
-                  <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-purple-500" />
-                    {safeDisplay(profile.guardianMobile)}
-                  </p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
+
 
           {/* Education */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
@@ -770,10 +752,6 @@ export default function Profile() {
               </div>
             </CardBody>
           </Card>
-        </div>
-
-        {/* Enhanced Address Information */}
-        <div className="grid gap-8 lg:grid-cols-2">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
             <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-lg">
               <div className="flex items-center gap-3">
@@ -853,20 +831,18 @@ export default function Profile() {
               )}
             </CardBody>
           </Card>
-        </div>
 
-        {/* Enhanced Family Information */}
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <CardHeader className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-t-lg">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-rose-500 rounded-lg group-hover:scale-110 transition-transform">
-                <Users className="h-5 w-5 text-white" />
+          {/* Enhanced Family Information */}
+          <Card className="w-full bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-rose-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <Users className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Family Information</span>
               </div>
-              <span className="text-xl font-bold text-gray-800">Family Information</span>
-            </div>
-          </CardHeader>
-          <CardBody className="p-6">
-            <div className="grid gap-8 lg:grid-cols-2">
+            </CardHeader>
+            <CardBody className="p-6">
               {/* Parents Information */}
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-100">
@@ -936,7 +912,19 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
-
+            </CardBody>
+          </Card>
+          {/* Enhanced Family Information */}
+          <Card className="w-full bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-rose-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <Users className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Family Information</span>
+              </div>
+            </CardHeader>
+            <CardBody className="p-6">
               {/* Siblings & Family Details */}
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-5 border border-purple-100">
@@ -970,22 +958,19 @@ export default function Profile() {
                   )}
                 </div>
               </div>
-            </div>
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
 
-        {/* Enhanced Partner Preferences */}
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-          <CardHeader className="bg-gradient-to-r from-pink-50 via-rose-50 to-red-50 rounded-t-lg">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg group-hover:scale-110 transition-transform">
-                <Heart className="h-5 w-5 text-white" />
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-pink-50 via-rose-50 to-red-50 rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <Heart className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Partner Preferences</span>
               </div>
-              <span className="text-xl font-bold text-gray-800">Partner Preferences</span>
-            </div>
-          </CardHeader>
-          <CardBody className="p-6">
-            <div className="grid gap-8 lg:grid-cols-2">
+            </CardHeader>
+            <CardBody className="p-6">
               {/* Basic Preferences */}
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg p-5 border border-rose-100">
@@ -1025,7 +1010,20 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
+            </CardBody>
+          </Card>
 
+          {/* Enhanced Partner Preferences */}
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-pink-50 via-rose-50 to-red-50 rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <Heart className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Partner Preferences</span>
+              </div>
+            </CardHeader>
+            <CardBody className="p-6">
               {/* Professional & Location Preferences */}
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-100">
@@ -1064,9 +1062,79 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-            </div>
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
+          {/* Contact Information */}
+          <Card id="contact-information" className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-500 rounded-lg group-hover:scale-110 transition-transform">
+                  <Phone className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-800">Contact Information</span>
+                {!isAuthenticated && (
+                  <div className="ml-auto">
+                    <Shield className="h-5 w-5 text-amber-500" />
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardBody className="p-6">
+              {isAuthenticated && user ? (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Email Address</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
+                      <Mail className="h-5 w-5 text-emerald-500" />
+                      <span className="break-all">{safeDisplay(profile.email, "Not provided")}</span>
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Personal Mobile</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
+                      <Phone className="h-5 w-5 text-blue-500" />
+                      {safeDisplay(profile.ownMobile)}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-2">Guardian Mobile</p>
+                    <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
+                      <Phone className="h-5 w-5 text-purple-500" />
+                      {safeDisplay(profile.guardianMobile)}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="max-w-md mx-auto">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
+                      <Shield className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                      Contact Information Protected
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Please log in to view contact details and connect with {safeDisplay(profile.fullName, "this person")}.
+                    </p>
+                    <Button
+                      size="lg"
+                      className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      onPress={() => router.push('/auth/login')}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Login to View Contact
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-3">
+                      <Shield className="h-3 w-3 inline mr-1" />
+                      Your privacy is protected with us
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+
 
         {/* Call to Action Section */}
         <Card className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white border-0 shadow-2xl overflow-hidden relative">
@@ -1093,11 +1161,10 @@ export default function Profile() {
                 <Button
                   variant="solid"
                   size="lg"
-                  className={`font-semibold px-8 py-3 rounded-full transition-all duration-300 hover:shadow-xl group ${
-                    isFavoriteProfile 
-                      ? 'bg-white text-rose-600 hover:bg-rose-50' 
-                      : 'border-white text-rose-600 hover:bg-white hover:text-rose-600 hover:border-rose-600'
-                  }`}
+                  className={`font-semibold px-8 py-3 rounded-full transition-all duration-300 hover:shadow-xl group ${isFavoriteProfile
+                    ? 'bg-white text-rose-600 hover:bg-rose-50'
+                    : 'border-white text-rose-600 hover:bg-white hover:text-rose-600 hover:border-rose-600'
+                    }`}
                   onPress={handleFavoriteToggle}
                   isLoading={favoriteLoading}
                   disabled={favoriteLoading}
@@ -1109,6 +1176,7 @@ export default function Profile() {
                   variant="solid"
                   size="lg"
                   className="bg-white text-rose-600 hover:bg-rose-50 font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  onPress={handleContactClick}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Contact

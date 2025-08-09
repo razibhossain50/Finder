@@ -12,6 +12,7 @@ import { Biodata } from './biodata/biodata.entity';
 import { BiodataModule } from './biodata/biodata.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { Favorite } from './favorites/favorites.entity';
+import { UploadModule } from './upload/upload.module';
 
 
 @Module({
@@ -38,6 +39,7 @@ import { Favorite } from './favorites/favorites.entity';
     AuthModule,
     BiodataModule,
     FavoritesModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
