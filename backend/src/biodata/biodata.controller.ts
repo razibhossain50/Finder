@@ -75,11 +75,19 @@ export class BiodataController {
 
   @Get('current')
   @UseGuards(JwtAuthGuard)
-  findCurrent(@CurrentUser() user: any) {
+  async findCurrent(@CurrentUser() user: any) {
     if (!user?.id) {
       throw new Error('User authentication required');
     }
-    return this.biodataService.findByUserId(user.id);
+    
+    const biodata = await this.biodataService.findByUserId(user.id);
+    
+    // Return null if no biodata exists, but as proper JSON
+    if (!biodata) {
+      return null;
+    }
+    
+    return biodata;
   }
 
   @Get('admin/all')

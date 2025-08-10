@@ -27,11 +27,12 @@
 - **Framework**: NestJS 11.0.1
 - **Language**: TypeScript 5.7.3
 - **Database**: PostgreSQL with TypeORM 0.3.25
-- **Authentication**: JWT 11.0.0 with Passport 0.7.0
+- **Authentication**: JWT 11.0.0 with Passport 0.7.0 + Google OAuth 2.0
 - **Password Hashing**: bcryptjs 3.0.2
 - **File Upload**: Multer with @nestjs/platform-express
 - **Validation**: Class Validator 0.14.2 & Class Transformer 0.5.1
 - **Configuration**: NestJS Config 4.0.2
+- **OAuth**: passport-google-oauth20 for Google SSO
 
 ## Project Structure
 
@@ -136,6 +137,7 @@ finder_frontend/
 
 ### 1. Comprehensive Authentication System
 - **Dual Authentication**: Separate login systems for users and admins
+- **Google OAuth 2.0 SSO**: One-click signup/login with Google accounts
 - **Role-based Access Control**: User, Admin, and Superadmin roles
 - **JWT Token Management**: Secure token-based authentication with automatic role detection
 - **Smart Redirects**: Automatic redirection based on user roles (users → dashboard, admins → admin panel)
@@ -564,6 +566,208 @@ export default function ProtectedRoute({ children }) {
 - **Role Validation**: Only allows users with `role: 'user'`
 - **Auto Redirect**: Redirects to `/dashboard` on successful auth
 - **Token Management**: Handles JWT token storage and cleanup
+
+## Google OAuth 2.0 Single Sign-On Implementation
+
+### Overview
+The Finder platform includes a complete Google OAuth 2.0 implementation that allows users to sign up and log in using their Google accounts. This provides a seamless authentication experience and reduces friction in the user registration process.
+
+### Backend Implementation
+
+#### Google OAuth Strategy (`backend/src/auth/strategies/google.strategy.ts`)
+- **Passport Google OAuth 2.0 strategy** for handling Google authentication
+- **Profile validation** and user information extraction (email, name, profile picture)
+- **Automatic user creation/update** from Google profiles
+
+#### Enhanced Auth Service (`backend/src/auth/auth.service.ts`)
+- `validateGoogleUser()` - Creates or updates users from Google profiles
+- `googleLogin()` - Generates JWT tokens for Google users
+- **Seamless integration** with existing authentication system
+
+#### API Endpoints (`backend/src/auth/auth.controller.ts`)
+- `GET /auth/google` - Initiates Google OAuth flow
+- `GET /auth/google/callback` - Handles Google OAuth callback with redirect to frontend
+
+#### Database Schema Updates (`backend/src/user/user.entity.ts`)
+- Added `googleId` field for Google user identification
+- Added `profilePicture` field for Google profile images
+- Made `password` nullable for Google users (no password required)
+
+### Frontend Implementation
+
+#### Google OAuth Button (`src/components/auth/GoogleOAuthButton.tsx`)
+- **Reusable component** for both login and signup forms
+- **Google-branded styling** with official colors and logo
+- **Loading states** and error handling
+- **One-click authentication** flow
+
+#### OAuth Callback Handler (`src/app/(client)/auth/google/callback/page.tsx`)
+- **Processes Google OAuth callback** with token and user data
+- **Handles token storage** in localStorage
+- **User feedback** with loading/success/error states
+- **Proper Suspense boundary** for Next.js 15 compatibility
+- **Infinite loop prevention** with processed flag
+
+#### Enhanced Auth Context (`src/context/RegularAuthContext.tsx`)
+- Added `setUserFromGoogle()` function for Google user authentication
+- **Seamless integration** with existing authentication flow
+- **Same JWT token system** and user permissions
+
+### Google Cloud Console Setup
+
+#### Prerequisites
+- Google account with access to Google Cloud Console
+- Finder project running locally (frontend on :3000, backend on :2000)
+
+#### Step-by-Step Configuration
+
+1. **Create Google Cloud Project**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create new project: "Finder Matrimony"
+
+2. **Enable Required APIs**
+   - Enable "Google+ API" in APIs & Services → Library
+   - Enable "People API" for profile information
+
+3. **Configure OAuth Consent Screen**
+   - Go to APIs & Services → OAuth consent screen
+   - Choose "External" for testing
+   - App name: "Finder - Matrimony Platform"
+   - Add scopes: `../auth/userinfo.email`, `../auth/userinfo.profile`
+   - Add test users for development
+
+4. **Create OAuth Credentials**
+   - Go to APIs & Services → Credentials
+   - Create OAuth client ID → Web application
+   - Name: "Finder Web Client"
+   - Authorized JavaScript origins:
+     ```
+     http://localhost:3000
+     http://localhost:2000
+     ```
+   - Authorized redirect URIs:
+     ```
+     http://localhost:2000/auth/google/callback
+     ```
+
+### Environment Configuration
+
+#### Backend Environment Variables (`backend/.env`)
+```env
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your_actual_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_actual_google_client_secret_here
+GOOGLE_CALLBACK_URL=http://localhost:2000/auth/google/callback
+```
+
+**Note**: Replace with actual credentials from Google Cloud Console
+
+### Database Migration
+
+#### Migration Script (`backend/migrations/005_add_google_auth_fields.sql`)
+```sql
+-- Add Google authentication fields to User table
+ALTER TABLE "user" 
+ADD COLUMN IF NOT EXISTS "googleId" VARCHAR(255),
+ADD COLUMN IF NOT EXISTS "profilePicture" VARCHAR(500);
+
+-- Make password nullable for Google users
+ALTER TABLE "user" 
+ALTER COLUMN "password" DROP NOT NULL;
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_user_google_id ON "user"("googleId");
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_google_id_unique 
+ON "user"("googleId") 
+WHERE "googleId" IS NOT NULL;
+```
+
+### OAuth Flow Process
+
+1. **User clicks "Continue with Google"** on login/signup page
+2. **Redirect to Google OAuth** (`/auth/google` endpoint)
+3. **User grants permissions** on Google consent screen
+4. **Google redirects back** to `/auth/google/callback`
+5. **Backend processes user data** (create/update user in database)
+6. **Generate JWT token** (same system as regular login)
+7. **Redirect to frontend callback** with token and user data
+8. **Frontend processes token** and stores in localStorage
+9. **User authenticated** and redirected to dashboard
+
+### Key Features
+
+#### Seamless Integration
+- **Works alongside existing email/password authentication**
+- **Same JWT token system** and user roles
+- **Same dashboard and features** for all users
+- **No separate user management** required
+
+#### User Experience
+- **One-click authentication** - no forms to fill
+- **No password required** for Google users
+- **Profile picture imported** automatically from Google
+- **Automatic account creation** for new users
+
+#### Security Features
+- **Secure OAuth 2.0 flow** with proper token validation
+- **JWT token authentication** consistent with existing system
+- **Google profile validation** and user verification
+- **Proper error handling** and user feedback
+
+#### Database Design
+- **Supports both Google and regular users** in same table
+- **Nullable password field** for Google users
+- **Unique Google ID constraints** prevent duplicate accounts
+- **Profile picture storage** with URL validation
+
+### Error Handling & Troubleshooting
+
+#### Common Issues and Solutions
+
+1. **"OAuth client was not found"**
+   - Verify `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are correct
+   - Ensure no extra spaces in `.env` file
+   - Restart backend server after updating credentials
+
+2. **"redirect_uri_mismatch"**
+   - Check redirect URI exactly matches: `http://localhost:2000/auth/google/callback`
+   - Verify no trailing slashes or typos in Google Console
+
+3. **JSON parsing errors for new Google users**
+   - Fixed in `useBiodataStatus.ts` and `Header.tsx` components
+   - Proper handling of empty responses when users don't have biodata yet
+
+4. **Infinite loop in callback page**
+   - Fixed with `processed` flag to prevent multiple executions
+   - Proper dependency management in useEffect
+
+### Testing Google OAuth
+
+#### Test Flow
+1. **Start applications**: Backend on :2000, Frontend on :3000
+2. **Go to login page**: `http://localhost:3000/auth/login`
+3. **Click "Continue with Google"** button
+4. **Complete Google OAuth flow** on consent screen
+5. **Verify redirect to dashboard** with successful authentication
+
+#### Expected Behavior for New Google Users
+- **User account created automatically** with Google profile information
+- **Dashboard access** without needing to create biodata first
+- **No JSON parsing errors** - all components handle new users gracefully
+- **Profile picture imported** from Google account
+- **Same permissions and features** as regular users
+
+### Production Considerations
+
+#### Security
+- **Use HTTPS** in production environment
+- **Secure environment variables** with proper secret management
+- **Update OAuth URLs** to production domains in Google Console
+
+#### Monitoring
+- **Track OAuth success/failure rates** for user experience insights
+- **Monitor authentication errors** and user feedback
+- **Log OAuth flow events** for debugging and analytics
 
 ## Recent Updates & Implementations
 

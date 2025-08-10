@@ -8,6 +8,15 @@ import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from '../user/create-user.dto';
 import { AuthPayload } from './interfaces/auth-payload.interface';
 
+interface GoogleUser {
+  googleId: string;
+  email: string;
+  fullName: string;
+  profilePicture?: string;
+  accessToken: string;
+  refreshToken?: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -87,6 +96,57 @@ export class AuthService {
 
     return {
       access_token: token,
+      user: {
+        id: user.id,
+        fullName: fullUser?.fullName || null,
+        email: user.email,
+        role: user.role
+      }
+    };
+  }
+
+  async validateGoogleUser(googleUser: GoogleUser): Promise<AuthPayload> {
+    let user = await this.usersRepository.findOne({ 
+      where: [
+        { email: googleUser.email },
+        { googleId: googleUser.googleId }
+      ]
+    });
+
+    if (user) {
+      // Update existing user with Google ID if not present
+      if (!user.googleId) {
+        user.googleId = googleUser.googleId;
+        await this.usersRepository.save(user);
+      }
+    } else {
+      // Create new user from Google profile
+      user = this.usersRepository.create({
+        email: googleUser.email,
+        fullName: googleUser.fullName,
+        googleId: googleUser.googleId,
+        role: 'user',
+        // No password needed for Google users
+        password: undefined,
+        profilePicture: googleUser.profilePicture
+      });
+
+      user = await this.usersRepository.save(user);
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    };
+  }
+
+  async googleLogin(user: AuthPayload) {
+    const payload = { id: user.id, email: user.email, role: user.role };
+    const fullUser = await this.usersRepository.findOne({ where: { id: user.id } });
+
+    return {
+      access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
         fullName: fullUser?.fullName || null,

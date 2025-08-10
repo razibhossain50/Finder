@@ -16,6 +16,7 @@ import {
 } from "@heroui/react";
 import { Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
 import { useRegularAuth } from "@/context/RegularAuthContext";
+import GoogleOAuthButton from "./GoogleOAuthButton";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -144,6 +145,19 @@ export default function LoginFormRegular() {
 
             <div className="mt-6">
               <div className="relative">
+                <Divider className="my-4" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="bg-white px-3 text-sm text-gray-500">
+                    or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <GoogleOAuthButton mode="login" />
+              </div>
+
+              <div className="relative mt-6">
                 <Divider className="my-4" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="bg-white px-3 text-sm text-gray-500">

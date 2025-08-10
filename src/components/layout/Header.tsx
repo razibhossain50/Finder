@@ -40,10 +40,22 @@ function Header() {
         });
 
         if (response.ok) {
-          const data = await response.json();
-          if (data && data.id) {
-            setBiodataId(data.id);
+          // Check if response has content before parsing JSON
+          const text = await response.text();
+          if (text) {
+            try {
+              const data = JSON.parse(text);
+              if (data && data.id) {
+                setBiodataId(data.id);
+              } else {
+                setBiodataId(null);
+              }
+            } catch (parseError) {
+              console.error('Error parsing biodata response:', parseError);
+              setBiodataId(null);
+            }
           } else {
+            // Empty response means no biodata
             setBiodataId(null);
           }
         } else {

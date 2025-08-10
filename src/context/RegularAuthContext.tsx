@@ -15,6 +15,7 @@ interface RegularAuthContextType {
   login: (email: string, password: string) => Promise<void>
   signup: (fullName: string, email: string, password: string, confirmPassword: string) => Promise<void>
   logout: () => void
+  setUserFromGoogle?: (user: User) => void
   isAuthenticated: boolean
   isLoading: boolean
 }
@@ -112,6 +113,10 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const setUserFromGoogle = (user: User) => {
+    setUser(user);
+  };
+
   const logout = async () => {
     try {
       await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
@@ -137,6 +142,7 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         signup,
         logout,
+        setUserFromGoogle,
         isAuthenticated: !!user,
         isLoading,
       }}

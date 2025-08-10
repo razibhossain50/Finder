@@ -1015,11 +1015,11 @@ export default function Biodatas() {
                                         <div>
                                             <p className="text-sm text-gray-600">Status:</p>
                                             <Chip
-                                                color={statusColorMap[selectedBiodata.status || 'Inactive']}
+                                                color={statusColorMap[selectedBiodata.biodataApprovalStatus || 'inactive']}
                                                 size="sm"
                                                 variant="flat"
                                             >
-                                                {selectedBiodata.status || 'Inactive'}
+                                                {selectedBiodata.biodataApprovalStatus || 'inactive'}
                                             </Chip>
                                         </div>
                                     </div>
@@ -1086,12 +1086,12 @@ export default function Biodatas() {
                                         </div>
                                         <div className="flex flex-col items-end gap-3">
                                             <Chip
-                                                color={statusColorMap[selectedBiodata.status || 'Inactive']}
+                                                color={statusColorMap[selectedBiodata.biodataApprovalStatus || 'inactive']}
                                                 size="lg"
                                                 variant="shadow"
                                                 className="font-semibold"
                                             >
-                                                {selectedBiodata.status || 'Inactive'}
+                                                {selectedBiodata.biodataApprovalStatus || 'inactive'}
                                             </Chip>
                                             <div className="bg-content2 px-3 py-1 rounded-full">
                                                 <span className="text-xs font-medium text-default-700">
@@ -1469,7 +1469,7 @@ export default function Biodatas() {
                                 color="primary"
                                 size="md"
                                 onPress={handleStatusUpdate}
-                                isDisabled={!newStatus || newStatus === selectedBiodata?.status || isUpdatingStatus}
+                                isDisabled={!newStatus || newStatus === selectedBiodata?.biodataApprovalStatus || isUpdatingStatus}
                                 isLoading={isUpdatingStatus}
                                 variant="shadow"
                                 className="font-semibold px-6 min-w-[120px]"

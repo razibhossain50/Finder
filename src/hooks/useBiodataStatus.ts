@@ -48,7 +48,19 @@ export const useBiodataStatus = (): UseBiodataStatusReturn => {
         throw new Error('Failed to fetch biodata status');
       }
 
-      const biodata = await response.json();
+      // Check if response has content before parsing JSON
+      const text = await response.text();
+      let biodata = null;
+      
+      if (text) {
+        try {
+          biodata = JSON.parse(text);
+        } catch (parseError) {
+          console.error('Error parsing biodata response:', parseError);
+          setStatusInfo(null);
+          return;
+        }
+      }
       
       if (biodata) {
         // Calculate effective status and toggle capability using new two-column system
