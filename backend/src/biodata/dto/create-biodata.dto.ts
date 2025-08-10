@@ -1,4 +1,6 @@
-import { IsString, IsNumber, IsBoolean, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsOptional, IsEnum } from 'class-validator';
+import { BiodataApprovalStatus } from '../enums/admin-approval-status.enum';
+import { BiodataVisibilityStatus } from '../enums/user-visibility-status.enum';
 
 export class CreateBiodataDto {
   @IsNumber()
@@ -171,6 +173,11 @@ export class CreateBiodataDto {
   @IsOptional()
   completedSteps?: number[];
 
+  @IsEnum(BiodataApprovalStatus)
   @IsOptional()
-  status?: string;
+  biodataApprovalStatus?: BiodataApprovalStatus;
+
+  @IsEnum(BiodataVisibilityStatus)
+  @IsOptional()
+  biodataVisibilityStatus?: BiodataVisibilityStatus;
 }

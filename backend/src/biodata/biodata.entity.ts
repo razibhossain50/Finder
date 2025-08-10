@@ -1,5 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../user/user.entity';
+import { BiodataApprovalStatus } from './enums/admin-approval-status.enum';
+import { BiodataVisibilityStatus } from './enums/user-visibility-status.enum';
 
 @Entity('biodata')
 export class Biodata {
@@ -172,11 +174,47 @@ export class Biodata {
   @Column({ nullable: true })
   ownMobile: string;
 
-  @Column({ nullable: true })
-  status: string;
+  // Admin's approval decision - only admin can change this
+  @Column({
+    type: 'enum',
+    enum: BiodataApprovalStatus,
+    default: BiodataApprovalStatus.PENDING
+  })
+  biodataApprovalStatus: BiodataApprovalStatus;
+
+  // User's visibility preference - user can toggle this if approved
+  @Column({
+    type: 'enum',
+    enum: BiodataVisibilityStatus,
+    default: BiodataVisibilityStatus.ACTIVE
+  })
+  biodataVisibilityStatus: BiodataVisibilityStatus;
 
   @Column({ default: 0 })
   viewCount: number;
+
+  // Get the effective status for public display
+  getEffectiveStatus(): 'active' | 'inactive' | 'pending' | 'rejected' {
+    // If not approved by admin, show admin approval status
+    if (this.biodataApprovalStatus !== BiodataApprovalStatus.APPROVED) {
+      return this.biodataApprovalStatus;
+    }
+
+    // If approved by admin, show user's visibility choice
+    return this.biodataVisibilityStatus;
+  }
+
+  // Check if user can toggle their visibility
+  canUserToggle(): boolean {
+    // User can only toggle if admin has approved the biodata
+    return this.biodataApprovalStatus === BiodataApprovalStatus.APPROVED;
+  }
+
+  // Check if biodata should be visible to public
+  isVisibleToPublic(): boolean {
+    return this.biodataApprovalStatus === BiodataApprovalStatus.APPROVED &&
+      this.biodataVisibilityStatus === BiodataVisibilityStatus.ACTIVE;
+  }
 
   @CreateDateColumn()
   createdAt: Date;

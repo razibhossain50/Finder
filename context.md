@@ -633,3 +633,540 @@ npm run lint     # Run ESLint
 ```
 
 This context provides a comprehensive overview of the Finder matrimony platform, its architecture, components, and development guidelines for efficient collaboration and maintenance.
+
+---
+
+# Biodata Status Management System
+
+## Overview
+The biodata status management system implements a comprehensive two-column approach that separates admin approval from user visibility control, ensuring proper authority hierarchy while giving users appropriate control over their profiles.
+
+## Final Implementation: Two-Column Status System
+
+### Database Schema
+```sql
+-- Admin controls approval (primary authority)
+biodataApprovalStatus: ENUM('pending', 'approved', 'rejected', 'inactive') DEFAULT 'pending'
+
+-- User controls visibility (only works if approved)
+biodataVisibilityStatus: ENUM('active', 'inactive') DEFAULT 'active'
+```
+
+### Core Logic
+- **Public Visibility**: Only show biodatas where `biodataApprovalStatus = 'approved' AND biodataVisibilityStatus = 'active'`
+- **User Toggle**: Users can only toggle `biodataVisibilityStatus` if `biodataApprovalStatus = 'approved'`
+- **Admin Authority**: Admin approval status always takes precedence over user preferences
+
+## Backend Implementation
+
+### Entity Structure (`backend/src/biodata/biodata.entity.ts`)
+```typescript
+@Entity('biodata')
+export class Biodata {
+  // Admin's approval decision - only admin can change this
+  @Column({
+    type: 'enum',
+    enum: BiodataApprovalStatus,
+    default: BiodataApprovalStatus.PENDING
+  })
+  biodataApprovalStatus: BiodataApprovalStatus;
+
+  // User's visibility preference - user can toggle this if approved
+  @Column({
+    type: 'enum',
+    enum: BiodataVisibilityStatus,
+    default: BiodataVisibilityStatus.ACTIVE
+  })
+  biodataVisibilityStatus: BiodataVisibilityStatus;
+
+  // Check if biodata should be visible to public
+  isVisibleToPublic(): boolean {
+    return this.biodataApprovalStatus === BiodataApprovalStatus.APPROVED && 
+           this.biodataVisibilityStatus === BiodataVisibilityStatus.ACTIVE;
+  }
+
+  // Check if user can toggle their visibility
+  canUserToggle(): boolean {
+    return this.biodataApprovalStatus === BiodataApprovalStatus.APPROVED;
+  }
+
+  // Get effective status for display
+  getEffectiveStatus(): string {
+    if (this.biodataApprovalStatus !== BiodataApprovalStatus.APPROVED) {
+      return this.biodataApprovalStatus; // pending, rejected, inactive
+    }
+    return this.biodataVisibilityStatus; // active, inactive
+  }
+}
+```
+
+### Status Enums (`backend/src/biodata/enums/`)
+
+#### Admin Approval Status
+```typescript
+export enum BiodataApprovalStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved', 
+  REJECTED = 'rejected',
+  INACTIVE = 'inactive'
+}
+
+export const BIODATA_APPROVAL_STATUS_DESCRIPTIONS = {
+  [BiodataApprovalStatus.PENDING]: 'Waiting for admin review',
+  [BiodataApprovalStatus.APPROVED]: 'Approved by admin - ready to go live',
+  [BiodataApprovalStatus.REJECTED]: 'Rejected by admin - needs corrections',
+  [BiodataApprovalStatus.INACTIVE]: 'Deactivated by admin'
+};
+```
+
+#### User Visibility Status
+```typescript
+export enum BiodataVisibilityStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive'
+}
+
+export const BIODATA_VISIBILITY_STATUS_DESCRIPTIONS = {
+  [BiodataVisibilityStatus.ACTIVE]: 'Visible to other users',
+  [BiodataVisibilityStatus.INACTIVE]: 'Hidden from other users'
+};
+```
+
+### Service Layer (`backend/src/biodata/biodata.service.ts`)
+
+#### Public Queries (Only Approved + Active)
+```typescript
+async findAll() {
+  const allBiodatas = await this.biodataRepository.find({
+    relations: ['user']
+  });
+  
+  // Only show biodatas that are approved and active (visible to public)
+  return allBiodatas.filter(biodata => biodata.isVisibleToPublic());
+}
+```
+
+#### Admin Queries (All Biodatas)
+```typescript
+async findAllForAdmin() {
+  // Show all completed biodatas regardless of status
+  const allBiodatas = await this.biodataRepository.find({
+    relations: ['user'],
+    order: { id: 'DESC' }
+  });
+
+  // Filter to only show completed biodatas (all 5 steps completed)
+  return allBiodatas.filter(biodata => {
+    const completedSteps = biodata.completedSteps || [];
+    const hasAllSteps = completedSteps.length >= 5 && 
+                       completedSteps.includes(1) && completedSteps.includes(2) && 
+                       completedSteps.includes(3) && completedSteps.includes(4) && 
+                       completedSteps.includes(5);
+    
+    const hasEssentialFields = biodata.fullName && biodata.email && 
+                              biodata.biodataType && biodata.religion;
+    
+    return hasAllSteps || hasEssentialFields;
+  });
+}
+```
+
+#### User Toggle Functionality
+```typescript
+async toggleUserVisibility(userId: number): Promise<{ success: boolean; message: string; newStatus?: string }> {
+  const biodata = await this.findByUserId(userId);
+  
+  if (!biodata) {
+    return { success: false, message: 'Biodata not found' };
+  }
+
+  if (!biodata.canUserToggle()) {
+    return { 
+      success: false, 
+      message: 'You cannot toggle your biodata visibility. Your biodata must be approved by admin first.' 
+    };
+  }
+
+  // Toggle user visibility
+  const newVisibilityStatus = biodata.biodataVisibilityStatus === BiodataVisibilityStatus.ACTIVE 
+    ? BiodataVisibilityStatus.INACTIVE 
+    : BiodataVisibilityStatus.ACTIVE;
+  
+  await this.biodataRepository.update(biodata.id, { biodataVisibilityStatus: newVisibilityStatus });
+
+  return {
+    success: true,
+    message: newVisibilityStatus === BiodataVisibilityStatus.ACTIVE 
+      ? 'Biodata is now visible to others' 
+      : 'Biodata is now hidden from others',
+    newStatus: biodata.getEffectiveStatus()
+  };
+}
+```
+
+### API Endpoints (`backend/src/biodata/biodata.controller.ts`)
+
+#### Admin Approval Management
+```typescript
+@Put(':id/approval-status')
+@UseGuards(JwtAuthGuard)
+async updateApprovalStatus(@Param('id') id: string, @Body() statusData: { status: BiodataApprovalStatus }, @CurrentUser() user: any) {
+  // Only admin and superadmin can update approval status
+  if (user.role !== 'admin' && user.role !== 'superadmin') {
+    throw new Error('Access denied: Only admin and superadmin can update biodata approval status');
+  }
+
+  const biodataId = +id;
+  return this.biodataService.updateApprovalStatus(biodataId, statusData.status);
+}
+```
+
+#### User Visibility Toggle
+```typescript
+@Put('current/toggle-visibility')
+@UseGuards(JwtAuthGuard)
+async toggleUserVisibility(@CurrentUser() user: any) {
+  if (!user?.id) {
+    throw new Error('User authentication required');
+  }
+
+  return this.biodataService.toggleUserVisibility(user.id);
+}
+```
+
+## Frontend Implementation
+
+### Type Definitions (`src/types/biodata.ts`)
+```typescript
+export enum BiodataApprovalStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  INACTIVE = 'inactive'
+}
+
+export enum BiodataVisibilityStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive'
+}
+
+export const BIODATA_STATUS_COLORS = {
+  [BiodataApprovalStatus.PENDING]: {
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    text: 'text-amber-800',
+    dot: 'bg-amber-500'
+  },
+  [BiodataApprovalStatus.APPROVED]: {
+    bg: 'bg-green-50',
+    border: 'border-green-200',
+    text: 'text-green-800',
+    dot: 'bg-green-500'
+  },
+  [BiodataApprovalStatus.REJECTED]: {
+    bg: 'bg-red-50',
+    border: 'border-red-200',
+    text: 'text-red-800',
+    dot: 'bg-red-500'
+  },
+  [BiodataApprovalStatus.INACTIVE]: {
+    bg: 'bg-gray-50',
+    border: 'border-gray-200',
+    text: 'text-gray-800',
+    dot: 'bg-gray-500'
+  }
+};
+
+export interface BiodataProfile {
+  // ... existing fields ...
+  biodataApprovalStatus: BiodataApprovalStatus;
+  biodataVisibilityStatus: BiodataVisibilityStatus;
+}
+```
+
+### Dashboard Toggle Component (`src/components/dashboard/BiodataStatusToggle.tsx`)
+```typescript
+export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
+  biodataId,
+  biodataApprovalStatus = BiodataApprovalStatus.PENDING,
+  biodataVisibilityStatus = BiodataVisibilityStatus.ACTIVE,
+  canUserToggle = false,
+  onStatusChange
+}) => {
+  const handleToggle = async () => {
+    if (!canUserToggle || isToggling) return;
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/current/toggle-visibility`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      }
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      const newVisibilityStatus = localVisibilityStatus === BiodataVisibilityStatus.ACTIVE 
+        ? BiodataVisibilityStatus.INACTIVE 
+        : BiodataVisibilityStatus.ACTIVE;
+      setLocalVisibilityStatus(newVisibilityStatus);
+      
+      if (onStatusChange && result.newStatus) {
+        onStatusChange(result.newStatus);
+      }
+    }
+  };
+
+  // Component renders toggle switch with proper state management
+  return (
+    <Card className="w-full">
+      <CardBody className="p-6">
+        {/* Status display and toggle interface */}
+        <Switch
+          isSelected={localVisibilityStatus === BiodataVisibilityStatus.ACTIVE}
+          onValueChange={handleToggle}
+          isDisabled={!canUserToggle || isToggling}
+          color="success"
+          size="sm"
+        />
+      </CardBody>
+    </Card>
+  );
+};
+```
+
+### Admin Interface Updates (`src/app/admin/(pages)/biodatas/page.tsx`)
+
+#### Streamlined Columns
+```typescript
+const columns = [
+  { name: "ID", uid: "id", sortable: false },
+  { name: "USER ID", uid: "userId", sortable: false },
+  { name: "APPROVAL STATUS", uid: "biodataApprovalStatus", sortable: true },
+  { name: "BIODATA TYPE", uid: "biodataType", sortable: false },
+  { name: "MARITAL STATUS", uid: "maritalStatus", sortable: true },
+  { name: "FULL NAME", uid: "fullName", sortable: false },
+  { name: "PROFILE PICTURE", uid: "profilePicture", sortable: false },
+  { name: "OWN MOBILE", uid: "ownMobile", sortable: false },
+  { name: "GUARDIAN MOBILE", uid: "guardianMobile", sortable: false },
+  { name: "EMAIL", uid: "email", sortable: false },
+  { name: "RELIGION", uid: "religion", sortable: false },
+  { name: "ACTIONS", uid: "actions", sortable: false },
+];
+```
+
+#### Color-Coded Status Badges
+```typescript
+const statusColorMap: Record<string, ChipProps["color"]> = {
+  pending: "warning",
+  approved: "success",
+  rejected: "danger",
+  inactive: "default",
+};
+
+const biodataTypeColorMap: Record<string, ChipProps["color"]> = {
+  "Male": "primary",
+  "Female": "danger",
+  "Groom": "primary", 
+  "Bride": "danger",
+  "Boy": "primary",
+  "Girl": "danger",
+  "Man": "primary",
+  "Woman": "danger",
+};
+```
+
+#### Profile Picture with Placeholder
+```typescript
+case "profilePicture":
+  return (
+    <div className="flex items-center justify-center">
+      {biodata.profilePicture ? (
+        <img
+          src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${biodata.profilePicture}`}
+          alt="Profile"
+          className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+      ) : null}
+      <div className={`w-10 h-10 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center ${biodata.profilePicture ? 'hidden' : ''}`}>
+        <User className="w-5 h-5 text-gray-400" />
+      </div>
+    </div>
+  );
+```
+
+## User Experience Flow
+
+### 1. Biodata Creation & Submission
+```
+User completes biodata form (5 steps)
+↓
+biodataApprovalStatus: 'pending'
+biodataVisibilityStatus: 'active' (default)
+↓
+User sees: Status badge "pending" on their profile
+Public sees: Nothing (not visible until approved)
+Admin sees: Biodata in admin panel for review
+```
+
+### 2. Admin Review Process
+```
+Admin reviews biodata in admin panel
+↓
+Admin can set status to: 'approved', 'rejected', or 'inactive'
+↓
+If approved: biodataApprovalStatus: 'approved'
+↓
+User sees: Status badge "approved" + toggle switch enabled
+Public sees: Biodata becomes visible (if user visibility = active)
+```
+
+### 3. User Visibility Control (Post-Approval)
+```
+User has approved biodata
+↓
+User can toggle visibility in dashboard
+↓
+Toggle OFF: biodataVisibilityStatus: 'inactive'
+  → Public sees: Nothing (hidden by user choice)
+  → User sees: "Approved but Hidden" with toggle to show
+↓
+Toggle ON: biodataVisibilityStatus: 'active'  
+  → Public sees: Biodata visible again
+  → User sees: "Approved & Visible" with toggle to hide
+```
+
+### 4. Admin Override Scenarios
+```
+Admin sets biodataApprovalStatus: 'inactive' (policy violation)
+↓
+User sees: "Deactivated by Admin" (toggle disabled)
+Public sees: Nothing (admin override)
+User cannot: Toggle visibility (admin authority)
+
+OR
+
+Admin sets biodataApprovalStatus: 'rejected' (needs fixes)
+↓
+User sees: "Rejected" status with edit option
+Public sees: Nothing (not approved)
+User cannot: Toggle visibility (must fix and resubmit)
+```
+
+## Status Scenarios Matrix
+
+| Approval Status | Visibility Status | Public Visible | User Can Toggle | Display Status | User Action |
+|----------------|------------------|----------------|-----------------|----------------|-------------|
+| pending        | active           | ❌ No          | ❌ No           | "pending"      | Wait for review |
+| pending        | inactive         | ❌ No          | ❌ No           | "pending"      | Wait for review |
+| approved       | active           | ✅ Yes         | ✅ Yes          | "active"       | Can hide profile |
+| approved       | inactive         | ❌ No          | ✅ Yes          | "inactive"     | Can show profile |
+| rejected       | active           | ❌ No          | ❌ No           | "rejected"     | Fix & resubmit |
+| rejected       | inactive         | ❌ No          | ❌ No           | "rejected"     | Fix & resubmit |
+| inactive       | active           | ❌ No          | ❌ No           | "inactive"     | Contact admin |
+| inactive       | inactive         | ❌ No          | ❌ No           | "inactive"     | Contact admin |
+
+## Database Migration
+
+### Migration Script (`backend/migrations/004_add_biodata_approval_visibility_columns.sql`)
+```sql
+-- Create new enum types for the cleaner two-column approach
+CREATE TYPE biodata_approval_status_enum AS ENUM ('pending', 'approved', 'rejected', 'inactive');
+CREATE TYPE biodata_visibility_status_enum AS ENUM ('active', 'inactive');
+
+-- Add new columns with proper defaults
+ALTER TABLE biodata 
+ADD COLUMN IF NOT EXISTS "biodataApprovalStatus" biodata_approval_status_enum DEFAULT 'pending',
+ADD COLUMN IF NOT EXISTS "biodataVisibilityStatus" biodata_visibility_status_enum DEFAULT 'active';
+
+-- Migrate existing data from old status system to new two-column system
+UPDATE biodata 
+SET "biodataApprovalStatus" = CASE 
+    WHEN status = 'Pending' THEN 'pending'::biodata_approval_status_enum
+    WHEN status = 'Active' THEN 'approved'::biodata_approval_status_enum
+    WHEN status = 'Rejected' THEN 'rejected'::biodata_approval_status_enum
+    WHEN status = 'Inactive' THEN 'inactive'::biodata_approval_status_enum
+    ELSE 'pending'::biodata_approval_status_enum
+END;
+
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_biodata_approval_status ON biodata("biodataApprovalStatus");
+CREATE INDEX IF NOT EXISTS idx_biodata_visibility_status ON biodata("biodataVisibilityStatus");
+
+-- Create composite index for public queries (approved + active)
+CREATE INDEX IF NOT EXISTS idx_biodata_public_visibility 
+ON biodata("biodataApprovalStatus", "biodataVisibilityStatus") 
+WHERE "biodataApprovalStatus" = 'approved' AND "biodataVisibilityStatus" = 'active';
+```
+
+## Key Benefits
+
+### ✅ **Clean Separation of Concerns**
+- **Admin Approval**: Controls quality and policy compliance
+- **User Visibility**: Controls personal preference for showing/hiding
+- **No Conflicts**: Clear hierarchy prevents permission issues
+
+### ✅ **Optimal User Experience**
+- **Users always see their own biodata** (regardless of status)
+- **Status-specific messaging** with clear next steps
+- **Toggle only works when appropriate** (after approval)
+- **No confusing "not found" messages** for owners
+
+### ✅ **Efficient Admin Management**
+- **Streamlined admin table** with only essential columns
+- **Color-coded status badges** for quick identification
+- **Profile picture thumbnails** with User icon placeholders
+- **Only completed biodatas** appear in admin panel
+
+### ✅ **Database Performance**
+- **Composite indexes** for efficient public queries
+- **Enum constraints** ensure data integrity
+- **Optimized filtering** with `isVisibleToPublic()` method
+
+### ✅ **Security & Authority**
+- **Admin decisions cannot be overridden** by users
+- **Role-based API endpoints** with proper authentication
+- **Clear audit trail** of all status changes
+
+## Testing Checklist
+
+### Backend Tests
+- [ ] Public API only returns approved + active biodatas
+- [ ] User toggle only works if approved
+- [ ] Admin can update approval status
+- [ ] Completed biodatas filter works correctly
+- [ ] Status validation prevents invalid transitions
+
+### Frontend Tests
+- [ ] Toggle switch shows correct state
+- [ ] Toggle disabled when not approved
+- [ ] Status colors display correctly
+- [ ] Admin interface updates status properly
+- [ ] Profile pictures show with proper fallbacks
+
+### Integration Tests
+- [ ] Complete user flow: submit → approve → toggle
+- [ ] Admin override prevents user toggle
+- [ ] Status changes reflect immediately in UI
+- [ ] Users always see their own biodata
+- [ ] Public queries only show approved + active
+
+## Monitoring & Analytics
+
+### Key Metrics
+- **Approval Rate**: approved / total submissions
+- **User Toggle Frequency**: how often users hide/show profiles
+- **Time to Approval**: average admin review time
+- **Admin Override Frequency**: how often admins force inactive
+
+### Performance Monitoring
+- **Query Performance**: monitor public biodata queries
+- **Database Load**: track index usage and query efficiency
+- **API Response Times**: monitor status update endpoints
+
+This comprehensive biodata status management system provides a robust, scalable solution that maintains clear authority hierarchy while giving users appropriate control over their profiles, ensuring optimal user experience and efficient admin management.

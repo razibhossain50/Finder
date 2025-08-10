@@ -6,7 +6,7 @@ import {
     Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Input, Button, DropdownTrigger,
     Dropdown, DropdownMenu, DropdownItem, Chip, Pagination, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Select, SelectItem
 } from "@heroui/react";
-import { Plus, EllipsisVertical, Search, ChevronDown } from "lucide-react";
+import { Plus, EllipsisVertical, Search, ChevronDown, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 type IconSvgProps = SVGProps<SVGSVGElement> & {
@@ -19,68 +19,24 @@ function capitalize(s: string) {
 
 const columns = [
     { name: "ID", uid: "id", sortable: false },
-    { name: "STEP", uid: "step", sortable: false },
     { name: "USER ID", uid: "userId", sortable: false },
-    { name: "COMPLETED STEPS", uid: "completedSteps", sortable: false },
-    { name: "PARTNER AGE MIN", uid: "partnerAgeMin", sortable: false },
-    { name: "PARTNER AGE MAX", uid: "partnerAgeMax", sortable: false },
-    { name: "SAME AS PERMANENT", uid: "sameAsPermanent", sortable: false },
-    { name: "RELIGION", uid: "religion", sortable: false },
+    { name: "APPROVAL STATUS", uid: "biodataApprovalStatus", sortable: true },
     { name: "BIODATA TYPE", uid: "biodataType", sortable: false },
     { name: "MARITAL STATUS", uid: "maritalStatus", sortable: true },
-    { name: "DATE OF BIRTH", uid: "dateOfBirth", sortable: false },
-    { name: "AGE", uid: "age", sortable: false },
-    { name: "HEIGHT", uid: "height", sortable: false },
-    { name: "WEIGHT", uid: "weight", sortable: false },
-    { name: "COMPLEXION", uid: "complexion", sortable: false },
-    { name: "PROFESSION", uid: "profession", sortable: false },
-    { name: "BLOOD GROUP", uid: "bloodGroup", sortable: false },
-    { name: "PERMANENT COUNTRY", uid: "permanentCountry", sortable: false },
-    { name: "PERMANENT DIVISION", uid: "permanentDivision", sortable: false },
-    { name: "PERMANENT ZILLA", uid: "permanentZilla", sortable: false },
-    { name: "PERMANENT UPAZILLA", uid: "permanentUpazilla", sortable: false },
-    { name: "PERMANENT AREA", uid: "permanentArea", sortable: false },
-    { name: "PRESENT COUNTRY", uid: "presentCountry", sortable: false },
-    { name: "PRESENT DIVISION", uid: "presentDivision", sortable: false },
-    { name: "PRESENT ZILLA", uid: "presentZilla", sortable: false },
-    { name: "PRESENT UPAZILLA", uid: "presentUpazilla", sortable: false },
-    { name: "PRESENT AREA", uid: "presentArea", sortable: false },
-    { name: "HEALTH ISSUES", uid: "healthIssues", sortable: false },
-    { name: "EDUCATION MEDIUM", uid: "educationMedium", sortable: false },
-    { name: "HIGHEST EDUCATION", uid: "highestEducation", sortable: false },
-    { name: "INSTITUTE NAME", uid: "instituteName", sortable: false },
-    { name: "SUBJECT", uid: "subject", sortable: false },
-    { name: "PASSING YEAR", uid: "passingYear", sortable: false },
-    { name: "RESULT", uid: "result", sortable: false },
-    { name: "ECONOMIC CONDITION", uid: "economicCondition", sortable: false },
-    { name: "FATHER NAME", uid: "fatherName", sortable: false },
-    { name: "FATHER PROFESSION", uid: "fatherProfession", sortable: false },
-    { name: "FATHER ALIVE", uid: "fatherAlive", sortable: false },
-    { name: "MOTHER NAME", uid: "motherName", sortable: false },
-    { name: "MOTHER PROFESSION", uid: "motherProfession", sortable: false },
-    { name: "MOTHER ALIVE", uid: "motherAlive", sortable: false },
-    { name: "BROTHERS COUNT", uid: "brothersCount", sortable: false },
-    { name: "SISTERS COUNT", uid: "sistersCount", sortable: false },
-    { name: "FAMILY DETAILS", uid: "familyDetails", sortable: false },
-    { name: "PARTNER COMPLEXION", uid: "partnerComplexion", sortable: false },
-    { name: "PARTNER HEIGHT", uid: "partnerHeight", sortable: false },
-    { name: "PARTNER EDUCATION", uid: "partnerEducation", sortable: false },
-    { name: "PARTNER PROFESSION", uid: "partnerProfession", sortable: false },
-    { name: "PARTNER LOCATION", uid: "partnerLocation", sortable: false },
-    { name: "PARTNER DETAILS", uid: "partnerDetails", sortable: false },
     { name: "FULL NAME", uid: "fullName", sortable: false },
     { name: "PROFILE PICTURE", uid: "profilePicture", sortable: false },
-    { name: "EMAIL", uid: "email", sortable: false },
-    { name: "GUARDIAN MOBILE", uid: "guardianMobile", sortable: false },
     { name: "OWN MOBILE", uid: "ownMobile", sortable: false },
-    { name: "STATUS", uid: "status", sortable: true },
+    { name: "GUARDIAN MOBILE", uid: "guardianMobile", sortable: false },
+    { name: "EMAIL", uid: "email", sortable: false },
+    { name: "RELIGION", uid: "religion", sortable: false },
     { name: "ACTIONS", uid: "actions", sortable: false },
 ];
 
 const statusOptions = [
-    { name: "Active", uid: "Active" },
-    { name: "Inactive", uid: "Inactive" },
-    { name: "Pending", uid: "Pending" },
+    { name: "Pending", uid: "pending" },
+    { name: "Approved", uid: "approved" },
+    { name: "Rejected", uid: "rejected" },
+    { name: "Inactive", uid: "inactive" },
 ];
 
 interface Biodata {
@@ -139,13 +95,26 @@ interface Biodata {
     email: string;
     guardianMobile: string;
     ownMobile: string;
-    status: string | null;
+    biodataApprovalStatus: string;
+    biodataVisibilityStatus: string;
 }
 
 const statusColorMap: Record<string, ChipProps["color"]> = {
-    Active: "success",
-    Inactive: "danger",
-    Pending: "warning",
+    pending: "warning",
+    approved: "success",
+    rejected: "danger",
+    inactive: "default",
+};
+
+const biodataTypeColorMap: Record<string, ChipProps["color"]> = {
+    "Male": "primary",
+    "Female": "danger",
+    "Groom": "primary",
+    "Bride": "danger",
+    "Boy": "primary",
+    "Girl": "danger",
+    "Man": "primary",
+    "Woman": "danger",
 };
 
 
@@ -160,7 +129,7 @@ export default function Biodatas() {
     const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
-        column: "status",
+        column: "biodataApprovalStatus",
         direction: "descending",
     });
     const [page, setPage] = React.useState(1);
@@ -176,7 +145,7 @@ export default function Biodatas() {
 
     // Handle status update
     const handleStatusUpdate = async () => {
-        if (!selectedBiodata || !newStatus || newStatus === selectedBiodata.status) return;
+        if (!selectedBiodata || !newStatus || newStatus === selectedBiodata.biodataApprovalStatus) return;
 
         try {
             setIsUpdatingStatus(true);
@@ -188,7 +157,7 @@ export default function Biodatas() {
                 return;
             }
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/${selectedBiodata.id}/status`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/${selectedBiodata.id}/approval-status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -201,11 +170,11 @@ export default function Biodatas() {
                 // Update local state
                 setBiodatas(prev => prev.map(biodata =>
                     biodata.id === selectedBiodata.id
-                        ? { ...biodata, status: newStatus }
+                        ? { ...biodata, biodataApprovalStatus: newStatus }
                         : biodata
                 ));
                 // Update the selected biodata to reflect the change
-                setSelectedBiodata(prev => prev ? { ...prev, status: newStatus } : null);
+                setSelectedBiodata(prev => prev ? { ...prev, biodataApprovalStatus: newStatus } : null);
                 // Close the modal after successful update
                 setViewModalOpen(false);
             } else {
@@ -317,7 +286,7 @@ export default function Biodatas() {
         }
         if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
             filteredBiodatas = filteredBiodatas.filter((biodata) =>
-                Array.from(statusFilter).includes(biodata.status || 'Inactive'),
+                Array.from(statusFilter).includes(biodata.biodataApprovalStatus || 'pending'),
             );
         }
 
@@ -335,13 +304,13 @@ export default function Biodatas() {
 
     const sortedItems = React.useMemo(() => {
         return [...items].sort((a: Biodata, b: Biodata) => {
-            // Only allow sorting on status column
-            if (sortDescriptor.column !== "status") {
+            // Only allow sorting on biodataApprovalStatus column
+            if (sortDescriptor.column !== "biodataApprovalStatus") {
                 return 0;
             }
 
-            const first = (a.status || 'Inactive').toLowerCase();
-            const second = (b.status || 'Inactive').toLowerCase();
+            const first = (a.biodataApprovalStatus || 'pending').toLowerCase();
+            const second = (b.biodataApprovalStatus || 'pending').toLowerCase();
             const cmp = first < second ? -1 : first > second ? 1 : 0;
 
             return sortDescriptor.direction === "descending" ? -cmp : cmp;
@@ -358,10 +327,14 @@ export default function Biodatas() {
                 );
             case "biodataType":
                 return (
-                    <div className="flex flex-col">
-                        <p className="text-bold text-small capitalize">{cellValue}</p>
-                        <p className="text-bold text-tiny capitalize text-default-400">{biodata.religion}</p>
-                    </div>
+                    <Chip
+                        className="capitalize"
+                        color={biodataTypeColorMap[biodata.biodataType] || "default"}
+                        size="sm"
+                        variant="flat"
+                    >
+                        {cellValue}
+                    </Chip>
                 );
             case "maritalStatus":
                 return (
@@ -374,16 +347,36 @@ export default function Biodatas() {
                         {cellValue}
                     </Chip>
                 );
-            case "status":
+            case "biodataApprovalStatus":
                 return (
                     <Chip
                         className="capitalize"
-                        color={statusColorMap[biodata.status || 'Inactive']}
+                        color={statusColorMap[biodata.biodataApprovalStatus || 'pending']}
                         size="sm"
                         variant="flat"
                     >
-                        {biodata.status || 'Inactive'}
+                        {biodata.biodataApprovalStatus || 'pending'}
                     </Chip>
+                );
+            case "profilePicture":
+                return (
+                    <div className="flex items-center justify-center">
+                        {biodata.profilePicture ? (
+                            <img
+                                src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${biodata.profilePicture}`}
+                                alt="Profile"
+                                className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                                onError={(e) => {
+                                    // If image fails to load, show placeholder
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                }}
+                            />
+                        ) : null}
+                        <div className={`w-10 h-10 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center ${biodata.profilePicture ? 'hidden' : ''}`}>
+                            <User className="w-5 h-5 text-gray-400" />
+                        </div>
+                    </div>
                 );
             case "actions":
                 return (
@@ -397,7 +390,7 @@ export default function Biodatas() {
                             <DropdownMenu onAction={(key) => {
                                 if (key === "view") {
                                     setSelectedBiodata(biodata);
-                                    setNewStatus(biodata.status || 'Inactive');
+                                    setNewStatus(biodata.biodataApprovalStatus || 'pending');
                                     setViewModalOpen(true);
                                 } else if (key === "delete") {
                                     setSelectedBiodata(biodata);
@@ -498,6 +491,7 @@ export default function Biodatas() {
                         <select
                             className="bg-transparent outline-solid outline-transparent text-default-400 text-small"
                             onChange={onRowsPerPageChange}
+                            defaultValue="10"
                         >
                             <option value="5">5</option>
                             <option value="10">10</option>
@@ -561,9 +555,6 @@ export default function Biodatas() {
                 aria-label="Admin biodata table with status management"
                 bottomContent={bottomContent}
                 bottomContentPlacement="outside"
-                classNames={{
-                    wrapper: "max-h-[382px]",
-                }}
                 selectedKeys={selectedKeys}
                 selectionMode="multiple"
                 sortDescriptor={sortDescriptor}
@@ -622,12 +613,12 @@ export default function Biodatas() {
                                         </div>
                                         <div className="text-right">
                                             <Chip
-                                                color={statusColorMap[selectedBiodata.status || 'Inactive']}
+                                                color={statusColorMap[selectedBiodata.biodataApprovalStatus || 'pending']}
                                                 size="lg"
                                                 variant="flat"
                                                 className="mb-2"
                                             >
-                                                {selectedBiodata.status || 'Inactive'}
+                                                {selectedBiodata.biodataApprovalStatus || 'pending'}
                                             </Chip>
                                             <p className="text-sm text-gray-600">Step: {selectedBiodata.step}/8</p>
                                         </div>
@@ -656,7 +647,7 @@ export default function Biodatas() {
                                             <Button
                                                 color="primary"
                                                 onPress={handleStatusUpdate}
-                                                isDisabled={!newStatus || newStatus === selectedBiodata.status || isUpdatingStatus}
+                                                isDisabled={!newStatus || newStatus === selectedBiodata.biodataApprovalStatus || isUpdatingStatus}
                                                 isLoading={isUpdatingStatus}
                                             >
                                                 {isUpdatingStatus ? "Updating..." : "Update"}

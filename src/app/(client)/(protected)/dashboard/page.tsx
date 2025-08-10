@@ -5,11 +5,14 @@ import { Card, CardBody, CardHeader, Button } from "@heroui/react";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 import { useProfileView } from "@/hooks/useProfileView";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useBiodataStatus } from "@/hooks/useBiodataStatus";
+import { BiodataStatusToggle } from "@/components/dashboard/BiodataStatusToggle";
 
 export default function Dashboard() {
   const { user } = useRegularAuth();
   const { getProfileViewStats } = useProfileView();
   const { favorites, getFavoriteCount } = useFavorites();
+  const { statusInfo, loading: statusLoading, refetch: refetchStatus } = useBiodataStatus();
   const [viewStats, setViewStats] = useState({
     totalViews: 0,
     recentViews: 0,
@@ -21,6 +24,11 @@ export default function Dashboard() {
   });
   const [statsLoading, setStatsLoading] = useState(true);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
+
+  const handleStatusChange = (newStatus: string) => {
+    // Refetch status info to get updated data
+    refetchStatus();
+  };
 
   // Fetch profile view statistics
   useEffect(() => {
@@ -138,6 +146,19 @@ export default function Dashboard() {
             </CardBody>
           </Card>
         </div>
+
+        {/* Biodata Status Toggle */}
+        {statusInfo && (
+          <div className="mb-8">
+            <BiodataStatusToggle
+              biodataId={statusInfo.id}
+              biodataApprovalStatus={statusInfo.biodataApprovalStatus}
+              biodataVisibilityStatus={statusInfo.biodataVisibilityStatus}
+              canUserToggle={statusInfo.canUserToggle}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid gap-8 md:grid-cols-3 mb-10">

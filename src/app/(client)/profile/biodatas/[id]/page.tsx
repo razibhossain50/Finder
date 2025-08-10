@@ -31,65 +31,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProfileView } from "@/hooks/useProfileView";
-
-interface BiodataProfile {
-  id: number;
-  step: number;
-  userId: number | null;
-  completedSteps: number | null;
-  partnerAgeMin: number;
-  partnerAgeMax: number;
-  sameAsPermanent: boolean;
-  religion: string;
-  biodataType: string;
-  maritalStatus: string;
-  dateOfBirth: string;
-  age: number;
-  height: string;
-  weight: number;
-  complexion: string;
-  profession: string;
-  bloodGroup: string;
-  permanentCountry: string;
-  permanentDivision: string;
-  permanentZilla: string;
-  permanentUpazilla: string;
-  permanentArea: string;
-  presentCountry: string;
-  presentDivision: string;
-  presentZilla: string;
-  presentUpazilla: string;
-  presentArea: string;
-  healthIssues: string;
-  educationMedium: string;
-  highestEducation: string;
-  instituteName: string;
-  subject: string;
-  passingYear: number;
-  result: string;
-  economicCondition: string;
-  fatherName: string;
-  fatherProfession: string;
-  fatherAlive: string;
-  motherName: string;
-  motherProfession: string;
-  motherAlive: string;
-  brothersCount: number;
-  sistersCount: number;
-  familyDetails: string;
-  partnerComplexion: string;
-  partnerHeight: string;
-  partnerEducation: string;
-  partnerProfession: string;
-  partnerLocation: string;
-  partnerDetails: string;
-  fullName: string;
-  profilePicture: string | null;
-  email: string;
-  guardianMobile: string;
-  ownMobile: string;
-  status: string | null;
-}
+import { BiodataProfile, BiodataApprovalStatus, BiodataVisibilityStatus } from "@/types/biodata";
+import { BiodataStatusHandler } from "@/components/biodata/BiodataStatusHandler";
 
 // Helper function to safely display data or fallback
 const safeDisplay = (value: unknown, fallback: string = "Not provided"): string => {
@@ -135,12 +78,40 @@ export default function Profile() {
       setError(null);
       setLoading(true);
 
-      // Fetch specific biodata by ID - no authentication required
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/${biodataId}`, {
-        headers: {
-          'Content-Type': 'application/json'
+      // Try to fetch as owner first (if authenticated), then fall back to public
+      let response;
+      const token = localStorage.getItem('regular_user_access_token');
+      
+      if (token && isAuthenticated) {
+        // Try owner endpoint first (user can always see their own biodata)
+        try {
+          response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/owner/${biodataId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            }
+          });
+          
+          // If owner endpoint fails (not owner), fall back to public endpoint
+          if (!response.ok && response.status !== 403) {
+            throw new Error('Owner fetch failed');
+          }
+        } catch (ownerError) {
+          // Fall back to public endpoint
+          response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/${biodataId}`, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
         }
-      });
+      } else {
+        // Not authenticated, use public endpoint
+        response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/${biodataId}`, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      }
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -356,6 +327,9 @@ export default function Profile() {
     );
   }
 
+  // Users should always see their own biodata profile (no status handler for owners)
+  // Status handler is only for non-owners viewing non-public biodatas
+
   if (!profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 p-4 md:p-8">
@@ -426,11 +400,11 @@ export default function Profile() {
                   <Button
                     size="lg"
                     className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white px-8 py-3 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                    
+
                   >
-                    <Link href="/profile/biodatas/edit/new">
+                    <Link className="flex items-center" href="/profile/biodatas/edit/new">
                       <Plus className="h-5 w-5 mr-2" />
-                      Create Your Biodata Profile
+                      <span>Create Your Biodata Profile</span>
                     </Link>
                   </Button>
 
@@ -473,10 +447,30 @@ export default function Profile() {
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-rose-600 to-purple-600 bg-clip-text text-transparent">
                 Biodata Profile
               </h1>
-              <p className="text-gray-600 mt-1 flex items-center gap-2">
-                <Star className="h-4 w-4 text-yellow-500" />
-                ID: BD{biodataId}
-              </p>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="text-gray-600 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                  ID: BD{biodataId}
+                </p>
+                {/* Show status badge for profile owner */}
+                {canEditProfile && (
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    className={`capitalize ${
+                      profile.biodataApprovalStatus === 'approved' 
+                        ? 'bg-green-100 text-green-800 border-green-200' 
+                        : profile.biodataApprovalStatus === 'pending'
+                        ? 'bg-amber-100 text-amber-800 border-amber-200'
+                        : profile.biodataApprovalStatus === 'rejected'
+                        ? 'bg-red-100 text-red-800 border-red-200'
+                        : 'bg-gray-100 text-gray-800 border-gray-200'
+                    }`}
+                  >
+                    {profile.biodataApprovalStatus || 'pending'}
+                  </Chip>
+                )}
+              </div>
             </div>
           </div>
 

@@ -141,7 +141,8 @@ export default function BiodataForm() {
             // This ensures the biodata is associated with the current logged-in user
             const payload = {
                 ...data,
-                status: 'Inactive',
+                biodataApprovalStatus: 'pending',
+                biodataVisibilityStatus: 'active',
                 completedSteps: [1, 2, 3, 4, 5], // Mark all steps as completed
             };
 

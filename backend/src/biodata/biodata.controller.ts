@@ -18,6 +18,7 @@ import { UpdateBiodataDto } from './dto/update-biodata.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Request } from 'express';
+import { BiodataApprovalStatus } from './enums/admin-approval-status.enum';
 
 @Controller('api/biodatas')
 export class BiodataController {
@@ -107,20 +108,30 @@ export class BiodataController {
     return this.biodataService.findOneForOwner(biodataId);
   }
 
-  @Put(':id/status')
+  @Put(':id/approval-status')
   @UseGuards(JwtAuthGuard)
-  async updateStatus(@Param('id') id: string, @Body() statusData: { status: string }, @CurrentUser() user: any) {
+  async updateApprovalStatus(@Param('id') id: string, @Body() statusData: { status: BiodataApprovalStatus }, @CurrentUser() user: any) {
     if (!user?.id) {
       throw new Error('User authentication required');
     }
 
-    // Allow both admin and superadmin to update biodata status
+    // Allow both admin and superadmin to update biodata approval status
     if (user.role !== 'admin' && user.role !== 'superadmin') {
-      throw new Error('Access denied: Only admin and superadmin can update biodata status');
+      throw new Error('Access denied: Only admin and superadmin can update biodata approval status');
     }
 
     const biodataId = +id;
-    return this.biodataService.updateStatus(biodataId, statusData.status);
+    return this.biodataService.updateApprovalStatus(biodataId, statusData.status);
+  }
+
+  @Put('current/toggle-visibility')
+  @UseGuards(JwtAuthGuard)
+  async toggleUserVisibility(@CurrentUser() user: any) {
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+
+    return this.biodataService.toggleUserVisibility(user.id);
   }
 
   @Get(':id')

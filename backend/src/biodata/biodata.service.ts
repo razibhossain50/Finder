@@ -5,6 +5,8 @@ import { Biodata } from './biodata.entity';
 import { ProfileView } from './entities/profile-view.entity';
 import { CreateBiodataDto } from './dto/create-biodata.dto';
 import { UpdateBiodataDto } from './dto/update-biodata.dto';
+import { BiodataApprovalStatus } from './enums/admin-approval-status.enum';
+import { BiodataVisibilityStatus } from './enums/user-visibility-status.enum';
 
 @Injectable()
 export class BiodataService {
@@ -13,7 +15,7 @@ export class BiodataService {
     private biodataRepository: Repository<Biodata>,
     @InjectRepository(ProfileView)
     private profileViewRepository: Repository<ProfileView>
-  ) {}
+  ) { }
 
   async create(createBiodataDto: CreateBiodataDto & { userId: number }) {
     console.log('=== BiodataService.create ===');
@@ -31,18 +33,26 @@ export class BiodataService {
     return savedBiodata;
   }
 
-  findAll() {
-    return this.biodataRepository.find({
-      where: { status: 'Active' },
+  async findAll() {
+    const allBiodatas = await this.biodataRepository.find({
       relations: ['user']
     });
+
+    // Only show biodatas that are approved and active (visible to public)
+    return allBiodatas.filter(biodata => biodata.isVisibleToPublic());
   }
 
-  findOne(id: number) {
-    return this.biodataRepository.findOne({
-      where: { id, status: 'Active' },
+  async findOne(id: number) {
+    const biodata = await this.biodataRepository.findOne({
+      where: { id },
       relations: ['user']
     });
+
+    if (!biodata || !biodata.isVisibleToPublic()) {
+      return null;
+    }
+
+    return biodata;
   }
 
   findByUserId(userId: number) {
@@ -61,11 +71,68 @@ export class BiodataService {
   }
 
   // Admin method to get all biodatas regardless of status
-  findAllForAdmin() {
-    return this.biodataRepository.find({
+  // Temporarily show all biodatas for debugging
+  async findAllForAdmin() {
+    const allBiodatas = await this.biodataRepository.find({
       relations: ['user'],
       order: { id: 'DESC' }
     });
+
+    console.log('=== Admin findAllForAdmin Debug ===');
+    console.log('Total biodatas found:', allBiodatas.length);
+
+    if (allBiodatas.length > 0) {
+      console.log('Sample biodata fields:', {
+        id: allBiodatas[0].id,
+        fullName: allBiodatas[0].fullName,
+        completedSteps: allBiodatas[0].completedSteps,
+        biodataApprovalStatus: allBiodatas[0].biodataApprovalStatus,
+        biodataVisibilityStatus: allBiodatas[0].biodataVisibilityStatus,
+        // Check if old status field still exists
+        status: (allBiodatas[0] as any).status
+      });
+
+      // Log all field names to see what's available
+      console.log('Available fields:', Object.keys(allBiodatas[0]));
+    } else {
+      console.log('No biodatas found in database');
+    }
+
+    // Handle both old and new column structures
+    // If new columns don't exist, map from old status field
+    const processedBiodatas = allBiodatas.map(biodata => {
+      // If new columns don't exist, set defaults based on old status
+      if (!biodata.biodataApprovalStatus && (biodata as any).status) {
+        const oldStatus = (biodata as any).status;
+        // Map old status to new approval status
+        switch (oldStatus) {
+          case 'Active':
+            biodata.biodataApprovalStatus = BiodataApprovalStatus.APPROVED;
+            break;
+          case 'Pending':
+            biodata.biodataApprovalStatus = BiodataApprovalStatus.PENDING;
+            break;
+          case 'Rejected':
+            biodata.biodataApprovalStatus = BiodataApprovalStatus.REJECTED;
+            break;
+          case 'Inactive':
+            biodata.biodataApprovalStatus = BiodataApprovalStatus.INACTIVE;
+            break;
+          default:
+            biodata.biodataApprovalStatus = BiodataApprovalStatus.PENDING;
+        }
+      }
+
+      // Set default visibility status if not exists
+      if (!biodata.biodataVisibilityStatus) {
+        biodata.biodataVisibilityStatus = BiodataVisibilityStatus.ACTIVE;
+      }
+
+      return biodata;
+    });
+
+    console.log('Processed biodatas with status mapping');
+    return processedBiodatas;
   }
 
   // Owner method to get their own biodata regardless of status
@@ -76,10 +143,45 @@ export class BiodataService {
     });
   }
 
-  // Admin method to update biodata status
-  async updateStatus(id: number, status: string) {
-    await this.biodataRepository.update(id, { status });
+  // Admin method to update biodata approval status
+  async updateApprovalStatus(id: number, approvalStatus: BiodataApprovalStatus) {
+    await this.biodataRepository.update(id, { biodataApprovalStatus: approvalStatus });
     return this.findOneInternal(id);
+  }
+
+  // User method to toggle their biodata visibility
+  async toggleUserVisibility(userId: number): Promise<{ success: boolean; message: string; newStatus?: string }> {
+    const biodata = await this.findByUserId(userId);
+
+    if (!biodata) {
+      return { success: false, message: 'Biodata not found' };
+    }
+
+    if (!biodata.canUserToggle()) {
+      return {
+        success: false,
+        message: 'You cannot toggle your biodata visibility. Your biodata must be approved by admin first.'
+      };
+    }
+
+    // Toggle user visibility
+    const newVisibilityStatus = biodata.biodataVisibilityStatus === BiodataVisibilityStatus.ACTIVE
+      ? BiodataVisibilityStatus.INACTIVE
+      : BiodataVisibilityStatus.ACTIVE;
+
+    await this.biodataRepository.update(biodata.id, { biodataVisibilityStatus: newVisibilityStatus });
+
+    // Get updated biodata to return new effective status
+    const updatedBiodata = await this.findByUserId(userId);
+    const effectiveStatus = updatedBiodata?.getEffectiveStatus();
+
+    return {
+      success: true,
+      message: newVisibilityStatus === BiodataVisibilityStatus.ACTIVE
+        ? 'Biodata is now visible to others'
+        : 'Biodata is now hidden from others',
+      newStatus: effectiveStatus
+    };
   }
 
   update(id: number, updateBiodataDto: UpdateBiodataDto) {
@@ -144,11 +246,10 @@ export class BiodataService {
 
       const { gender, maritalStatus, location, biodataNumber, ageMin, ageMax, page = 1, limit = 6 } = filters;
 
-      // Build query with filters
+      // Build query with filters - get all biodatas first, then filter by effective status
       const queryBuilder = this.biodataRepository
         .createQueryBuilder('biodata')
-        .leftJoinAndSelect('biodata.user', 'user')
-        .where('biodata.status = :status', { status: 'Active' }); // Only show active biodatas
+        .leftJoinAndSelect('biodata.user', 'user');
 
       // Filter by biodata number (ID)
       if (biodataNumber) {
@@ -181,17 +282,19 @@ export class BiodataService {
         queryBuilder.andWhere('biodata.age <= :ageMax', { ageMax });
       }
 
-      // Get total count for pagination
-      const totalCount = await queryBuilder.getCount();
-
-      // Apply pagination
-      const skip = (page - 1) * limit;
-      queryBuilder.skip(skip).take(limit);
-
       // Order by creation date (newest first)
       queryBuilder.orderBy('biodata.id', 'DESC');
 
-      const biodatas = await queryBuilder.getMany();
+      // Get all matching biodatas
+      const allBiodatas = await queryBuilder.getMany();
+
+      // Filter by effective status (only show biodatas that are approved and active)
+      const activeBiodatas = allBiodatas.filter(biodata => biodata.isVisibleToPublic());
+
+      // Apply pagination to filtered results
+      const totalCount = activeBiodatas.length;
+      const skip = (page - 1) * limit;
+      const biodatas = activeBiodatas.slice(skip, skip + limit);
 
       console.log(`Found ${biodatas.length} biodatas out of ${totalCount} total`);
 
@@ -232,7 +335,7 @@ export class BiodataService {
 
       // Check if this user/IP has already viewed this profile recently (within 24 hours)
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      
+
       let existingView;
       if (viewerId) {
         // For logged-in users, check by viewerId
@@ -310,7 +413,7 @@ export class BiodataService {
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
-    
+
     const viewsThisMonth = await this.profileViewRepository
       .createQueryBuilder('view')
       .where('view.biodataId = :biodataId', { biodataId: biodata.id })

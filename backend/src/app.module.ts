@@ -12,6 +12,7 @@ import { Biodata } from './biodata/biodata.entity';
 import { BiodataModule } from './biodata/biodata.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { Favorite } from './favorites/favorites.entity';
+import { ProfileView } from './biodata/entities/profile-view.entity';
 import { UploadModule } from './upload/upload.module';
 
 
@@ -30,7 +31,7 @@ import { UploadModule } from './upload/upload.module';
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASS'),
         database: config.get<string>('DB_NAME'),
-        entities: [User, Biodata, Favorite],
+        entities: [User, Biodata, Favorite, ProfileView],
         autoLoadEntities: true,
         synchronize: true,
       }),
