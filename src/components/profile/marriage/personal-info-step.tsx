@@ -88,7 +88,7 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
         updateData({ age });
       }
     }
-  }, [data.age, data.dateOfBirth, updateData]);
+  }, [data.dateOfBirth]);
 
   const handleSameAddressChange = (checked: boolean) => {
     updateData({ sameAsPermanent: checked });
@@ -201,8 +201,11 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
             type="number"
             label="Weight"
             placeholder="Enter weight"
-            value={(data.weight as string) || ""}
-            onChange={(e) => updateData({ weight: parseInt(e.target.value) || "" })}
+            value={data.weight ? String(data.weight) : ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              updateData({ weight: value ? parseInt(value) || undefined : undefined });
+            }}
             endContent={<span className="text-slate-500 text-sm">kg</span>}
             isRequired
             errorMessage={errors.weight}

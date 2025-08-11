@@ -24,21 +24,21 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const { fullName, email, password, confirmPassword, role } = createUserDto;
+    const { fullName, mobile, password, confirmPassword, role } = createUserDto;
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Password and confirm password do not match');
     }
 
-    const userExists = await this.userRepository.findOne({ where: { email } });
+    const userExists = await this.userRepository.findOne({ where: { mobile } });
     if (userExists) {
-      throw new BadRequestException('Email already in use');
+      throw new BadRequestException('Mobile number already in use');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.userRepository.create({
       fullName,
-      email,
+      mobile,
       password: hashedPassword,
       role: role || 'user' // Use provided role or default to 'user'
     });

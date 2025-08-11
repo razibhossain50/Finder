@@ -15,15 +15,15 @@ const biodataSchema = z.object({
   profession: z.string().min(1, "Profession is required"),
   bloodGroup: z.string().min(1, "Blood group is required"),
   
-  // Address Information - Using unified address fields
-  permanentAddress: z.string().min(1, "Permanent address is required"),
+  // Address Information - Individual components are required, combined strings are optional
+  permanentAddress: z.string().optional(),
   permanentCountry: z.string().min(1, "Permanent country is required"),
   permanentDivision: z.string().min(1, "Permanent division is required"),
   permanentZilla: z.string().min(1, "Permanent zilla is required"),
   permanentUpazilla: z.string().min(1, "Permanent upazilla is required"),
   permanentArea: z.string().min(1, "Permanent area is required"),
   
-  presentAddress: z.string().min(1, "Present address is required"),
+  presentAddress: z.string().optional(),
   presentCountry: z.string().min(1, "Present country is required"),
   presentDivision: z.string().min(1, "Present division is required"),
   presentZilla: z.string().min(1, "Present zilla is required"),

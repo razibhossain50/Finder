@@ -136,15 +136,17 @@ finder_frontend/
 ## Key Features
 
 ### 1. Comprehensive Authentication System
+- **Mobile Number Authentication**: Primary authentication using Bangladesh mobile numbers (01XXXXXXXXX format)
+- **Google OAuth 2.0 SSO**: One-click signup/login with Google accounts (no mobile required)
 - **Dual Authentication**: Separate login systems for users and admins
-- **Google OAuth 2.0 SSO**: One-click signup/login with Google accounts
 - **Role-based Access Control**: User, Admin, and Superadmin roles
 - **JWT Token Management**: Secure token-based authentication with automatic role detection
 - **Smart Redirects**: Automatic redirection based on user roles (users → dashboard, admins → admin panel)
 - **Protected Routes**: Route protection for both user and admin areas
-- **Auto-created Accounts**: 
-  - Superadmin: `admin@example.com` / `aaaaa`
-  - Test User: `user@example.com` / `12345`
+- **Auto-created Test Accounts**: 
+  - Superadmin: `01700000000` / `superadmin`
+  - Test Admin: `01900000000` / `aaaaa`
+  - Test User: `01800000000` / `12345`
 
 ### 2. Advanced Admin Panel
 - **User Management**: Complete CRUD operations for user accounts

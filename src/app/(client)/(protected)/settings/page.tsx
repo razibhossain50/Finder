@@ -17,7 +17,7 @@ export default function Settings() {
   useEffect(() => {
     if (user) {
       setName(user.fullName);
-      setEmail(user.email);
+      setEmail(user.email || ''); // Handle optional email for Google users
     }
   }, [user]);
 

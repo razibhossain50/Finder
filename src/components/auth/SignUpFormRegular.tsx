@@ -14,13 +14,14 @@ import {
   Spinner,
   Chip
 } from "@heroui/react";
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Phone, Lock, User, Sparkles, CheckCircle } from "lucide-react";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 import GoogleOAuthButton from "./GoogleOAuthButton";
 
 const signupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  mobile: z.string()
+    .regex(/^(\+88)?01[3-9]\d{8}$/, "Invalid mobile number format. Use: 01XXXXXXXXX or +8801XXXXXXXXX"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -47,7 +48,7 @@ export default function SignupFormRegular() {
     mode: "onChange",
     defaultValues: {
       fullName: "",
-      email: "",
+      mobile: "",
       password: "",
       confirmPassword: "",
     },
@@ -55,7 +56,7 @@ export default function SignupFormRegular() {
 
   const password = watch("password");
   const fullName = watch("fullName");
-  const email = watch("email");
+  const mobile = watch("mobile");
 
 
 
@@ -79,7 +80,7 @@ export default function SignupFormRegular() {
     setIsLoading(true);
     setError(null);
     try {
-      await signup(values.fullName, values.email, values.password, values.confirmPassword);
+      await signup(values.fullName, values.mobile, values.password, values.confirmPassword);
     } catch (error: unknown) {
       setError((error as Error)?.message || 'Signup failed');
     } finally {
@@ -141,19 +142,19 @@ export default function SignupFormRegular() {
               />
 
               <Input
-                {...register("email")}
-                type="email"
-                label="Email Address"
-                placeholder="Enter your email"
-                startContent={<Mail className="w-4 h-4 text-gray-400" />}
+                {...register("mobile")}
+                type="tel"
+                label="Mobile Number"
+                placeholder="Enter your mobile number (01XXXXXXXXX)"
+                startContent={<Phone className="w-4 h-4 text-gray-400" />}
                 endContent={
-                  email && !errors.email ? (
+                  mobile && !errors.mobile ? (
                     <CheckCircle className="w-4 h-4 text-success-500" />
                   ) : null
                 }
                 variant="bordered"
-                isInvalid={!!errors.email}
-                errorMessage={errors.email?.message}
+                isInvalid={!!errors.mobile}
+                errorMessage={errors.mobile?.message}
                 classNames={{
                   input: "text-sm",
                   inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",

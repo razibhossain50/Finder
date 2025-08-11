@@ -1,11 +1,14 @@
-import { IsString, IsEmail, MinLength, Matches, IsOptional, IsIn } from 'class-validator';
+import { IsString, MinLength, Matches, IsOptional, IsIn } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
   fullName: string;
 
-  @IsEmail()
-  email: string;
+  @IsString()
+  @Matches(/^(\+88)?01[3-9]\d{8}$/, { 
+    message: 'Invalid mobile number format. Use: 01XXXXXXXXX or +8801XXXXXXXXX' 
+  })
+  mobile: string;
 
   @IsString()
   @MinLength(5)

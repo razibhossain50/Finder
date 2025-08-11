@@ -6,14 +6,15 @@ import { useRouter } from 'next/navigation'
 interface User {
   id: number
   fullName: string
-  email: string
+  mobile: string
+  email?: string // Optional for Google users
   role: string
 }
 
 interface RegularAuthContextType {
   user: User | null
-  login: (email: string, password: string) => Promise<void>
-  signup: (fullName: string, email: string, password: string, confirmPassword: string) => Promise<void>
+  login: (mobile: string, password: string) => Promise<void>
+  signup: (fullName: string, mobile: string, password: string, confirmPassword: string) => Promise<void>
   logout: () => void
   setUserFromGoogle?: (user: User) => void
   isAuthenticated: boolean
@@ -48,14 +49,14 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
     initializeAuth()
   }, [])
 
-  const signup = async (fullName: string, email: string, password: string, confirmPassword: string) => {
+  const signup = async (fullName: string, mobile: string, password: string, confirmPassword: string) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fullName, email, password, confirmPassword }),
+        body: JSON.stringify({ fullName, mobile, password, confirmPassword }),
       })
 
       const data = await response.json()
@@ -74,14 +75,14 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const login = async (mobile: string, password: string) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ mobile, password }),
       })
 
       const data = await response.json()

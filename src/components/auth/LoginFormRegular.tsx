@@ -14,12 +14,13 @@ import {
   Spinner,
   Chip
 } from "@heroui/react";
-import { Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Phone, Lock, Sparkles } from "lucide-react";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 import GoogleOAuthButton from "./GoogleOAuthButton";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  mobile: z.string()
+    .regex(/^(\+88)?01[3-9]\d{8}$/, "Invalid mobile number format. Use: 01XXXXXXXXX or +8801XXXXXXXXX"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -39,7 +40,7 @@ export default function LoginFormRegular() {
     resolver: zodResolver(loginSchema),
     mode: "onChange",
     defaultValues: {
-      email: "",
+      mobile: "",
       password: "",
     },
   });
@@ -48,7 +49,7 @@ export default function LoginFormRegular() {
     setIsLoading(true);
     setError(null);
     try {
-      await login(values.email, values.password);
+      await login(values.mobile, values.password);
     } catch (error: unknown) {
       setError((error as Error)?.message || 'Login failed');
     } finally {
@@ -89,14 +90,14 @@ export default function LoginFormRegular() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <Input
-                {...register("email")}
-                type="email"
-                label="Email Address"
-                placeholder="Enter your email"
-                startContent={<Mail className="w-4 h-4 text-gray-400" />}
+                {...register("mobile")}
+                type="tel"
+                label="Mobile Number"
+                placeholder="Enter your mobile number (01XXXXXXXXX)"
+                startContent={<Phone className="w-4 h-4 text-gray-400" />}
                 variant="bordered"
-                isInvalid={!!errors.email}
-                errorMessage={errors.email?.message}
+                isInvalid={!!errors.mobile}
+                errorMessage={errors.mobile?.message}
                 classNames={{
                   input: "text-sm",
                   inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",
