@@ -159,9 +159,6 @@ const Login = () => {
                 <p className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-md">
                   <span className="font-medium">Admin:</span> admin@example.com / aaaaa
                 </p>
-                <p className="text-xs text-gray-500 bg-blue-50 px-3 py-2 rounded-md">
-                  <span className="font-medium">Superadmin:</span> superadmin@example.com / superadmin
-                </p>
               </div>
             </div>
           </div>

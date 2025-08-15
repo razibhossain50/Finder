@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Lock, User } from "lucide-react";
+import { Lock, User, Mail, AtSign } from "lucide-react";
 import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useRegularAuth } from "@/context/RegularAuthContext";
@@ -8,6 +8,7 @@ import { useRegularAuth } from "@/context/RegularAuthContext";
 export default function Settings() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const router = useRouter();
@@ -16,8 +17,9 @@ export default function Settings() {
   // Prefill form with current user data
   useEffect(() => {
     if (user) {
-      setName(user.fullName);
-      setEmail(user.email || ''); // Handle optional email for Google users
+      setName(user.fullName || "");
+      setEmail(user.email || "");
+      setUsername(user.username || "");
     }
   }, [user]);
 
@@ -31,9 +33,21 @@ export default function Settings() {
 
     try {
       const token = localStorage.getItem('regular_user_access_token');
-      console.log('Token from localStorage:', token);
-      console.log('User ID:', user.id);
-      console.log('Request URL:', `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/${user.id}`);
+      
+      if (!token) {
+        throw new Error('Authentication token not found. Please login again.');
+      }
+      
+      const updateData: any = {
+        fullName: name,
+      };
+
+      // Only include email if user has email (don't send empty email for username users)
+      if (user.email || email) {
+        updateData.email = email;
+      }
+
+      console.log('Updating user profile:', updateData);
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/${user.id}`, {
         method: 'PUT',
@@ -41,10 +55,7 @@ export default function Settings() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          fullName: name,
-          email: email,
-        }),
+        body: JSON.stringify(updateData),
       });
 
       const data = await response.json();
@@ -54,7 +65,11 @@ export default function Settings() {
       }
 
       // Update local storage with new user data
-      const updatedUser = { ...user, fullName: name, email: email };
+      const updatedUser = { 
+        ...user, 
+        fullName: name,
+        ...(updateData.email && { email: email })
+      };
       localStorage.setItem('regular_user', JSON.stringify(updatedUser));
 
       setMessage("Profile updated successfully!");
@@ -63,6 +78,7 @@ export default function Settings() {
       setTimeout(() => setMessage(""), 3000);
 
     } catch (error) {
+      console.error('Profile update error:', error);
       setMessage(error instanceof Error ? error.message : "Failed to update profile");
     } finally {
       setIsLoading(false);
@@ -70,8 +86,8 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 p-8">
-      <div className="container space-y-8">
+    <div className="min-h-screen  bg-gradient-to-b from-neutral-50 to-neutral-100 p-8">
+      <div className="container mx-auto max-w-7xl space-y-8">
         <h1 className="text-3xl font-bold">Settings</h1>
 
         {/* Profile Settings */}
@@ -85,43 +101,104 @@ export default function Settings() {
               Manage your profile information and preferences
             </p>
           </CardHeader>
-          <CardBody className="space-y-4">
-            <div className="grid gap-4">
+          <CardBody className="space-y-6">
+            <div className="grid gap-6">
               <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium">Display Name</label>
+                <label htmlFor="name" className="text-sm font-medium text-gray-700">Display Name</label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder="Your full name"
+                  startContent={<User className="w-4 h-4 text-gray-400" />}
+                  variant="bordered"
+                  classNames={{
+                    input: "text-sm",
+                    inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",
+                  }}
                 />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">Email Address</label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                />
+              
+              {/* Show Username field if user has username */}
+              {username && (
+                <div className="space-y-2">
+                  <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
+                  <Input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Your username"
+                    startContent={<AtSign className="w-4 h-4 text-gray-400" />}
+                    variant="bordered"
+                    isDisabled
+                    classNames={{
+                      input: "text-sm",
+                      inputWrapper: "border-gray-200 bg-gray-50",
+                    }}
+                  />
+                  <p className="text-xs text-gray-500">Username cannot be changed</p>
+                </div>
+              )}
+              
+              {/* Show Email field if user has email */}
+              {email && (
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    startContent={<Mail className="w-4 h-4 text-gray-400" />}
+                    variant="bordered"
+                    classNames={{
+                      input: "text-sm",
+                      inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Show Email/Username field for users who have neither or want to add email */}
+              {!email && !username && (
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium text-gray-700">Email/Username</label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Add your email address"
+                    startContent={<Mail className="w-4 h-4 text-gray-400" />}
+                    variant="bordered"
+                    classNames={{
+                      input: "text-sm",
+                      inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+            
+            {message && (
+              <div className={`p-4 rounded-md ${message.includes('successfully') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                {message}
               </div>
+            )}
+
+            <div className="flex justify-end">
+              <Button 
+                onClick={handleSaveChanges} 
+                disabled={isLoading}
+                color="primary"
+                className="px-8"
+              >
+                {isLoading ? "Saving..." : "Save Changes"}
+              </Button>
             </div>
           </CardBody>
         </Card>
-
-
-        {message && (
-          <div className={`p-4 rounded-md ${message.includes('successfully') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-            {message}
-          </div>
-        )}
-
-        <div className="flex justify-end">
-          <Button onClick={handleSaveChanges} disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
 
         {/* Security Settings */}
         <Card>

@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     console.log('JWT Strategy - validating payload:', payload);
     console.log('JWT Strategy - payload type:', typeof payload);
     console.log('JWT Strategy - payload keys:', Object.keys(payload));
-    const user = { id: payload.id, mobile: payload.mobile, role: payload.role };
+    const user = { id: payload.id, username: payload.username, role: payload.role };
     console.log('JWT Strategy - returning user:', user);
     return user;
   }

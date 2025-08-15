@@ -6,15 +6,15 @@ import { useRouter } from 'next/navigation'
 interface User {
   id: number
   fullName: string
-  mobile: string
+  username: string
   email?: string // Optional for Google users
   role: string
 }
 
 interface RegularAuthContextType {
   user: User | null
-  login: (mobile: string, password: string) => Promise<void>
-  signup: (fullName: string, mobile: string, password: string, confirmPassword: string) => Promise<void>
+  login: (username: string, password: string) => Promise<void>
+  signup: (fullName: string, username: string, password: string, confirmPassword: string) => Promise<void>
   logout: () => void
   setUserFromGoogle?: (user: User) => void
   isAuthenticated: boolean
@@ -49,14 +49,14 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
     initializeAuth()
   }, [])
 
-  const signup = async (fullName: string, mobile: string, password: string, confirmPassword: string) => {
+  const signup = async (fullName: string, username: string, password: string, confirmPassword: string) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fullName, mobile, password, confirmPassword }),
+        body: JSON.stringify({ fullName, username, password, confirmPassword }),
       })
 
       const data = await response.json()
@@ -75,14 +75,14 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const login = async (mobile: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ mobile, password }),
+        body: JSON.stringify({ username, password }),
       })
 
       const data = await response.json()

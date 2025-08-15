@@ -52,13 +52,13 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
-        const newVisibilityStatus = localVisibilityStatus === BiodataVisibilityStatus.ACTIVE 
-          ? BiodataVisibilityStatus.INACTIVE 
+        const newVisibilityStatus = localVisibilityStatus === BiodataVisibilityStatus.ACTIVE
+          ? BiodataVisibilityStatus.INACTIVE
           : BiodataVisibilityStatus.ACTIVE;
         setLocalVisibilityStatus(newVisibilityStatus);
-        
+
         if (onStatusChange && result.newStatus) {
           onStatusChange(result.newStatus);
         }
@@ -75,7 +75,7 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
 
   const getStatusInfo = () => {
     const colors = BIODATA_STATUS_COLORS[biodataApprovalStatus];
-    
+
     switch (biodataApprovalStatus) {
       case BiodataApprovalStatus.PENDING:
         return {
@@ -85,19 +85,19 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
           canToggle: false,
           toggleMessage: "Cannot toggle while under review"
         };
-      
+
       case BiodataApprovalStatus.APPROVED:
         const isVisible = localVisibilityStatus === BiodataVisibilityStatus.ACTIVE;
         return {
           icon: isVisible ? <Eye className="h-5 w-5 text-green-500" /> : <EyeOff className="h-5 w-5 text-gray-500" />,
           title: isVisible ? "Approved & Visible" : "Approved but Hidden",
-          description: isVisible 
-            ? "Your biodata is approved and visible to other users" 
+          description: isVisible
+            ? "Your biodata is approved and visible to other users"
             : "Your biodata is approved but hidden by your choice",
           canToggle: true,
           toggleMessage: isVisible ? "Hide from others" : "Make visible to others"
         };
-      
+
       case BiodataApprovalStatus.REJECTED:
         return {
           icon: <AlertCircle className="h-5 w-5 text-red-500" />,
@@ -106,7 +106,7 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
           canToggle: false,
           toggleMessage: "Cannot toggle rejected biodata"
         };
-      
+
       case BiodataApprovalStatus.INACTIVE:
         return {
           icon: <EyeOff className="h-5 w-5 text-gray-500" />,
@@ -115,7 +115,7 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
           canToggle: false,
           toggleMessage: "Contact admin to reactivate"
         };
-      
+
       default:
         return {
           icon: <AlertCircle className="h-5 w-5 text-gray-500" />,
@@ -135,10 +135,7 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
       <CardBody className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4 flex-1">
-            <div className="flex-shrink-0">
-              {statusInfo.icon}
-            </div>
-            
+
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h3 className="text-lg font-semibold text-gray-800">
@@ -152,7 +149,7 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
                   {biodataApprovalStatus}
                 </Chip>
               </div>
-              
+
               <p className="text-gray-600 mb-4">
                 {statusInfo.description}
               </p>
@@ -179,7 +176,7 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
                       {localVisibilityStatus === BiodataVisibilityStatus.ACTIVE ? "Visible to others" : "Hidden from others"}
                     </span>
                   </div>
-                  
+
                   {!canUserToggle && (
                     <div className="flex items-center gap-1">
                       <Shield className="h-3 w-3 text-gray-400" />
@@ -192,7 +189,7 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
 
                 <div className="flex items-center gap-3">
                   {isToggling && <Spinner size="sm" />}
-                  
+
                   <Switch
                     isSelected={localVisibilityStatus === BiodataVisibilityStatus.ACTIVE}
                     onValueChange={handleToggle}

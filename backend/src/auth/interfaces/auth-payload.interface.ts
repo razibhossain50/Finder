@@ -1,5 +1,5 @@
 export interface AuthPayload {
   id: number;
-  mobile: string;
+  username: string;
   role: string;
 }

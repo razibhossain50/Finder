@@ -1,11 +1,9 @@
-import { IsString, MinLength, Matches } from 'class-validator';
+import { IsString, MinLength } from 'class-validator';
 
 export class LoginDto {
   @IsString()
-  @Matches(/^(\+88)?01[3-9]\d{8}$/, { 
-    message: 'Invalid mobile number format. Use: 01XXXXXXXXX or +8801XXXXXXXXX' 
-  })
-  mobile: string;
+  @MinLength(8, { message: 'Username must be at least 8 characters long' })
+  username: string;
 
   @IsString()
   @MinLength(1, { message: 'Password is required' })

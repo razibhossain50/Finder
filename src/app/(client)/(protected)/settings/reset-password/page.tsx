@@ -81,7 +81,7 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 p-8">
-      <div className="container max-w-2xl mx-auto space-y-8">
+      <div className="container max-w-7xl mx-auto space-y-8">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"

@@ -24,7 +24,7 @@ function capitalize(s: string) {
 const columns = [
     { name: "ID", uid: "id", sortable: true },
     { name: "FULL NAME", uid: "fullName", sortable: true },
-    { name: "EMAIL", uid: "email", sortable: true },
+    { name: "EMAIL/USERNAME", uid: "emailOrUsername", sortable: true },
     { name: "ROLE", uid: "role", sortable: true },
     { name: "CREATED AT", uid: "createdAt", sortable: true },
     { name: "UPDATED AT", uid: "updatedAt", sortable: true },
@@ -42,7 +42,8 @@ const roleOptions = [
 // User interface based on your database schema
 interface DatabaseUser {
     id: number;
-    email: string;
+    email: string | null;
+    username: string | null;
     password: string; // Won't display this
     role: string;
     createdAt: string;
@@ -177,8 +178,19 @@ export default function Users() {
             // Get admin authentication token
             const token = localStorage.getItem('admin_user_access_token');
 
+            console.log('=== DELETE USER DEBUG ===');
+            console.log('Current user role:', currentUser?.role);
+            console.log('Token exists:', !!token);
+            console.log('User to delete:', userToDelete.id, userToDelete.fullName);
+
             if (!token) {
                 console.error('No authentication token found');
+                alert('No authentication token found. Please login again.');
+                return;
+            }
+
+            if (currentUser?.role !== 'superadmin') {
+                alert('Only superadmin can delete users. Your role: ' + currentUser?.role);
                 return;
             }
 
@@ -190,19 +202,34 @@ export default function Users() {
                 },
             });
 
+            console.log('Delete response status:', response.status);
+
             if (response.ok) {
                 // Remove user from local state
                 setUsers(prev => prev.filter(user => user.id !== userToDelete.id));
                 setDeleteModalOpen(false);
                 setUserToDelete(null);
+                alert('User deleted successfully!');
             } else {
                 const errorText = await response.text();
                 console.error('Failed to delete user:', response.status, errorText);
-                alert('Failed to delete user. Please try again.');
+                
+                let errorMessage = 'Failed to delete user. ';
+                if (response.status === 401) {
+                    errorMessage += 'Authentication failed. Please login again.';
+                } else if (response.status === 403) {
+                    errorMessage += 'Access denied. Only superadmin can delete users.';
+                } else if (response.status === 400) {
+                    errorMessage += 'Cannot delete superadmin accounts.';
+                } else {
+                    errorMessage += `Server error: ${response.status}`;
+                }
+                
+                alert(errorMessage);
             }
         } catch (error) {
             console.error('Error deleting user:', error);
-            alert('Error deleting user. Please try again.');
+            alert('Network error. Please check if the backend server is running.');
         } finally {
             setIsDeleting(false);
         }
@@ -426,7 +453,8 @@ export default function Users() {
         if (hasSearchFilter) {
             filteredUsers = filteredUsers.filter((user) =>
                 (user.fullName?.toLowerCase().includes(filterValue.toLowerCase()) || false) ||
-                user.email.toLowerCase().includes(filterValue.toLowerCase())
+                (user.email?.toLowerCase().includes(filterValue.toLowerCase()) || false) ||
+                (user.username?.toLowerCase().includes(filterValue.toLowerCase()) || false)
             );
         }
         if (roleFilter !== "all" && Array.from(roleFilter).length !== roleOptions.length) {
@@ -486,6 +514,19 @@ export default function Users() {
                         {user.fullName || "No name"}
                     </div>
 
+                );
+            case "emailOrUsername":
+                return (
+                    <div className="flex flex-col">
+                        <span className="text-small">
+                            {user.username ? user.username : (user.email || "No email/username")}
+                        </span>
+                        {user.username && user.email && (
+                            <span className="text-tiny text-default-400">
+                                Email: {user.email}
+                            </span>
+                        )}
+                    </div>
                 );
             case "role":
                 return (
@@ -585,7 +626,7 @@ export default function Users() {
                     <Input
                         isClearable
                         className="w-full sm:max-w-[44%]"
-                        placeholder="Search by name or email..."
+                        placeholder="Search by name, email, or username..."
                         startContent={<Search />}
                         value={filterValue}
                         onClear={() => onClear()}
@@ -748,8 +789,15 @@ export default function Users() {
                                             <span className="ml-2 font-semibold">{userToDelete.fullName || "No name"}</span>
                                         </div>
                                         <div>
-                                            <span className="text-sm text-gray-600">Email:</span>
-                                            <span className="ml-2 font-semibold">{userToDelete.email}</span>
+                                            <span className="text-sm text-gray-600">Email/Username:</span>
+                                            <span className="ml-2 font-semibold">
+                                                {userToDelete.username || userToDelete.email || "No email/username"}
+                                            </span>
+                                            {userToDelete.username && userToDelete.email && (
+                                                <div className="ml-2 text-xs text-gray-500">
+                                                    Email: {userToDelete.email}
+                                                </div>
+                                            )}
                                         </div>
                                         <div>
                                             <span className="text-sm text-gray-600">Role:</span>

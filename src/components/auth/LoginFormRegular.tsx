@@ -14,13 +14,13 @@ import {
   Spinner,
   Chip
 } from "@heroui/react";
-import { Eye, EyeOff, Phone, Lock, Sparkles } from "lucide-react";
+import { Eye, EyeOff, User, Lock, Sparkles } from "lucide-react";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 import GoogleOAuthButton from "./GoogleOAuthButton";
 
 const loginSchema = z.object({
-  mobile: z.string()
-    .regex(/^(\+88)?01[3-9]\d{8}$/, "Invalid mobile number format. Use: 01XXXXXXXXX or +8801XXXXXXXXX"),
+  username: z.string()
+    .min(8, "Username must be at least 8 characters long"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -40,7 +40,7 @@ export default function LoginFormRegular() {
     resolver: zodResolver(loginSchema),
     mode: "onChange",
     defaultValues: {
-      mobile: "",
+      username: "",
       password: "",
     },
   });
@@ -49,7 +49,7 @@ export default function LoginFormRegular() {
     setIsLoading(true);
     setError(null);
     try {
-      await login(values.mobile, values.password);
+      await login(values.username, values.password);
     } catch (error: unknown) {
       setError((error as Error)?.message || 'Login failed');
     } finally {
@@ -90,14 +90,14 @@ export default function LoginFormRegular() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <Input
-                {...register("mobile")}
-                type="tel"
-                label="Mobile Number"
-                placeholder="Enter your mobile number (01XXXXXXXXX)"
-                startContent={<Phone className="w-4 h-4 text-gray-400" />}
+                {...register("username")}
+                type="text"
+                label="Username"
+                placeholder="Enter your username (minimum 8 characters)"
+                startContent={<User className="w-4 h-4 text-gray-400" />}
                 variant="bordered"
-                isInvalid={!!errors.mobile}
-                errorMessage={errors.mobile?.message}
+                isInvalid={!!errors.username}
+                errorMessage={errors.username?.message}
                 classNames={{
                   input: "text-sm",
                   inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",

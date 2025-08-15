@@ -14,14 +14,14 @@ import {
   Spinner,
   Chip
 } from "@heroui/react";
-import { Eye, EyeOff, Phone, Lock, User, Sparkles, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, User, Lock, Sparkles, CheckCircle } from "lucide-react";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 import GoogleOAuthButton from "./GoogleOAuthButton";
 
 const signupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
-  mobile: z.string()
-    .regex(/^(\+88)?01[3-9]\d{8}$/, "Invalid mobile number format. Use: 01XXXXXXXXX or +8801XXXXXXXXX"),
+  username: z.string()
+    .min(8, "Username must be at least 8 characters long"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -48,7 +48,7 @@ export default function SignupFormRegular() {
     mode: "onChange",
     defaultValues: {
       fullName: "",
-      mobile: "",
+      username: "",
       password: "",
       confirmPassword: "",
     },
@@ -56,7 +56,7 @@ export default function SignupFormRegular() {
 
   const password = watch("password");
   const fullName = watch("fullName");
-  const mobile = watch("mobile");
+  const username = watch("username");
 
 
 
@@ -80,7 +80,7 @@ export default function SignupFormRegular() {
     setIsLoading(true);
     setError(null);
     try {
-      await signup(values.fullName, values.mobile, values.password, values.confirmPassword);
+      await signup(values.fullName, values.username, values.password, values.confirmPassword);
     } catch (error: unknown) {
       setError((error as Error)?.message || 'Signup failed');
     } finally {
@@ -142,19 +142,19 @@ export default function SignupFormRegular() {
               />
 
               <Input
-                {...register("mobile")}
-                type="tel"
-                label="Mobile Number"
-                placeholder="Enter your mobile number (01XXXXXXXXX)"
-                startContent={<Phone className="w-4 h-4 text-gray-400" />}
+                {...register("username")}
+                type="text"
+                label="Username"
+                placeholder="Enter your username (minimum 8 characters)"
+                startContent={<User className="w-4 h-4 text-gray-400" />}
                 endContent={
-                  mobile && !errors.mobile ? (
+                  username && !errors.username ? (
                     <CheckCircle className="w-4 h-4 text-success-500" />
                   ) : null
                 }
                 variant="bordered"
-                isInvalid={!!errors.mobile}
-                errorMessage={errors.mobile?.message}
+                isInvalid={!!errors.username}
+                errorMessage={errors.username?.message}
                 classNames={{
                   input: "text-sm",
                   inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",

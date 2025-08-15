@@ -27,7 +27,7 @@ const columns = [
     { name: "PROFILE PICTURE", uid: "profilePicture", sortable: false },
     { name: "OWN MOBILE", uid: "ownMobile", sortable: false },
     { name: "GUARDIAN MOBILE", uid: "guardianMobile", sortable: false },
-    { name: "EMAIL", uid: "email", sortable: false },
+    { name: "EMAIL/USERNAME", uid: "emailOrUsername", sortable: false },
     { name: "RELIGION", uid: "religion", sortable: false },
     { name: "ACTIONS", uid: "actions", sortable: false },
 ];
@@ -92,7 +92,8 @@ interface Biodata {
     partnerDetails: string;
     fullName: string;
     profilePicture: string | null;
-    email: string;
+    email: string | null;
+    username: string | null;
     guardianMobile: string;
     ownMobile: string;
     biodataApprovalStatus: string;
@@ -357,6 +358,19 @@ export default function Biodatas() {
                     >
                         {biodata.biodataApprovalStatus || 'pending'}
                     </Chip>
+                );
+            case "emailOrUsername":
+                return (
+                    <div className="flex flex-col">
+                        <span className="text-small">
+                            {biodata.username ? biodata.username : (biodata.email || "No email/username")}
+                        </span>
+                        {biodata.username && biodata.email && (
+                            <span className="text-tiny text-default-400">
+                                Email: {biodata.email}
+                            </span>
+                        )}
+                    </div>
                 );
             case "profilePicture":
                 return (

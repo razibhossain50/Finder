@@ -24,21 +24,26 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const { fullName, mobile, password, confirmPassword, role } = createUserDto;
+    const { fullName, username, password, confirmPassword, role } = createUserDto;
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Password and confirm password do not match');
     }
 
-    const userExists = await this.userRepository.findOne({ where: { mobile } });
+    // Validate username length
+    if (username.length < 8) {
+      throw new BadRequestException('Username must be at least 8 characters long');
+    }
+
+    const userExists = await this.userRepository.findOne({ where: { username } });
     if (userExists) {
-      throw new BadRequestException('Mobile number already in use');
+      throw new BadRequestException('Username already in use');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.userRepository.create({
       fullName,
-      mobile,
+      username,
       password: hashedPassword,
       role: role || 'user' // Use provided role or default to 'user'
     });
@@ -125,7 +130,21 @@ export class UserService {
       throw new BadRequestException('Cannot delete superadmin accounts');
     }
 
+    // Check if user has biodata and handle it
+    const biodataRepository = this.userRepository.manager.getRepository('Biodata');
+    const userBiodata = await biodataRepository.find({ where: { userId: id } });
+    
+    if (userBiodata.length > 0) {
+      console.log(`User ${id} has ${userBiodata.length} biodata record(s). Deleting biodata first...`);
+      // Delete all biodata records for this user first
+      await biodataRepository.delete({ userId: id });
+    }
+
     await this.userRepository.remove(user);
-    return { message: 'User deleted successfully', deletedUser: { id: user.id, email: user.email } };
+    return { 
+      message: 'User deleted successfully', 
+      deletedUser: { id: user.id, email: user.email, username: user.username },
+      deletedBiodataCount: userBiodata.length
+    };
   }
 }
