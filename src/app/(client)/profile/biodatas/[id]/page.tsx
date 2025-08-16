@@ -1,30 +1,10 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  User,
-  Heart,
-  GraduationCap,
-  Briefcase,
-  MapPin,
-  Users,
-  Phone,
-  Mail,
-  Calendar,
-  Ruler,
-  Weight,
-  Droplets,
-  Shield,
-  Home,
-  AlertCircle,
-  RefreshCw,
-  Star,
-  Share2,
-  MessageCircle,
-  Sparkles,
-  Edit,
-  Plus
+  User, Heart, GraduationCap, Briefcase, MapPin, Users, Phone, Mail, Calendar, Ruler, Weight, Droplets, Shield,
+  Home, AlertCircle, RefreshCw, Star, Share2, MessageCircle, Sparkles, Edit, Plus
 } from "lucide-react";
-import { Card, CardBody, CardHeader, Button, Chip } from "@heroui/react";
+import { Card, CardBody, CardHeader, Button, Chip, addToast } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -57,6 +37,8 @@ export default function Profile() {
   const [error, setError] = useState<string | null>(null);
   const [isFavoriteProfile, setIsFavoriteProfile] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [userHasBiodata, setUserHasBiodata] = useState(false);
+  const [checkingUserBiodata, setCheckingUserBiodata] = useState(true);
   const params = useParams();
   const router = useRouter();
   const biodataId = params.id as string;
@@ -81,7 +63,7 @@ export default function Profile() {
       // Try to fetch as owner first (if authenticated), then fall back to public
       let response;
       const token = localStorage.getItem('regular_user_access_token');
-      
+
       if (token && isAuthenticated) {
         // Try owner endpoint first (user can always see their own biodata)
         try {
@@ -91,7 +73,7 @@ export default function Profile() {
               'Authorization': `Bearer ${token}`,
             }
           });
-          
+
           // If owner endpoint fails (not owner), fall back to public endpoint
           if (!response.ok && response.status !== 403) {
             throw new Error('Owner fetch failed');
@@ -172,6 +154,53 @@ export default function Profile() {
     }
   }, [biodataId]);
 
+  // Check if the current user has their own biodata
+  const checkUserBiodata = useCallback(async () => {
+    if (!isAuthenticated || !user) {
+      setUserHasBiodata(false);
+      setCheckingUserBiodata(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('regular_user_access_token');
+      if (!token) {
+        setUserHasBiodata(false);
+        setCheckingUserBiodata(false);
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biodatas/current`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (response.ok) {
+        const responseText = await response.text();
+        // If we get a valid response with biodata, user has biodata
+        if (responseText.trim() && !responseText.includes('404')) {
+          try {
+            const data = JSON.parse(responseText);
+            setUserHasBiodata(data && typeof data === 'object' && Object.keys(data).length > 0);
+          } catch {
+            setUserHasBiodata(false);
+          }
+        } else {
+          setUserHasBiodata(false);
+        }
+      } else {
+        setUserHasBiodata(false);
+      }
+    } catch (error) {
+      console.error('Error checking user biodata:', error);
+      setUserHasBiodata(false);
+    } finally {
+      setCheckingUserBiodata(false);
+    }
+  }, [isAuthenticated, user]);
+
   // Check if profile is in favorites when profile loads
   const checkFavoriteStatus = useCallback(async () => {
     if (!profile || !isAuthenticated || !user) return;
@@ -231,6 +260,49 @@ export default function Profile() {
     }
   };
 
+  // Handle share button click - copy current URL to clipboard
+  const handleShareClick = async () => {
+    try {
+      const currentUrl = window.location.href;
+      await navigator.clipboard.writeText(currentUrl);
+
+      // Show HeroUI success toast
+      addToast({
+        title: "Success!",
+        description: "Profile link copied to clipboard!",
+        color: "success",
+      });
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+
+      // Fallback for browsers that don't support clipboard API
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = window.location.href;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        // Show HeroUI success toast for fallback
+        addToast({
+          title: "Success!",
+          description: "Profile link copied to clipboard!",
+          color: "success",
+        });
+      } catch (fallbackError) {
+        console.error('Fallback copy failed:', fallbackError);
+
+        // Show HeroUI error toast
+        addToast({
+          title: "Error",
+          description: "Unable to copy link. Please copy the URL manually from your browser.",
+          color: "danger",
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
@@ -238,6 +310,10 @@ export default function Profile() {
   useEffect(() => {
     checkFavoriteStatus();
   }, [checkFavoriteStatus]);
+
+  useEffect(() => {
+    checkUserBiodata();
+  }, [checkUserBiodata]);
 
   // Track profile view when profile loads successfully
   useEffect(() => {
@@ -457,15 +533,14 @@ export default function Profile() {
                   <Chip
                     size="sm"
                     variant="flat"
-                    className={`capitalize ${
-                      profile.biodataApprovalStatus === 'approved' 
-                        ? 'bg-green-100 text-green-800 border-green-200' 
-                        : profile.biodataApprovalStatus === 'pending'
+                    className={`capitalize ${profile.biodataApprovalStatus === 'approved'
+                      ? 'bg-green-100 text-green-800 border-green-200'
+                      : profile.biodataApprovalStatus === 'pending'
                         ? 'bg-amber-100 text-amber-800 border-amber-200'
                         : profile.biodataApprovalStatus === 'rejected'
-                        ? 'bg-red-100 text-red-800 border-red-200'
-                        : 'bg-gray-100 text-gray-800 border-gray-200'
-                    }`}
+                          ? 'bg-red-100 text-red-800 border-red-200'
+                          : 'bg-gray-100 text-gray-800 border-gray-200'
+                      }`}
                   >
                     {profile.biodataApprovalStatus || 'pending'}
                   </Chip>
@@ -508,6 +583,7 @@ export default function Profile() {
               variant="flat"
               size="sm"
               className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 hover:shadow-md"
+              onPress={handleShareClick}
             >
               <Share2 className="h-4 w-4" />
               Share
@@ -1074,7 +1150,14 @@ export default function Profile() {
               </div>
             </CardHeader>
             <CardBody className="p-6">
-              {isAuthenticated && user ? (
+              {checkingUserBiodata ? (
+                // Loading state while checking if user has biodata
+                <div className="text-center py-8">
+                  <div className="w-8 h-8 mx-auto mb-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-gray-600">Checking access permissions...</p>
+                </div>
+              ) : isAuthenticated && user && userHasBiodata ? (
+                // Show contact info only if user is logged in AND has their own biodata
                 <div className="space-y-4">
                   <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-2">Email Address</p>
@@ -1098,7 +1181,35 @@ export default function Profile() {
                     </p>
                   </div>
                 </div>
+              ) : isAuthenticated && user && !userHasBiodata ? (
+                // User is logged in but doesn't have their own biodata
+                <div className="text-center py-8">
+                  <div className="max-w-md mx-auto">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                      <User className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                      Create Your Profile First
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      To view contact details of other members, you need to create your own biodata profile first. This ensures a fair exchange of information.
+                    </p>
+                    <Button
+                      size="lg"
+                      className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      onPress={() => router.push('/profile/biodatas/edit/new')}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Your Biodata
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-3">
+                      <Shield className="h-3 w-3 inline mr-1" />
+                      Fair exchange policy - Create your profile to connect with others
+                    </p>
+                  </div>
+                </div>
               ) : (
+                // User is not logged in
                 <div className="text-center py-8">
                   <div className="max-w-md mx-auto">
                     <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
@@ -1108,16 +1219,27 @@ export default function Profile() {
                       Contact Information Protected
                     </h3>
                     <p className="text-gray-600 mb-6">
-                      Please log in to view contact details and connect with {safeDisplay(profile.fullName, "this person")}.
+                      Please log in and create your biodata profile to view contact details and connect with {safeDisplay(profile.fullName, "this person")}.
                     </p>
-                    <Button
-                      size="lg"
-                      className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                      onPress={() => router.push('/auth/login')}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Login to View Contact
-                    </Button>
+                    <div className="space-y-3">
+                      <Button
+                        size="lg"
+                        className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                        onPress={() => router.push('/auth/login')}
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Login to Continue
+                      </Button>
+                      <p className="text-sm text-gray-500">
+                        Don't have an account?{' '}
+                        <button
+                          onClick={() => router.push('/auth/signup')}
+                          className="text-emerald-600 hover:text-emerald-700 font-medium underline"
+                        >
+                          Sign up here
+                        </button>
+                      </p>
+                    </div>
                     <p className="text-xs text-gray-500 mt-3">
                       <Shield className="h-3 w-3 inline mr-1" />
                       Your privacy is protected with us
@@ -1191,6 +1313,8 @@ export default function Profile() {
           </CardBody>
         </Card>
       </div>
+
+
     </div>
   );
 }

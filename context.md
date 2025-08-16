@@ -136,16 +136,16 @@ finder_frontend/
 ## Key Features
 
 ### 1. Comprehensive Authentication System
-- **Username Authentication**: Primary authentication using usernames (minimum 8 characters)
-- **Google OAuth 2.0 SSO**: One-click signup/login with Google accounts (auto-generates usernames)
+- **Email Authentication**: Primary authentication using email addresses with proper validation
+- **Google OAuth 2.0 SSO**: One-click signup/login with Google accounts (uses email addresses)
 - **Dual Authentication**: Separate login systems for users and admins
 - **Role-based Access Control**: User, Admin, and Superadmin roles
 - **JWT Token Management**: Secure token-based authentication with automatic role detection
 - **Smart Redirects**: Automatic redirection based on user roles (users → dashboard, admins → admin panel)
 - **Protected Routes**: Route protection for both user and admin areas
 - **Auto-created Test Accounts**: 
-  - Superadmin: `superadmin` / `superadmin`
-  - Test Admin: `testadmin` / `aaaaa`
+  - Superadmin: `razibmahmud50@gmail.com` / `superadmin`
+  - Test Admin: `testadmin@example.com` / `aaaaa`
   - Test User: `testuser1` / `12345`
 
 ### 2. Advanced Admin Panel
@@ -431,7 +431,7 @@ The system automatically creates these test accounts on startup:
 - **Access**: Admin dashboard with limited permissions
 
 #### Superadmin User
-- **Email**: `superadmin@example.com`
+- **Email**: `razibmahmud50@gmail.com`
 - **Password**: `superadmin`
 - **Role**: `superadmin`
 - **Access**: Full admin dashboard access

@@ -24,7 +24,7 @@ function capitalize(s: string) {
 const columns = [
     { name: "ID", uid: "id", sortable: true },
     { name: "FULL NAME", uid: "fullName", sortable: true },
-    { name: "EMAIL/USERNAME", uid: "emailOrUsername", sortable: true },
+    { name: "EMAIL", uid: "email", sortable: true },
     { name: "ROLE", uid: "role", sortable: true },
     { name: "CREATED AT", uid: "createdAt", sortable: true },
     { name: "UPDATED AT", uid: "updatedAt", sortable: true },
@@ -434,7 +434,7 @@ export default function Users() {
         setUserToEdit(user);
         setEditUserForm({
             fullName: user.fullName || '',
-            email: user.email,
+            email: user.email || '',
             role: user.role
         });
         setEditFormErrors({});
@@ -453,8 +453,7 @@ export default function Users() {
         if (hasSearchFilter) {
             filteredUsers = filteredUsers.filter((user) =>
                 (user.fullName?.toLowerCase().includes(filterValue.toLowerCase()) || false) ||
-                (user.email?.toLowerCase().includes(filterValue.toLowerCase()) || false) ||
-                (user.username?.toLowerCase().includes(filterValue.toLowerCase()) || false)
+                (user.email?.toLowerCase().includes(filterValue.toLowerCase()) || false)
             );
         }
         if (roleFilter !== "all" && Array.from(roleFilter).length !== roleOptions.length) {
@@ -515,17 +514,12 @@ export default function Users() {
                     </div>
 
                 );
-            case "emailOrUsername":
+            case "email":
                 return (
                     <div className="flex flex-col">
                         <span className="text-small">
-                            {user.username ? user.username : (user.email || "No email/username")}
+                            {user.email || "No email"}
                         </span>
-                        {user.username && user.email && (
-                            <span className="text-tiny text-default-400">
-                                Email: {user.email}
-                            </span>
-                        )}
                     </div>
                 );
             case "role":
@@ -626,7 +620,7 @@ export default function Users() {
                     <Input
                         isClearable
                         className="w-full sm:max-w-[44%]"
-                        placeholder="Search by name, email, or username..."
+                        placeholder="Search by name or email..."
                         startContent={<Search />}
                         value={filterValue}
                         onClear={() => onClear()}
@@ -789,15 +783,10 @@ export default function Users() {
                                             <span className="ml-2 font-semibold">{userToDelete.fullName || "No name"}</span>
                                         </div>
                                         <div>
-                                            <span className="text-sm text-gray-600">Email/Username:</span>
+                                            <span className="text-sm text-gray-600">Email:</span>
                                             <span className="ml-2 font-semibold">
-                                                {userToDelete.username || userToDelete.email || "No email/username"}
+                                                {userToDelete.email || "No email"}
                                             </span>
-                                            {userToDelete.username && userToDelete.email && (
-                                                <div className="ml-2 text-xs text-gray-500">
-                                                    Email: {userToDelete.email}
-                                                </div>
-                                            )}
                                         </div>
                                         <div>
                                             <span className="text-sm text-gray-600">Role:</span>

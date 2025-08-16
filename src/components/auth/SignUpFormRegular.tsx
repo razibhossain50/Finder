@@ -20,8 +20,8 @@ import GoogleOAuthButton from "./GoogleOAuthButton";
 
 const signupSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
-  username: z.string()
-    .min(8, "Username must be at least 8 characters long"),
+  email: z.string()
+    .email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -48,7 +48,7 @@ export default function SignupFormRegular() {
     mode: "onChange",
     defaultValues: {
       fullName: "",
-      username: "",
+      email: "",
       password: "",
       confirmPassword: "",
     },
@@ -56,7 +56,7 @@ export default function SignupFormRegular() {
 
   const password = watch("password");
   const fullName = watch("fullName");
-  const username = watch("username");
+  const email = watch("email");
 
 
 
@@ -80,7 +80,7 @@ export default function SignupFormRegular() {
     setIsLoading(true);
     setError(null);
     try {
-      await signup(values.fullName, values.username, values.password, values.confirmPassword);
+      await signup(values.fullName, values.email, values.password, values.confirmPassword);
     } catch (error: unknown) {
       setError((error as Error)?.message || 'Signup failed');
     } finally {
@@ -142,19 +142,19 @@ export default function SignupFormRegular() {
               />
 
               <Input
-                {...register("username")}
-                type="text"
-                label="Username"
-                placeholder="Enter your username (minimum 8 characters)"
+                {...register("email")}
+                type="email"
+                label="Email"
+                placeholder="Enter your email address"
                 startContent={<User className="w-4 h-4 text-gray-400" />}
                 endContent={
-                  username && !errors.username ? (
+                  email && !errors.email ? (
                     <CheckCircle className="w-4 h-4 text-success-500" />
                   ) : null
                 }
                 variant="bordered"
-                isInvalid={!!errors.username}
-                errorMessage={errors.username?.message}
+                isInvalid={!!errors.email}
+                errorMessage={errors.email?.message}
                 classNames={{
                   input: "text-sm",
                   inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",

@@ -34,7 +34,7 @@ WHERE "mobile" IS NULL
 UPDATE "user" 
 SET 
   "email" = CASE 
-    WHEN "role" = 'superadmin' AND ("email" IS NULL OR "email" NOT LIKE '%@example.com') THEN 'superadmin@example.com'
+    WHEN "role" = 'superadmin' AND ("email" IS NULL OR "email" NOT LIKE '%@example.com') THEN 'razibmahmud50@gmail.com'
     WHEN "role" = 'admin' AND ("email" IS NULL OR "email" NOT LIKE '%@example.com') THEN 'admin@example.com'
     ELSE "email"
   END,

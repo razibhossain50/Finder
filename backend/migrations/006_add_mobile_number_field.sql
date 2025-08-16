@@ -21,7 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_user_mobile ON "user"("mobile");
 -- Note: In production, you would need to collect real mobile numbers from users
 UPDATE "user" 
 SET "mobile" = CASE 
-    WHEN "email" = 'superadmin@example.com' THEN '01700000000'
+    WHEN "email" = 'razibmahmud50@gmail.com' THEN '01700000000'
     WHEN "email" = 'admin@example.com' THEN '01900000000'
     WHEN "email" = 'user@example.com' THEN '01800000000'
     ELSE '0170000' || LPAD(id::text, 4, '0') -- Generate unique mobile for other users

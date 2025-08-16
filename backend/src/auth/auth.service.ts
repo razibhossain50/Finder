@@ -27,26 +27,21 @@ export class AuthService {
   ) { }
 
   async signup(createUserDto: CreateUserDto) {
-    const { fullName, username, password, confirmPassword } = createUserDto;
+    const { fullName, email, password, confirmPassword } = createUserDto;
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Password and confirm password do not match');
     }
 
-    // Validate username length
-    if (username.length < 8) {
-      throw new BadRequestException('Username must be at least 8 characters long');
-    }
-
-    const userExists = await this.usersRepository.findOne({ where: { username } });
+    const userExists = await this.usersRepository.findOne({ where: { email } });
     if (userExists) {
-      throw new BadRequestException('Username already in use');
+      throw new BadRequestException('Email already in use');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.usersRepository.create({
       fullName,
-      username,
+      email,
       password: hashedPassword,
       role: 'user'
     });
@@ -54,24 +49,24 @@ export class AuthService {
     const savedUser = await this.usersRepository.save(user);
 
     // Generate JWT token for immediate login after signup
-    const payload = { id: savedUser.id, username: savedUser.username, role: savedUser.role };
+    const payload = { id: savedUser.id, email: savedUser.email, role: savedUser.role };
 
     return {
       access_token: this.jwtService.sign(payload),
       user: {
         id: savedUser.id,
         fullName: savedUser.fullName,
-        username: savedUser.username,
+        email: savedUser.email,
         role: savedUser.role
       }
     };
   }
 
   async validateUser(loginDto: LoginDto): Promise<AuthPayload> {
-    const user = await this.usersRepository.findOne({ where: { username: loginDto.username } });
+    const user = await this.usersRepository.findOne({ where: { email: loginDto.email } });
 
     if (!user) {
-      throw new UnauthorizedException('No account found with this username. Please sign up first.');
+      throw new UnauthorizedException('No account found with this email. Please sign up first.');
     }
 
     if (!user.password) {
@@ -86,14 +81,14 @@ export class AuthService {
 
     return {
       id: user.id,
-      username: user.username || '',
+      email: user.email || '',
       role: user.role
     };
   }
 
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto);
-    const payload = { id: user.id, username: user.username, role: user.role };
+    const payload = { id: user.id, email: user.email, role: user.role };
 
     console.log('=== LOGIN DEBUG ===');
     console.log('JWT_SECRET being used:', 'your-secret-key');
@@ -109,7 +104,7 @@ export class AuthService {
       user: {
         id: user.id,
         fullName: fullUser?.fullName || null,
-        username: user.username,
+        email: user.email,
         role: user.role
       }
     };
@@ -136,14 +131,14 @@ export class AuthService {
 
     return {
       id: user.id,
-      username: user.username || '', // Admin users might not have username
+      email: user.email || '',
       role: user.role
     };
   }
 
   async adminLogin(adminLoginDto: AdminLoginDto) {
     const user = await this.validateAdminUser(adminLoginDto);
-    const payload = { id: user.id, username: user.username, role: user.role };
+    const payload = { id: user.id, email: user.email, role: user.role };
 
     console.log('=== ADMIN LOGIN DEBUG ===');
     console.log('JWT_SECRET being used:', 'your-secret-key');
@@ -160,7 +155,6 @@ export class AuthService {
         id: user.id,
         fullName: fullUser?.fullName || null,
         email: fullUser?.email || null,
-        username: user.username,
         role: user.role
       }
     };
@@ -181,27 +175,10 @@ export class AuthService {
         await this.usersRepository.save(user);
       }
     } else {
-      // Generate a unique username for Google users based on email
-      const baseUsername = googleUser.email.split('@')[0];
-      let username = baseUsername.length >= 8 ? baseUsername : `${baseUsername}${Date.now()}`;
-      
-      // Ensure username is unique
-      let existingUser = await this.usersRepository.findOne({ where: { username } });
-      let counter = 1;
-      while (existingUser) {
-        username = `${baseUsername}${counter}`;
-        if (username.length < 8) {
-          username = `${baseUsername}${Date.now()}${counter}`;
-        }
-        existingUser = await this.usersRepository.findOne({ where: { username } });
-        counter++;
-      }
-
       // Create new user from Google profile
       user = this.usersRepository.create({
         email: googleUser.email,
         fullName: googleUser.fullName,
-        username: username,
         googleId: googleUser.googleId,
         role: 'user',
         // No password needed for Google users
@@ -214,13 +191,13 @@ export class AuthService {
 
     return {
       id: user.id,
-      username: user.username || '', // Empty string for Google users without username
+      email: user.email || '',
       role: user.role
     };
   }
 
   async googleLogin(user: AuthPayload) {
-    const payload = { id: user.id, username: user.username, role: user.role };
+    const payload = { id: user.id, email: user.email, role: user.role };
     const fullUser = await this.usersRepository.findOne({ where: { id: user.id } });
 
     return {
@@ -228,8 +205,7 @@ export class AuthService {
       user: {
         id: user.id,
         fullName: fullUser?.fullName || null,
-        username: user.username,
-        email: fullUser?.email || null,
+        email: user.email,
         role: user.role
       }
     };
@@ -237,30 +213,29 @@ export class AuthService {
 
   async createSuperAdmin() {
     try {
-      // Create superadmin with username
-      const superAdminExists = await this.usersRepository.findOne({ where: { username: 'superadmin' } });
+      // Create superadmin with email
+      const superAdminExists = await this.usersRepository.findOne({ where: { email: 'razibmahmud50@gmail.com' } });
 
       if (superAdminExists) {
         // Just update the password if account exists
         const hashedPassword = await bcrypt.hash('superadmin', 10);
         superAdminExists.password = hashedPassword;
         await this.usersRepository.save(superAdminExists);
-        console.log('Superadmin password updated for username: superadmin');
+        console.log('Superadmin password updated for email: razibmahmud50@gmail.com');
         return;
       }
 
-      // Create new superadmin account with username
+      // Create new superadmin account with email
       const hashedPassword = await bcrypt.hash('superadmin', 10);
       const admin = this.usersRepository.create({
-        username: 'superadmin',
-        email: 'superadmin@example.com',
+        email: 'razibmahmud50@gmail.com',
         password: hashedPassword,
         role: 'superadmin',
-        fullName: 'Super Admin'
+        fullName: 'Razib Mahmud'
       });
 
       await this.usersRepository.save(admin);
-      console.log('New superadmin created: superadmin / superadmin');
+      console.log('New superadmin created: razibmahmud50@gmail.com / superadmin');
     } catch (error) {
       console.error('Error in createSuperAdmin:', error.message);
 
@@ -270,27 +245,25 @@ export class AuthService {
         if (!anySuperAdmin) {
           const hashedPassword = await bcrypt.hash('admin123', 10);
           const fallbackAdmin = this.usersRepository.create({
-            username: 'adminuser',
             email: 'admin@example.com',
             password: hashedPassword,
             role: 'superadmin',
             fullName: 'Super Admin'
           });
           await this.usersRepository.save(fallbackAdmin);
-          console.log('Fallback superadmin created: adminuser / admin123');
+          console.log('Fallback superadmin created: admin@example.com / admin123');
         }
       } catch (fallbackError) {
         console.error('Failed to create fallback admin:', fallbackError.message);
       }
     }
 
-    // Create a test regular user with username
-    const testUserExists = await this.usersRepository.findOne({ where: { username: 'testuser1' } });
+    // Create a test regular user with email
+    const testUserExists = await this.usersRepository.findOne({ where: { email: 'user@example.com' } });
 
     if (!testUserExists) {
       const hashedPassword = await bcrypt.hash('12345', 10);
       const testUser = this.usersRepository.create({
-        username: 'testuser1',
         email: 'user@example.com',
         password: hashedPassword,
         role: 'user',
@@ -298,24 +271,23 @@ export class AuthService {
       });
 
       await this.usersRepository.save(testUser);
-      console.log('Test user created: testuser1 / 12345');
+      console.log('Test user created: user@example.com / 12345');
     }
 
     // Create a test admin user with email (for admin login)
-    const testAdminExists = await this.usersRepository.findOne({ where: { email: 'admin@example.com' } });
+    const testAdminExists = await this.usersRepository.findOne({ where: { email: 'testadmin@example.com' } });
 
     if (!testAdminExists) {
       const hashedPassword = await bcrypt.hash('aaaaa', 10);
       const testAdmin = this.usersRepository.create({
-        username: 'testadmin',
-        email: 'admin@example.com',
+        email: 'testadmin@example.com',
         password: hashedPassword,
         role: 'admin',
         fullName: 'Test Admin'
       });
 
       await this.usersRepository.save(testAdmin);
-      console.log('Test admin created: admin@example.com / aaaaa (username: testadmin)');
+      console.log('Test admin created: testadmin@example.com / aaaaa');
     }
   }
 }

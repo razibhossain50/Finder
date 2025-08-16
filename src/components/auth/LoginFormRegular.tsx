@@ -19,8 +19,8 @@ import { useRegularAuth } from "@/context/RegularAuthContext";
 import GoogleOAuthButton from "./GoogleOAuthButton";
 
 const loginSchema = z.object({
-  username: z.string()
-    .min(8, "Username must be at least 8 characters long"),
+  email: z.string()
+    .email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -40,7 +40,7 @@ export default function LoginFormRegular() {
     resolver: zodResolver(loginSchema),
     mode: "onChange",
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -49,7 +49,7 @@ export default function LoginFormRegular() {
     setIsLoading(true);
     setError(null);
     try {
-      await login(values.username, values.password);
+      await login(values.email, values.password);
     } catch (error: unknown) {
       setError((error as Error)?.message || 'Login failed');
     } finally {
@@ -90,14 +90,14 @@ export default function LoginFormRegular() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <Input
-                {...register("username")}
-                type="text"
-                label="Username"
-                placeholder="Enter your username (minimum 8 characters)"
+                {...register("email")}
+                type="email"
+                label="Email"
+                placeholder="Enter your email address"
                 startContent={<User className="w-4 h-4 text-gray-400" />}
                 variant="bordered"
-                isInvalid={!!errors.username}
-                errorMessage={errors.username?.message}
+                isInvalid={!!errors.email}
+                errorMessage={errors.email?.message}
                 classNames={{
                   input: "text-sm",
                   inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",

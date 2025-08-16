@@ -24,26 +24,21 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const { fullName, username, password, confirmPassword, role } = createUserDto;
+    const { fullName, email, password, confirmPassword, role } = createUserDto;
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Password and confirm password do not match');
     }
 
-    // Validate username length
-    if (username.length < 8) {
-      throw new BadRequestException('Username must be at least 8 characters long');
-    }
-
-    const userExists = await this.userRepository.findOne({ where: { username } });
+    const userExists = await this.userRepository.findOne({ where: { email } });
     if (userExists) {
-      throw new BadRequestException('Username already in use');
+      throw new BadRequestException('Email already in use');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.userRepository.create({
       fullName,
-      username,
+      email,
       password: hashedPassword,
       role: role || 'user' // Use provided role or default to 'user'
     });

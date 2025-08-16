@@ -103,17 +103,17 @@ yarn dev
 The system automatically creates these test accounts on startup:
 
 ### Regular User
-- **Email**: `user@example.com`
+- **Email**: `user@finder.com`
 - **Password**: `12345`
 - **Access**: User dashboard and biodata creation
 
 ### Admin User
 - **Email**: `admin@example.com`
-- **Password**: `aaaaa`
+- **Password**: `admin`
 - **Access**: Admin dashboard with biodata and user management
 
 ### Superadmin User
-- **Email**: `superadmin@example.com`
+- **Email**: `razibmahmud50@gmail.com`
 - **Password**: `superadmin`
 - **Access**: Full admin access including user deletion
 

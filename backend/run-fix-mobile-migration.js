@@ -89,7 +89,7 @@ async function runFixMobileMigration() {
     const superAdminUser = await client.query(`
       SELECT id, "fullName", mobile, email, role 
       FROM "user" 
-      WHERE email = 'superadmin@example.com' OR mobile = '01700000000'
+      WHERE email = 'superadmin@finder.com' OR mobile = '01700000000'
       LIMIT 1;
     `);
     

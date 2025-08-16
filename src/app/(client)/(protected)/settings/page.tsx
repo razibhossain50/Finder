@@ -8,7 +8,6 @@ import { useRegularAuth } from "@/context/RegularAuthContext";
 export default function Settings() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const router = useRouter();
@@ -19,7 +18,6 @@ export default function Settings() {
     if (user) {
       setName(user.fullName || "");
       setEmail(user.email || "");
-      setUsername(user.username || "");
     }
   }, [user]);
 
@@ -119,66 +117,22 @@ export default function Settings() {
                 />
               </div>
               
-              {/* Show Username field if user has username */}
-              {username && (
-                <div className="space-y-2">
-                  <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
-                  <Input
-                    id="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Your username"
-                    startContent={<AtSign className="w-4 h-4 text-gray-400" />}
-                    variant="bordered"
-                    isDisabled
-                    classNames={{
-                      input: "text-sm",
-                      inputWrapper: "border-gray-200 bg-gray-50",
-                    }}
-                  />
-                  <p className="text-xs text-gray-500">Username cannot be changed</p>
-                </div>
-              )}
-              
-              {/* Show Email field if user has email */}
-              {email && (
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    startContent={<Mail className="w-4 h-4 text-gray-400" />}
-                    variant="bordered"
-                    classNames={{
-                      input: "text-sm",
-                      inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",
-                    }}
-                  />
-                </div>
-              )}
-              
-              {/* Show Email/Username field for users who have neither or want to add email */}
-              {!email && !username && (
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-gray-700">Email/Username</label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Add your email address"
-                    startContent={<Mail className="w-4 h-4 text-gray-400" />}
-                    variant="bordered"
-                    classNames={{
-                      input: "text-sm",
-                      inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",
-                    }}
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  startContent={<Mail className="w-4 h-4 text-gray-400" />}
+                  variant="bordered"
+                  classNames={{
+                    input: "text-sm",
+                    inputWrapper: "border-gray-200 hover:border-primary-300 focus-within:border-primary-500",
+                  }}
+                />
+              </div>
             </div>
             
             {message && (

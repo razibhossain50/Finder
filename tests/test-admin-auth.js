@@ -9,19 +9,19 @@ async function testAdminPermissions() {
     {
       name: 'Admin User',
       email: 'admin@example.com',
-      password: 'aaaaa',
+      password: 'admin',
       expectedRole: 'admin'
     },
     {
       name: 'Superadmin User',
-      email: 'superadmin@example.com',
+      email: 'razibmahmud50@gmail.com',
       password: 'superadmin',
       expectedRole: 'superadmin'
     },
     {
       name: 'Regular User',
       email: 'user@example.com',
-      password: '12345',
+      password: 'user',
       expectedRole: 'user'
     }
   ];
