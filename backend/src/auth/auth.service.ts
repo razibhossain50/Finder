@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { CreateUserDto } from '../user/create-user.dto';
 import { AuthPayload } from './interfaces/auth-payload.interface';
+import { RecaptchaService } from '../common/recaptcha.service';
 
 interface GoogleUser {
   googleId: string;
@@ -23,11 +24,20 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private recaptchaService: RecaptchaService
   ) { }
 
   async signup(createUserDto: CreateUserDto) {
-    const { fullName, username, password, confirmPassword } = createUserDto;
+    const { fullName, username, password, confirmPassword, recaptchaToken } = createUserDto;
+
+    // Verify reCAPTCHA token
+    if (recaptchaToken) {
+      const isRecaptchaValid = await this.recaptchaService.verifyRecaptcha(recaptchaToken);
+      if (!isRecaptchaValid) {
+        throw new BadRequestException('reCAPTCHA verification failed. Please try again.');
+      }
+    }
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Password and confirm password do not match');
@@ -92,6 +102,14 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    // Verify reCAPTCHA token if provided
+    if (loginDto.recaptchaToken) {
+      const isRecaptchaValid = await this.recaptchaService.verifyRecaptcha(loginDto.recaptchaToken);
+      if (!isRecaptchaValid) {
+        throw new BadRequestException('reCAPTCHA verification failed. Please try again.');
+      }
+    }
+
     const user = await this.validateUser(loginDto);
     const payload = { id: user.id, username: user.username, role: user.role };
 

@@ -20,4 +20,8 @@ export class CreateUserDto {
   @IsString()
   @IsIn(['user', 'admin', 'superadmin'])
   role?: string;
+
+  @IsOptional()
+  @IsString()
+  recaptchaToken?: string;
 }

@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import ReCAPTCHA from "react-google-recaptcha";
 import {
   Card,
   CardBody,
@@ -14,7 +15,7 @@ import {
   Spinner,
   Chip
 } from "@heroui/react";
-import { Eye, EyeOff, User, Lock, Sparkles } from "lucide-react";
+import { Eye, EyeOff, User, Lock, Sparkles, Shield } from "lucide-react";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 import GoogleOAuthButton from "./GoogleOAuthButton";
 
@@ -30,6 +31,8 @@ export default function LoginFormRegular() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const { login } = useRegularAuth();
 
   const {
@@ -46,16 +49,31 @@ export default function LoginFormRegular() {
   });
 
   async function onSubmit(values: LoginValues) {
+    if (!recaptchaToken) {
+      setError('Please complete the reCAPTCHA verification');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      await login(values.username, values.password);
+      await login(values.username, values.password, recaptchaToken);
     } catch (error: unknown) {
       setError((error as Error)?.message || 'Login failed');
+      // Reset reCAPTCHA on error
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
   }
+
+  const handleRecaptchaChange = (token: string | null) => {
+    setRecaptchaToken(token);
+    if (error && token) {
+      setError(null); // Clear error when reCAPTCHA is completed
+    }
+  };
 
   const toggleVisibility = () => setIsVisible(!isVisible);
 
@@ -132,12 +150,31 @@ export default function LoginFormRegular() {
                 }}
               />
 
+              {/* reCAPTCHA */}
+              <div className="w-full flex justify-center">
+                <div className="w-full max-w-full overflow-hidden">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                    onChange={handleRecaptchaChange}
+                    theme="light"
+                    size="normal"
+                    className="w-full"
+                    style={{ 
+                      transform: 'scale(1)', 
+                      transformOrigin: '0 0',
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold py-3 text-base hover:from-pink-600 hover:to-purple-600 transition-all duration-200"
                 size="lg"
                 isLoading={isLoading}
-                isDisabled={!isValid}
+                isDisabled={!isValid || !recaptchaToken}
                 spinner={<Spinner size="sm" color="white" />}
               >
                 {isLoading ? "Signing In..." : "Sign In"}

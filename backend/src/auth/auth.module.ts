@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { User } from '../user/user.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { RecaptchaService } from '../common/recaptcha.service';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, RecaptchaService],
   exports: [AuthService],
 })
 export class AuthModule {

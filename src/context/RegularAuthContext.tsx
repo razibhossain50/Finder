@@ -13,8 +13,8 @@ interface User {
 
 interface RegularAuthContextType {
   user: User | null
-  login: (username: string, password: string) => Promise<void>
-  signup: (fullName: string, username: string, password: string, confirmPassword: string) => Promise<void>
+  login: (username: string, password: string, recaptchaToken?: string) => Promise<void>
+  signup: (fullName: string, username: string, password: string, confirmPassword: string, recaptchaToken?: string) => Promise<void>
   logout: () => void
   setUserFromGoogle?: (user: User) => void
   isAuthenticated: boolean
@@ -49,14 +49,19 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
     initializeAuth()
   }, [])
 
-  const signup = async (fullName: string, username: string, password: string, confirmPassword: string) => {
+  const signup = async (fullName: string, username: string, password: string, confirmPassword: string, recaptchaToken?: string) => {
     try {
+      const requestBody: any = { fullName, username, password, confirmPassword };
+      if (recaptchaToken) {
+        requestBody.recaptchaToken = recaptchaToken;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fullName, username, password, confirmPassword }),
+        body: JSON.stringify(requestBody),
       })
 
       const data = await response.json()
@@ -75,14 +80,19 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string, recaptchaToken?: string) => {
     try {
+      const requestBody: any = { username, password };
+      if (recaptchaToken) {
+        requestBody.recaptchaToken = recaptchaToken;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(requestBody),
       })
 
       const data = await response.json()
