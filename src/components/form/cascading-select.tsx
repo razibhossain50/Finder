@@ -1,5 +1,5 @@
 // No need to import Label, we'll use native HTML label
-import { addressData } from "../../lib/address-data";
+import { addressData } from "../../api/address-data";
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, MapPin } from "lucide-react";
 
