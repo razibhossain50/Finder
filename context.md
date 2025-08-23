@@ -96,7 +96,7 @@ finder_frontend/
 │   │   │   └── marriage/              # Marriage-related forms
 │   │   └── ui/                        # Base UI components
 │   │       ├── dropdown/              # Dropdown components
-│   │       └── cascading-select.tsx   # Cascading selects
+│   │       └── LocationSelector.tsx   # Unified location selector
 │   ├── context/                       # React contexts
 │   │   └── RegularAuthContext.tsx     # User authentication context
 │   ├── hooks/                         # Custom hooks
@@ -206,8 +206,7 @@ A self-contained component that handles:
 - Favorite/unfavorite functionality
 
 ### Form Components
-- **LocationSelector**: Hierarchical location selection
-- **CascadingSelect**: Dependent dropdown selections
+- **LocationSelector**: Unified hierarchical location selection (supports both geoLocation and addressData sources)
 - **MultiSelect**: Multiple option selection
 - **Custom Input Components**: Styled form inputs with validation
 

@@ -91,7 +91,11 @@ export const BiodataSearch = () => {
     const filteredBiodatas = useMemo(() => {
         if (!hasSearched) return [];
 
-        return biodatas.filter(biodata => {
+        console.log('🔍 FILTERING BIODATAS');
+        console.log('📊 Total biodatas to filter:', biodatas.length);
+        console.log('🎯 Active filters:', searchFilters);
+
+        const filtered = biodatas.filter(biodata => {
             // Gender filter - use the search filters, not current form state
             const matchesGender = !searchFilters.gender || searchFilters.gender === "" || searchFilters.gender === "all" ||
                 biodata.biodataType?.toLowerCase() === searchFilters.gender.toLowerCase();
@@ -101,25 +105,157 @@ export const BiodataSearch = () => {
                 biodata.maritalStatus?.toLowerCase() === searchFilters.maritalStatus.toLowerCase();
 
             // Location filter - use the search filters, not current form state
-            const matchesLocation = !searchFilters.location || searchFilters.location === '' ||
-                searchFilters.location === 'All Divisions' ||
-                searchFilters.location === 'All Districts' ||
-                searchFilters.location === 'All Upazilas' ||
-                biodata.presentArea?.toLowerCase().includes(searchFilters.location.toLowerCase()) ||
-                biodata.permanentArea?.toLowerCase().includes(searchFilters.location.toLowerCase()) ||
-                biodata.presentZilla?.toLowerCase().includes(searchFilters.location.toLowerCase()) ||
-                biodata.permanentZilla?.toLowerCase().includes(searchFilters.location.toLowerCase()) ||
-                biodata.presentUpazilla?.toLowerCase().includes(searchFilters.location.toLowerCase()) ||
-                biodata.permanentUpazilla?.toLowerCase().includes(searchFilters.location.toLowerCase()) ||
-                biodata.presentDivision?.toLowerCase().includes(searchFilters.location.toLowerCase()) ||
-                biodata.permanentDivision?.toLowerCase().includes(searchFilters.location.toLowerCase());
+            const matchesLocation = (() => {
+                if (!searchFilters.location || searchFilters.location === '') {
+                    console.log('🔍 Location Filter: No location filter applied - showing all');
+                    return true; // No location filter applied
+                }
+
+                // Parse the hierarchical location string (e.g., "Bangladesh > Dhaka > All Districts")
+                const locationParts = searchFilters.location.split(' > ').map(part => part.trim());
+                
+                console.log('🔍 Location Filter Debug:', {
+                    searchLocation: searchFilters.location,
+                    locationParts: locationParts,
+                    biodataId: biodata.id,
+                    biodataLocation: {
+                        presentDivision: biodata.presentDivision,
+                        permanentDivision: biodata.permanentDivision,
+                        presentZilla: biodata.presentZilla,
+                        permanentZilla: biodata.permanentZilla,
+                        presentUpazilla: biodata.presentUpazilla,
+                        permanentUpazilla: biodata.permanentUpazilla,
+                        presentArea: biodata.presentArea,
+                        permanentArea: biodata.permanentArea
+                    }
+                });
+                
+                // If "All Divisions" is selected, show all biodatas from Bangladesh
+                if (locationParts.includes('All Divisions')) {
+                    console.log('✅ All Divisions selected - showing all biodatas');
+                    return true; // Show all biodatas when "All Divisions" is selected
+                }
+                
+                // If "All Districts" is selected, match by division
+                if (locationParts.includes('All Districts') && locationParts.length >= 2) {
+                    const selectedDivision = locationParts[1]; // Second part is division name
+                    const divisionMatch = biodata.presentDivision?.toLowerCase().includes(selectedDivision.toLowerCase()) ||
+                           biodata.permanentDivision?.toLowerCase().includes(selectedDivision.toLowerCase());
+                    
+                    console.log(`🔍 All Districts for division "${selectedDivision}":`, {
+                        match: divisionMatch,
+                        presentDivision: biodata.presentDivision,
+                        permanentDivision: biodata.permanentDivision
+                    });
+                    
+                    return divisionMatch;
+                }
+                
+                // If "All Upazilas" is selected, match by district
+                if (locationParts.includes('All Upazilas') && locationParts.length >= 3) {
+                    const selectedDistrict = locationParts[2]; // Third part is district name
+                    const districtMatch = biodata.presentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase()) ||
+                           biodata.permanentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase());
+                    
+                    console.log(`🔍 All Upazilas for district "${selectedDistrict}":`, {
+                        match: districtMatch,
+                        presentZilla: biodata.presentZilla,
+                        permanentZilla: biodata.permanentZilla
+                    });
+                    
+                    return districtMatch;
+                }
+                
+                // For specific upazila/area selections, be more precise
+                if (locationParts.length >= 4) {
+                    const selectedDivision = locationParts[1];
+                    const selectedDistrict = locationParts[2];
+                    const selectedUpazila = locationParts[3];
+                    
+                    // Check if biodata matches the hierarchical selection
+                    const divisionMatch = biodata.presentDivision?.toLowerCase().includes(selectedDivision.toLowerCase()) ||
+                                         biodata.permanentDivision?.toLowerCase().includes(selectedDivision.toLowerCase());
+                    
+                    const districtMatch = biodata.presentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase()) ||
+                                         biodata.permanentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase());
+                    
+                    const upazilaMatch = biodata.presentUpazilla?.toLowerCase().includes(selectedUpazila.toLowerCase()) ||
+                                        biodata.permanentUpazilla?.toLowerCase().includes(selectedUpazila.toLowerCase()) ||
+                                        biodata.presentArea?.toLowerCase().includes(selectedUpazila.toLowerCase()) ||
+                                        biodata.permanentArea?.toLowerCase().includes(selectedUpazila.toLowerCase());
+                    
+                    const hierarchicalMatch = divisionMatch && districtMatch && upazilaMatch;
+                    
+                    console.log(`🔍 Specific location "${selectedUpazila}" in "${selectedDistrict}", "${selectedDivision}":`, {
+                        hierarchicalMatch,
+                        divisionMatch,
+                        districtMatch,
+                        upazilaMatch,
+                        selectedDivision,
+                        selectedDistrict,
+                        selectedUpazila
+                    });
+                    
+                    return hierarchicalMatch;
+                }
+                
+                // For less specific selections (3 parts or less), do broader matching
+                const searchTerm = searchFilters.location.toLowerCase();
+                const broadMatch = biodata.presentArea?.toLowerCase().includes(searchTerm) ||
+                       biodata.permanentArea?.toLowerCase().includes(searchTerm) ||
+                       biodata.presentZilla?.toLowerCase().includes(searchTerm) ||
+                       biodata.permanentZilla?.toLowerCase().includes(searchTerm) ||
+                       biodata.presentUpazilla?.toLowerCase().includes(searchTerm) ||
+                       biodata.permanentUpazilla?.toLowerCase().includes(searchTerm) ||
+                       biodata.presentDivision?.toLowerCase().includes(searchTerm) ||
+                       biodata.permanentDivision?.toLowerCase().includes(searchTerm) ||
+                       // Also check individual parts of the hierarchical selection
+                       locationParts.some(part => 
+                           part !== 'Bangladesh' && // Skip country name
+                           (biodata.presentArea?.toLowerCase().includes(part.toLowerCase()) ||
+                           biodata.permanentArea?.toLowerCase().includes(part.toLowerCase()) ||
+                           biodata.presentZilla?.toLowerCase().includes(part.toLowerCase()) ||
+                           biodata.permanentZilla?.toLowerCase().includes(part.toLowerCase()) ||
+                           biodata.presentUpazilla?.toLowerCase().includes(part.toLowerCase()) ||
+                           biodata.permanentUpazilla?.toLowerCase().includes(part.toLowerCase()) ||
+                           biodata.presentDivision?.toLowerCase().includes(part.toLowerCase()) ||
+                           biodata.permanentDivision?.toLowerCase().includes(part.toLowerCase()))
+                       );
+                
+                console.log('🔍 Broad location match:', {
+                    match: broadMatch,
+                    searchTerm,
+                    locationParts: locationParts.filter(part => part !== 'Bangladesh')
+                });
+                
+                return broadMatch;
+            })();
 
             // Biodata number filter - use the search filters, not current form state
             const matchesBiodataNumber = !searchFilters.biodataNumber || searchFilters.biodataNumber === '' ||
                 biodata.id.toString().includes(searchFilters.biodataNumber);
 
-            return matchesGender && matchesMaritalStatus && matchesLocation && matchesBiodataNumber;
+            const finalMatch = matchesGender && matchesMaritalStatus && matchesLocation && matchesBiodataNumber;
+            
+            console.log(`🎯 Biodata ${biodata.id} Filter Results:`, {
+                gender: matchesGender,
+                maritalStatus: matchesMaritalStatus,
+                location: matchesLocation,
+                biodataNumber: matchesBiodataNumber,
+                finalMatch: finalMatch
+            });
+            
+            return finalMatch;
         });
+        
+        console.log('✅ FILTERING COMPLETE');
+        console.log('📈 Results:', {
+            totalBiodatas: biodatas.length,
+            filteredCount: filtered.length,
+            filterEfficiency: `${((filtered.length / biodatas.length) * 100).toFixed(1)}%`
+        });
+        
+        return filtered;
     }, [biodatas, searchFilters, hasSearched]);
 
     // Pagination logic
@@ -186,13 +322,24 @@ export const BiodataSearch = () => {
 
     const handleSearch = async () => {
         // Capture current form values as search filters
-        setSearchFilters({
+        const filters = {
             gender: selectedGender,
             maritalStatus: selectedMaritalStatus,
             location: selectedLocation,
             biodataNumber: biodataNumber
+        };
+        
+        console.log('🔍 BIODATA SEARCH STARTED');
+        console.log('📋 Search Filters Applied:', filters);
+        console.log('📍 Location Selection Details:', {
+            rawLocation: selectedLocation,
+            locationParts: selectedLocation ? selectedLocation.split(' > ').map(part => part.trim()) : [],
+            hasAllDivisions: selectedLocation?.includes('All Divisions'),
+            hasAllDistricts: selectedLocation?.includes('All Districts'),
+            hasAllUpazilas: selectedLocation?.includes('All Upazilas')
         });
-
+        
+        setSearchFilters(filters);
         setHasSearched(true);
         await fetchBiodatas();
     };
@@ -238,9 +385,9 @@ export const BiodataSearch = () => {
                 <div className="text-center space-y-5 pb-12">
                     <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-rose-600 to-purple-600 bg-clip-text text-transparent">
                         <div className="flex items-center justify-center gap-2">
-                            <Sparkles className="h-6 w-6 text-rose-500" />
+                            <Sparkles className="h-6 w-6 text-rose-500" aria-hidden="true" />
                             <div className=" text-gray-800">Finder</div>
-                            <Sparkles className="h-6 w-6 text-rose-500" />
+                            <Sparkles className="h-6 w-6 text-rose-500" aria-hidden="true" />
                         </div>
                     </h1>
                     <p className="text-gray-600 text-2xl">&quot;Craft your love story with someone who complements your soul and spirit&quot;</p>
@@ -251,8 +398,10 @@ export const BiodataSearch = () => {
                     <CardBody className="p-8 overflow-y-visible">
                         <div className="grid gap-6 md:grid-cols-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-foreground">I&apos;m looking for</label>
                                 <Select
+                                    id="gender-select"
+                                    label="I'm looking for"
+                                    aria-label="Select gender preference"
                                     size="lg"
                                     placeholder="Select gender"
                                     selectedKeys={selectedGender ? [selectedGender] : []}
@@ -266,8 +415,10 @@ export const BiodataSearch = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-foreground">Marital status</label>
                                 <Select
+                                    id="marital-status-select"
+                                    label="Marital status"
+                                    aria-label="Select marital status preference"
                                     size="lg"
                                     placeholder="Select marital status"
                                     selectedKeys={selectedMaritalStatus ? [selectedMaritalStatus] : []}
@@ -284,13 +435,14 @@ export const BiodataSearch = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-foreground">Location</label>
-                                <LocationSelector onLocationSelect={setSelectedLocation} value={selectedLocation} />
+                                <LocationSelector id="location-select" aria-label="Select location preference" onLocationSelect={setSelectedLocation} value={selectedLocation} />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-foreground">Biodata Number</label>
                                 <Input
+                                    id="biodata-number-input"
+                                    label="Biodata Number"
+                                    aria-label="Enter biodata number to search"
                                     size="lg"
                                     placeholder="Enter biodata number"
                                     value={biodataNumber}
@@ -342,9 +494,9 @@ export const BiodataSearch = () => {
                         {/* Loading Header */}
                         <div className="text-center">
                             <div className="flex items-center justify-center gap-2 mb-4">
-                                <Sparkles className="h-5 w-5 text-rose-500 animate-pulse" />
+                                <Sparkles className="h-5 w-5 text-rose-500 animate-pulse" aria-hidden="true" />
                                 <h2 className="text-xl font-semibold text-gray-800">Finding Perfect Matches</h2>
-                                <Sparkles className="h-5 w-5 text-rose-500 animate-pulse" />
+                                <Sparkles className="h-5 w-5 text-rose-500 animate-pulse" aria-hidden="true" />
                             </div>
                             <p className="text-gray-600 animate-pulse">Please wait while we search for your ideal partner...</p>
                         </div>
@@ -391,7 +543,7 @@ export const BiodataSearch = () => {
                                 {/* Card Header with Gradient */}
                                 <CardHeader className="bg-gradient-to-r from-rose-400 to-pink-500 text-white pb-2 relative">
                                     <div className="absolute top-2 right-2 opacity-20">
-                                        <Sparkles className="h-4 w-4 text-rose-500 animate-pulse" />
+                                        <Sparkles className="h-4 w-4 text-rose-500 animate-pulse" aria-hidden="true" />
                                     </div>
                                     <div className="flex justify-between items-start w-full">
                                         <Chip
@@ -411,6 +563,7 @@ export const BiodataSearch = () => {
                                             isLoading={favoriteLoading[biodata.id]}
                                             disabled={favoriteLoading[biodata.id]}
                                             className={`${favoriteStates[biodata.id] ? "bg-white/90" : "bg-white/90 text-gray-400 hover:text-red-500"} transition-all duration-200`}
+                                            aria-label={favoriteStates[biodata.id] ? `Remove ${biodata.fullName} from favorites` : `Add ${biodata.fullName} to favorites`}
                                         >
                                             <Heart
                                                 className={`h-4 w-4 ${favoriteStates[biodata.id] ? "fill-rose-500 stroke-rose-500" : ""} group-hover:scale-110 transition-transform`}
@@ -433,6 +586,7 @@ export const BiodataSearch = () => {
                                                             name={biodata.fullName}
                                                             size="lg"
                                                             className="w-fit h-fit border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300"
+                                                            alt={`Profile picture of ${biodata.fullName}`}
                                                         />
 
                                                     ) : (
@@ -443,6 +597,7 @@ export const BiodataSearch = () => {
                                                             name={biodata.fullName}
                                                             size="lg"
                                                             className="w-24 h-24 border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300"
+                                                            alt={`Profile picture of ${biodata.fullName}`}
                                                         />
                                                     )
                                                 }

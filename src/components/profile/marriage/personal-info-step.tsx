@@ -1,6 +1,6 @@
 'use client';
 import { Input, Select, SelectItem, Textarea, Checkbox, Card, CardBody, CardHeader } from "@heroui/react";
-import { CascadingSelect } from "@/components/form/cascading-select";
+import { LocationSelector } from "@/components/form/LocationSelector";
 import { useState, useEffect } from "react";
 
 interface PersonalInfoStepProps {
@@ -95,7 +95,6 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
 
     if (checked) {
       updateData({
-        presentAddress: data.permanentAddress,
         presentCountry: data.permanentCountry,
         presentDivision: data.permanentDivision,
         presentZilla: data.permanentZilla,
@@ -271,11 +270,13 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
           {/* Permanent Address */}
           <div>
             <div className="rounded-lg bg-slate-50 p-4 shadow-inner">
-              <CascadingSelect
+              <LocationSelector
+                dataSource="addressData"
                 type="permanent"
                 data={data}
                 errors={errors}
                 updateData={updateData}
+                onLocationSelect={() => {}} // Not used in addressData mode
               />
               <div className="mt-4">
                 <Input
@@ -304,11 +305,13 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
           {/* Present Address */}
           <div className={`${data.sameAsPermanent ? "opacity-50 pointer-events-none" : ""}`}>
             <div className="rounded-lg bg-slate-50 p-4 shadow-inner">
-              <CascadingSelect
+              <LocationSelector
+                dataSource="addressData"
                 type="present"
                 data={data}
                 errors={errors}
                 updateData={updateData}
+                onLocationSelect={() => {}} // Not used in addressData mode
               />
               <div className="mt-4">
                 <Input
