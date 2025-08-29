@@ -63,7 +63,7 @@ yarn install
 
 #### Frontend Environment (.env)
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:2000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 NEXT_PUBLIC_BUILDER_API_KEY=your_builder_api_key
 ```
 
@@ -83,7 +83,7 @@ JWT_SECRET=your_jwt_secret
 
 ### 5. Start Development Servers
 
-#### Start Backend (Port 2000)
+#### Start Backend (Port 3001)
 ```bash
 cd backend
 npm run start:dev
@@ -146,7 +146,7 @@ node tests/test-biodata-api.js     # Test biodata API endpoints
 ## 🌐 Application URLs
 
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:2000
+- **Backend API**: http://localhost:3001
 - **Admin Panel**: http://localhost:3000/admin
 - **User Dashboard**: http://localhost:3000/dashboard
 

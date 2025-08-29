@@ -458,7 +458,7 @@ The profile picture upload functionality allows users to upload JPEG/PNG images 
 #### Static File Serving
 - **Configuration**: Added to `main.ts` using `useStaticAssets`
 - **Path**: Serves files from `public/` directory
-- **Access**: Files accessible via `http://localhost:2000/uploads/profile-pictures/{filename}`
+- **Access**: Files accessible via `http://localhost:3001/uploads/profile-pictures/{filename}`
 
 ### Frontend Implementation
 
@@ -618,7 +618,7 @@ The Mawami platform includes a complete Google OAuth 2.0 implementation that all
 
 #### Prerequisites
 - Google account with access to Google Cloud Console
-- Mawami project running locally (frontend on :3000, backend on :2000)
+- Mawami project running locally (frontend on :3000, backend on :3001)
 
 #### Step-by-Step Configuration
 
@@ -644,11 +644,11 @@ The Mawami platform includes a complete Google OAuth 2.0 implementation that all
    - Authorized JavaScript origins:
      ```
      http://localhost:3000
-     http://localhost:2000
+     http://localhost:3001
      ```
    - Authorized redirect URIs:
      ```
-     http://localhost:2000//api/auth/google/callback
+     http://localhost:3001/api/auth/google/callback
      ```
 
 ### Environment Configuration
@@ -658,7 +658,7 @@ The Mawami platform includes a complete Google OAuth 2.0 implementation that all
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_actual_google_client_id_here
 GOOGLE_CLIENT_SECRET=your_actual_google_client_secret_here
-GOOGLE_CALLBACK_URL=http://localhost:2000/api/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
 ```
 
 **Note**: Replace with actual credentials from Google Cloud Console
@@ -731,7 +731,7 @@ WHERE "googleId" IS NOT NULL;
    - Restart backend server after updating credentials
 
 2. **"redirect_uri_mismatch"**
-   - Check redirect URI exactly matches: `http://localhost:2000/auth/google/callback`
+   - Check redirect URI exactly matches: `http://localhost:3001/auth/google/callback`
    - Verify no trailing slashes or typos in Google Console
 
 3. **JSON parsing errors for new Google users**
@@ -745,7 +745,7 @@ WHERE "googleId" IS NOT NULL;
 ### Testing Google OAuth
 
 #### Test Flow
-1. **Start applications**: Backend on :2000, Frontend on :3000
+1. **Start applications**: Backend on :3001, Frontend on :3000
 2. **Go to login page**: `http://localhost:3000/auth/login`
 3. **Click "Continue with Google"** button
 4. **Complete Google OAuth flow** on consent screen

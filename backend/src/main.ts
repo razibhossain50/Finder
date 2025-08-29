@@ -43,7 +43,7 @@ async function bootstrap() {
   await authService.createSuperAdmin();
   
   // Use custom port variables with fallbacks
-  const port = process.env.BE_PORT || process.env.PORT || 2000;
+  const port = process.env.BE_PORT || process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');
   console.log(`Application is running on: ${await app.getUrl()}/api`);
 }

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
-        port: '2000',
+        port: '3001',
         pathname: '/uploads/**',
       },
       // Allow common Cloudflare R2 public bucket hostnames (adjust as needed)
@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
-    const backendPort = process.env.BE_PORT || '2000';
+    const backendPort = process.env.BE_PORT || '3001';
     return [
       {
         source: '/api/:path*',
