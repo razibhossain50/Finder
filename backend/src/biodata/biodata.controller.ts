@@ -20,7 +20,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Request } from 'express';
 import { BiodataApprovalStatus } from './enums/admin-approval-status.enum';
 
-@Controller('api/biodatas')
+@Controller('biodatas')
 export class BiodataController {
   constructor(private readonly biodataService: BiodataService) {}
 

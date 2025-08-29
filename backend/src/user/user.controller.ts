@@ -6,7 +6,7 @@ import { UpdateUserDto } from './update-user.dto';
 import { UpdatePasswordDto } from './update-password.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
-@Controller('api/users')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

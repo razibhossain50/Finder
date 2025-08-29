@@ -40,7 +40,7 @@ export class UserService {
       fullName,
       email,
       password: hashedPassword,
-      role: role || 'user' // Use provided role or default to 'user'
+      role: (role as 'user' | 'admin' | 'superadmin') || 'user' // Use provided role or default to 'user'
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -138,7 +138,7 @@ export class UserService {
     await this.userRepository.remove(user);
     return { 
       message: 'User deleted successfully', 
-      deletedUser: { id: user.id, email: user.email, username: user.username },
+      deletedUser: { id: user.id, email: user.email, fullName: user.fullName },
       deletedBiodataCount: userBiodata.length
     };
   }

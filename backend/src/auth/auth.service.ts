@@ -218,7 +218,7 @@ export class AuthService {
 
       if (superAdminExists) {
         // Just update the password if account exists
-        const hashedPassword = await bcrypt.hash('superadmin', 10);
+        const hashedPassword = await bcrypt.hash('Superadmin@50', 10);
         superAdminExists.password = hashedPassword;
         await this.usersRepository.save(superAdminExists);
         console.log('Superadmin password updated for email: razibmahmud50@gmail.com');
@@ -226,16 +226,16 @@ export class AuthService {
       }
 
       // Create new superadmin account with email
-      const hashedPassword = await bcrypt.hash('superadmin', 10);
+      const hashedPassword = await bcrypt.hash('Superadmin@50', 10);
       const admin = this.usersRepository.create({
         email: 'razibmahmud50@gmail.com',
         password: hashedPassword,
         role: 'superadmin',
-        fullName: 'Razib Mahmud'
+        fullName: 'Razib Hossain'
       });
 
       await this.usersRepository.save(admin);
-      console.log('New superadmin created: razibmahmud50@gmail.com / superadmin');
+      console.log('New superadmin created: razibmahmud50@gmail.com / Superadmin@50');
     } catch (error) {
       console.error('Error in createSuperAdmin:', error.message);
 
@@ -243,51 +243,20 @@ export class AuthService {
       try {
         const anySuperAdmin = await this.usersRepository.findOne({ where: { role: 'superadmin' } });
         if (!anySuperAdmin) {
-          const hashedPassword = await bcrypt.hash('admin123', 10);
+          const hashedPassword = await bcrypt.hash('Superadmin@50', 10);
           const fallbackAdmin = this.usersRepository.create({
-            email: 'admin@example.com',
+            email: 'razibmahmud50@gmail.com',
             password: hashedPassword,
             role: 'superadmin',
-            fullName: 'Super Admin'
+            fullName: 'Razib Hossain'
           });
           await this.usersRepository.save(fallbackAdmin);
-          console.log('Fallback superadmin created: admin@example.com / admin123');
+          console.log('Fallback superadmin created: razibmahmud50@gmail.com / Superadmin@50');
         }
       } catch (fallbackError) {
         console.error('Failed to create fallback admin:', fallbackError.message);
       }
     }
 
-    // Create a test regular user with email
-    const testUserExists = await this.usersRepository.findOne({ where: { email: 'user@example.com' } });
-
-    if (!testUserExists) {
-      const hashedPassword = await bcrypt.hash('12345', 10);
-      const testUser = this.usersRepository.create({
-        email: 'user@example.com',
-        password: hashedPassword,
-        role: 'user',
-        fullName: 'Test User'
-      });
-
-      await this.usersRepository.save(testUser);
-      console.log('Test user created: user@example.com / 12345');
-    }
-
-    // Create a test admin user with email (for admin login)
-    const testAdminExists = await this.usersRepository.findOne({ where: { email: 'testadmin@example.com' } });
-
-    if (!testAdminExists) {
-      const hashedPassword = await bcrypt.hash('aaaaa', 10);
-      const testAdmin = this.usersRepository.create({
-        email: 'testadmin@example.com',
-        password: hashedPassword,
-        role: 'admin',
-        fullName: 'Test Admin'
-      });
-
-      await this.usersRepository.save(testAdmin);
-      console.log('Test admin created: testadmin@example.com / aaaaa');
-    }
   }
 }

@@ -2,7 +2,7 @@ import { Controller, Post, Delete, Get, Param, UseGuards, Request, HttpCode, Htt
 import { FavoritesService } from './favorites.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@Controller('api/favorites')
+@Controller('favorites')
 @UseGuards(JwtAuthGuard)
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}

@@ -11,9 +11,6 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ unique: true, nullable: true })
-  username: string;
-
   @Column({ nullable: true })
   password: string;
 
@@ -23,8 +20,8 @@ export class User {
   @Column({ nullable: true })
   profilePicture: string;
 
-  @Column({ default: 'user' })
-  role: string;
+  @Column({ type: 'enum', enum: ['user', 'admin', 'superadmin'], default: 'user' })
+  role: 'user' | 'admin' | 'superadmin';
 
   @CreateDateColumn()
   createdAt: Date;

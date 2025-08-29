@@ -1,3 +1,6 @@
+// Import polyfills first
+import './polyfills';
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
@@ -20,9 +23,16 @@ async function bootstrap() {
     transform: true,
   }));
 
+  // Set global prefix for all routes
+  app.setGlobalPrefix('api');
+
   // Enable CORS for the frontend application
+  // Allow both local and deployed frontend origins, configurable via env
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+  ];
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
     credentials: true,
@@ -32,7 +42,9 @@ async function bootstrap() {
   const authService = app.get(AuthService);
   await authService.createSuperAdmin();
   
-  await app.listen(2000);
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  // Use Railway's dynamic port and listen on all interfaces
+  const port = process.env.PORT || 2000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Application is running on: ${await app.getUrl()}/api`);
 }
-bootstrap();
+void bootstrap();
