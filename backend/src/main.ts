@@ -30,7 +30,11 @@ async function bootstrap() {
   // Allow both local and deployed frontend origins, configurable via env
   const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://mawami.com', // Explicitly allow production frontend
   ];
+
+  console.log('CORS allowed origins:', allowedOrigins);
+
   app.enableCors({
     origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
@@ -41,7 +45,7 @@ async function bootstrap() {
   // Create super admin if not exists
   const authService = app.get(AuthService);
   await authService.createSuperAdmin();
-  
+
   // Use custom port variables with fallbacks
   const port = process.env.BE_PORT || process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');
