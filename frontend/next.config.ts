@@ -30,10 +30,11 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
+    const backendPort = process.env.BE_PORT || '2000';
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:2000/api/:path*',
+        destination: `http://localhost:${backendPort}/api/:path*`,
       },
     ];
   },

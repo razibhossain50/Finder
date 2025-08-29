@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p ${FE_PORT:-3000}",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "scripts:migrate-logs": "node scripts/migrate-logs.js",
