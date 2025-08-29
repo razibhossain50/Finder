@@ -13,7 +13,7 @@ export default function GoogleOAuthButton({ mode, className = "" }: GoogleOAuthB
   const handleGoogleAuth = () => {
     setIsLoading(true);
     // Redirect to backend Google OAuth endpoint
-    let backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:2000';
+    let backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
     // Remove trailing slash if present
     if (backendUrl.endsWith('/')) {
       backendUrl = backendUrl.slice(0, -1);
