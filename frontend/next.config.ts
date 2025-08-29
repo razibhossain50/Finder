@@ -30,13 +30,17 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
-    const backendPort = process.env.BE_PORT || '3001';
-    return [
-      {
-        source: '/api/:path*',
-        destination: `http://localhost:${backendPort}/api/:path*`,
-      },
-    ];
+    // Only use rewrites in development
+    if (process.env.NODE_ENV === 'development') {
+      const backendPort = process.env.BE_PORT || '3001';
+      return [
+        {
+          source: '/api/:path*',
+          destination: `http://localhost:${backendPort}/api/:path*`,
+        },
+      ];
+    }
+    return [];
   },
   webpack(config) {
     config.module.rules.push({
