@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
     Card, CardBody, CardHeader, Button, Select, SelectItem, Input, Chip,
@@ -63,21 +63,27 @@ export const BiodataSearch = () => {
 
     const fetchBiodatas = async () => {
         try {
+            console.log('🚀 fetchBiodatas called - setting loading to true');
             setLoading(true);
             logger.debug('Fetching biodatas', undefined, 'BiodataSearch');
-            
+
             const data = await publicApi.get('/biodatas');
+            console.log('📦 API response received:', { dataType: Array.isArray(data) ? 'array' : typeof data, count: Array.isArray(data) ? data.length : 1 });
+
             // Handle both single object and array responses
             const biodatasArray = Array.isArray(data) ? data : [data];
             setBiodatas(biodatasArray);
             setError(null);
-            
+
             logger.info('Successfully fetched biodatas', { count: biodatasArray.length }, 'BiodataSearch');
+            console.log('✅ fetchBiodatas completed successfully');
         } catch (error) {
             const appError = handleApiError(error, 'BiodataSearch');
             logger.error('Failed to fetch biodatas', appError, 'BiodataSearch');
             setError(appError.message);
+            console.log('❌ fetchBiodatas failed:', appError.message);
         } finally {
+            console.log('🏁 fetchBiodatas finished - setting loading to false');
             setLoading(false);
         }
     };
@@ -117,7 +123,7 @@ export const BiodataSearch = () => {
 
                 // Parse the hierarchical location string (e.g., "Bangladesh > Dhaka > All Districts")
                 const locationParts = searchFilters.location.split(' > ').map(part => part.trim());
-                
+
                 logger.debug('Location filter debug', {
                     searchLocation: searchFilters.location,
                     locationParts: locationParts,
@@ -133,63 +139,63 @@ export const BiodataSearch = () => {
                         permanentArea: biodata.permanentArea
                     }
                 });
-                
+
                 // If "All Divisions" is selected, show all biodatas from Bangladesh
                 if (locationParts.includes('All Divisions')) {
                     logger.debug('All Divisions selected - showing all biodatas', undefined, 'BiodataSearch');
                     return true; // Show all biodatas when "All Divisions" is selected
                 }
-                
+
                 // If "All Districts" is selected, match by division
                 if (locationParts.includes('All Districts') && locationParts.length >= 2) {
                     const selectedDivision = locationParts[1]; // Second part is division name
                     const divisionMatch = biodata.presentDivision?.toLowerCase().includes(selectedDivision.toLowerCase()) ||
-                           biodata.permanentDivision?.toLowerCase().includes(selectedDivision.toLowerCase());
-                    
+                        biodata.permanentDivision?.toLowerCase().includes(selectedDivision.toLowerCase());
+
                     logger.debug(`All Districts for division "${selectedDivision}"`, {
                         match: divisionMatch,
                         presentDivision: biodata.presentDivision,
                         permanentDivision: biodata.permanentDivision
                     });
-                    
+
                     return divisionMatch;
                 }
-                
+
                 // If "All Upazilas" is selected, match by district
                 if (locationParts.includes('All Upazilas') && locationParts.length >= 3) {
                     const selectedDistrict = locationParts[2]; // Third part is district name
                     const districtMatch = biodata.presentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase()) ||
-                           biodata.permanentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase());
-                    
+                        biodata.permanentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase());
+
                     logger.debug(`All Upazilas for district "${selectedDistrict}"`, {
                         match: districtMatch,
                         presentZilla: biodata.presentZilla,
                         permanentZilla: biodata.permanentZilla
                     });
-                    
+
                     return districtMatch;
                 }
-                
+
                 // For specific upazila/area selections, be more precise
                 if (locationParts.length >= 4) {
                     const selectedDivision = locationParts[1];
                     const selectedDistrict = locationParts[2];
                     const selectedUpazila = locationParts[3];
-                    
+
                     // Check if biodata matches the hierarchical selection
                     const divisionMatch = biodata.presentDivision?.toLowerCase().includes(selectedDivision.toLowerCase()) ||
-                                         biodata.permanentDivision?.toLowerCase().includes(selectedDivision.toLowerCase());
-                    
+                        biodata.permanentDivision?.toLowerCase().includes(selectedDivision.toLowerCase());
+
                     const districtMatch = biodata.presentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase()) ||
-                                         biodata.permanentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase());
-                    
+                        biodata.permanentZilla?.toLowerCase().includes(selectedDistrict.toLowerCase());
+
                     const upazilaMatch = biodata.presentUpazilla?.toLowerCase().includes(selectedUpazila.toLowerCase()) ||
-                                        biodata.permanentUpazilla?.toLowerCase().includes(selectedUpazila.toLowerCase()) ||
-                                        biodata.presentArea?.toLowerCase().includes(selectedUpazila.toLowerCase()) ||
-                                        biodata.permanentArea?.toLowerCase().includes(selectedUpazila.toLowerCase());
-                    
+                        biodata.permanentUpazilla?.toLowerCase().includes(selectedUpazila.toLowerCase()) ||
+                        biodata.presentArea?.toLowerCase().includes(selectedUpazila.toLowerCase()) ||
+                        biodata.permanentArea?.toLowerCase().includes(selectedUpazila.toLowerCase());
+
                     const hierarchicalMatch = divisionMatch && districtMatch && upazilaMatch;
-                    
+
                     logger.debug(`Specific location "${selectedUpazila}" in "${selectedDistrict}", "${selectedDivision}"`, {
                         hierarchicalMatch,
                         divisionMatch,
@@ -199,39 +205,39 @@ export const BiodataSearch = () => {
                         selectedDistrict,
                         selectedUpazila
                     });
-                    
+
                     return hierarchicalMatch;
                 }
-                
+
                 // For less specific selections (3 parts or less), do broader matching
                 const searchTerm = searchFilters.location.toLowerCase();
                 const broadMatch = biodata.presentArea?.toLowerCase().includes(searchTerm) ||
-                       biodata.permanentArea?.toLowerCase().includes(searchTerm) ||
-                       biodata.presentZilla?.toLowerCase().includes(searchTerm) ||
-                       biodata.permanentZilla?.toLowerCase().includes(searchTerm) ||
-                       biodata.presentUpazilla?.toLowerCase().includes(searchTerm) ||
-                       biodata.permanentUpazilla?.toLowerCase().includes(searchTerm) ||
-                       biodata.presentDivision?.toLowerCase().includes(searchTerm) ||
-                       biodata.permanentDivision?.toLowerCase().includes(searchTerm) ||
-                       // Also check individual parts of the hierarchical selection
-                       locationParts.some(part => 
-                           part !== 'Bangladesh' && // Skip country name
-                           (biodata.presentArea?.toLowerCase().includes(part.toLowerCase()) ||
-                           biodata.permanentArea?.toLowerCase().includes(part.toLowerCase()) ||
-                           biodata.presentZilla?.toLowerCase().includes(part.toLowerCase()) ||
-                           biodata.permanentZilla?.toLowerCase().includes(part.toLowerCase()) ||
-                           biodata.presentUpazilla?.toLowerCase().includes(part.toLowerCase()) ||
-                           biodata.permanentUpazilla?.toLowerCase().includes(part.toLowerCase()) ||
-                           biodata.presentDivision?.toLowerCase().includes(part.toLowerCase()) ||
-                           biodata.permanentDivision?.toLowerCase().includes(part.toLowerCase()))
-                       );
-                
+                    biodata.permanentArea?.toLowerCase().includes(searchTerm) ||
+                    biodata.presentZilla?.toLowerCase().includes(searchTerm) ||
+                    biodata.permanentZilla?.toLowerCase().includes(searchTerm) ||
+                    biodata.presentUpazilla?.toLowerCase().includes(searchTerm) ||
+                    biodata.permanentUpazilla?.toLowerCase().includes(searchTerm) ||
+                    biodata.presentDivision?.toLowerCase().includes(searchTerm) ||
+                    biodata.permanentDivision?.toLowerCase().includes(searchTerm) ||
+                    // Also check individual parts of the hierarchical selection
+                    locationParts.some(part =>
+                        part !== 'Bangladesh' && // Skip country name
+                        (biodata.presentArea?.toLowerCase().includes(part.toLowerCase()) ||
+                            biodata.permanentArea?.toLowerCase().includes(part.toLowerCase()) ||
+                            biodata.presentZilla?.toLowerCase().includes(part.toLowerCase()) ||
+                            biodata.permanentZilla?.toLowerCase().includes(part.toLowerCase()) ||
+                            biodata.presentUpazilla?.toLowerCase().includes(part.toLowerCase()) ||
+                            biodata.permanentUpazilla?.toLowerCase().includes(part.toLowerCase()) ||
+                            biodata.presentDivision?.toLowerCase().includes(part.toLowerCase()) ||
+                            biodata.permanentDivision?.toLowerCase().includes(part.toLowerCase()))
+                    );
+
                 logger.debug('Broad location match', {
                     match: broadMatch,
                     searchTerm,
                     locationParts: locationParts.filter(part => part !== 'Bangladesh')
                 });
-                
+
                 return broadMatch;
             })();
 
@@ -240,7 +246,7 @@ export const BiodataSearch = () => {
                 biodata.id.toString().includes(searchFilters.biodataNumber);
 
             const finalMatch = matchesGender && matchesMaritalStatus && matchesLocation && matchesBiodataNumber;
-            
+
             logger.debug(`Biodata ${biodata.id} filter results`, {
                 gender: matchesGender,
                 maritalStatus: matchesMaritalStatus,
@@ -248,16 +254,16 @@ export const BiodataSearch = () => {
                 biodataNumber: matchesBiodataNumber,
                 finalMatch: finalMatch
             });
-            
+
             return finalMatch;
         });
-        
+
         logger.info('Filtering complete', {
             totalBiodatas: biodatas.length,
             filteredCount: filtered.length,
             filterEfficiency: `${((filtered.length / biodatas.length) * 100).toFixed(1)}%`
         });
-        
+
         return filtered;
     }, [biodatas, searchFilters, hasSearched]);
 
@@ -267,27 +273,45 @@ export const BiodataSearch = () => {
     const endIndex = startIndex + itemsPerPage;
     const currentBiodatas = filteredBiodatas.slice(startIndex, endIndex);
 
+    // Track which biodatas we've already checked to prevent duplicate API calls
+    const checkedBiodatasRef = useRef<Set<number>>(new Set());
+
     // Check favorite status for each biodata when they load
     useEffect(() => {
         const checkFavoriteStatuses = async () => {
             if (!isAuthenticated || !user || currentBiodatas.length === 0) return;
 
+            // Filter out biodatas we've already checked
+            const uncheckedBiodatas = currentBiodatas.filter(biodata =>
+                !checkedBiodatasRef.current.has(biodata.id)
+            );
+
+            if (uncheckedBiodatas.length === 0) {
+                console.log('🔄 All current biodatas already checked for favorites, skipping');
+                return;
+            }
+
+            console.log('🔍 Checking favorite statuses for new biodatas:', uncheckedBiodatas.map(b => b.id));
             const statuses: { [key: number]: boolean } = {};
-            for (const biodata of currentBiodatas) {
+
+            for (const biodata of uncheckedBiodatas) {
                 try {
                     const status = await isFavorite(biodata.id);
                     statuses[biodata.id] = status;
+                    checkedBiodatasRef.current.add(biodata.id);
                 } catch (error) {
                     const appError = handleApiError(error, 'BiodataSearch');
                     logger.error(`Error checking favorite status for biodata ${biodata.id}`, appError, 'BiodataSearch');
                     statuses[biodata.id] = false;
+                    checkedBiodatasRef.current.add(biodata.id);
                 }
             }
-            setFavoriteStates(statuses);
+
+            setFavoriteStates(prev => ({ ...prev, ...statuses }));
         };
 
         checkFavoriteStatuses();
-    }, [currentBiodatas, isAuthenticated, user, isFavorite]);
+    }, [currentBiodatas, isAuthenticated, user]);
 
     // Handle favorite toggle with backend integration
     const handleFavoriteToggle = async (biodataId: number) => {
@@ -326,6 +350,16 @@ export const BiodataSearch = () => {
     }, [filteredBiodatas]);
 
     const handleSearch = async () => {
+        // Prevent multiple simultaneous searches
+        if (loading) {
+            logger.debug('Search already in progress, ignoring duplicate request', undefined, 'BiodataSearch');
+            return;
+        }
+
+        // Clear previous favorite checks when doing a new search
+        checkedBiodatasRef.current.clear();
+        setFavoriteStates({});
+
         // Capture current form values as search filters
         const filters = {
             gender: selectedGender,
@@ -333,7 +367,7 @@ export const BiodataSearch = () => {
             location: selectedLocation,
             biodataNumber: biodataNumber
         };
-        
+
         logger.info('Biodata search started', {
             filters,
             locationDetails: {
@@ -344,7 +378,7 @@ export const BiodataSearch = () => {
                 hasAllUpazilas: selectedLocation?.includes('All Upazilas')
             }
         }, 'BiodataSearch');
-        
+
         setSearchFilters(filters);
         setHasSearched(true);
         await fetchBiodatas();
@@ -352,8 +386,8 @@ export const BiodataSearch = () => {
 
 
     return (
-        <div className="space-y-8 pt-20 bg-[url('/images/hero-bg.png')] bg-no-repeat bg-center bg-cover">
-            <div className="container max-w-7xl mx-auto py-24 px-4 space-y-8">
+        <div className="space-y-4 md:space-y-8 pt-20 bg-[url('/images/hero-bg.png')] bg-no-repeat bg-center bg-cover">
+            <div className="container max-w-7xl mx-auto py-12 md:py-24 px-4 space-y-4 md:space-y-8">
                 {/* Enhanced Header */}
                 <div className="text-center space-y-5 pb-12">
                     <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-rose-600 to-purple-600 bg-clip-text text-transparent">
@@ -428,11 +462,15 @@ export const BiodataSearch = () => {
                         <Button
                             className="w-full mt-8 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
                             size="lg"
-                            onPress={handleSearch}
+                            onPress={() => {
+                                console.log('🔘 Find Your Partner button clicked');
+                                handleSearch();
+                            }}
                             startContent={<Search className="h-5 w-5" />}
                             isLoading={loading}
+                            isDisabled={loading}
                         >
-                            Find Your Partner
+                            {loading ? 'Searching...' : 'Find Your Partner'}
                         </Button>
                     </CardBody>
                 </Card>
@@ -553,8 +591,8 @@ export const BiodataSearch = () => {
                                                 {
                                                     biodata.biodataType == "Male" ? (
                                                         <Avatar
-                                                            src={biodata.profilePicture ? 
-                                                                getImageUrl(biodata.profilePicture) : 
+                                                            src={biodata.profilePicture ?
+                                                                getImageUrl(biodata.profilePicture) :
                                                                 "icons/male.png"}
                                                             name={biodata.fullName}
                                                             size="lg"
@@ -564,8 +602,8 @@ export const BiodataSearch = () => {
 
                                                     ) : (
                                                         <Avatar
-                                                            src={biodata.profilePicture ? 
-                                                                getImageUrl(biodata.profilePicture) : 
+                                                            src={biodata.profilePicture ?
+                                                                getImageUrl(biodata.profilePicture) :
                                                                 "icons/female.png"}
                                                             name={biodata.fullName}
                                                             size="lg"
@@ -623,78 +661,78 @@ export const BiodataSearch = () => {
                         ))}
                     </div>
                 ) : (
-                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                                    <CardBody className="text-center py-16">
-                                        <div className="relative">
-                                            {/* Decorative background */}
-                                            <div className="absolute inset-0 opacity-5">
-                                                <div className="absolute top-4 left-4 text-4xl">💕</div>
-                                                <div className="absolute top-8 right-8 text-3xl">✨</div>
-                                                <div className="absolute bottom-4 left-8 text-3xl">💑</div>
-                                                <div className="absolute bottom-8 right-4 text-4xl">🌟</div>
-                                            </div>
-                                            {!error ? (
-                                                <div className="relative z-10">
-                                                    <div className="w-24 h-24 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                                                        <User className="h-12 w-12 text-rose-500" />
-                                                    </div>
-                                                    <h3 className="text-2xl font-bold text-gray-900 mb-3">No Perfect Matches Found</h3>
-                                                    <p className="text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
-                                                        Don&apos;t worry! Your soulmate might be just around the corner. Try adjusting your search filters or check back later for new profiles.
-                                                    </p>
-
-                                                    <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                                                        <Button
-                                                            className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                                                            onPress={() => {
-                                                                setSelectedGender("");
-                                                                setSelectedMaritalStatus("");
-                                                                setSelectedLocation("");
-                                                                setBiodataNumber("");
-                                                            }}
-                                                            startContent={<Search className="h-4 w-4" />}
-                                                        >
-                                                            Clear All Filters
-                                                        </Button>
-                                                        <Button
-                                                            variant="flat"
-                                                            className="bg-rose-50 text-rose-600 hover:bg-rose-100 border-rose-200"
-                                                            onPress={fetchBiodatas}
-                                                            startContent={<Sparkles className="h-4 w-4" />}
-                                                        >
-                                                            Refresh Profiles
-                                                        </Button>
-                                                    </div>
-                                                </div>
-
-                                            ) : (
-                                                    <div className="space-y-8">
-                                                        <div className="text-center space-y-4">
-                                                            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-rose-600 to-purple-600 bg-clip-text text-transparent">
-                                                                All Biodatas
-                                                            </h1>
-                                                            <p className="text-gray-600 text-lg">Discover and connect with verified profiles</p>
-                                                        </div>
-                                                        <div className="text-center">
-                                                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                                <User className="h-8 w-8 text-red-500" />
-                                                            </div>
-                                                            <h3 className="text-xl font-semibold text-gray-900 mb-2">Oops! Something went wrong</h3>
-                                                            <p className="text-red-600 mb-6">{error}</p>
-                                                            <Button
-                                                                color="primary"
-                                                                onPress={() => window.location.reload()}
-                                                                className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600"
-                                                            >
-                                                                Try Again
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                            )
-                                            }
+                    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                        <CardBody className="text-center py-16">
+                            <div className="relative">
+                                {/* Decorative background */}
+                                <div className="absolute inset-0 opacity-5">
+                                    <div className="absolute top-4 left-4 text-4xl">💕</div>
+                                    <div className="absolute top-8 right-8 text-3xl">✨</div>
+                                    <div className="absolute bottom-4 left-8 text-3xl">💑</div>
+                                    <div className="absolute bottom-8 right-4 text-4xl">🌟</div>
+                                </div>
+                                {!error ? (
+                                    <div className="relative z-10">
+                                        <div className="w-24 h-24 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                                            <User className="h-12 w-12 text-rose-500" />
                                         </div>
-                                    </CardBody>
-                                </Card>
+                                        <h3 className="text-2xl font-bold text-gray-900 mb-3">No Perfect Matches Found</h3>
+                                        <p className="text-gray-600 mb-6 max-w-md mx-auto leading-relaxed">
+                                            Don&apos;t worry! Your soulmate might be just around the corner. Try adjusting your search filters or check back later for new profiles.
+                                        </p>
+
+                                        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                                            <Button
+                                                className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                                                onPress={() => {
+                                                    setSelectedGender("");
+                                                    setSelectedMaritalStatus("");
+                                                    setSelectedLocation("");
+                                                    setBiodataNumber("");
+                                                }}
+                                                startContent={<Search className="h-4 w-4" />}
+                                            >
+                                                Clear All Filters
+                                            </Button>
+                                            <Button
+                                                variant="flat"
+                                                className="bg-rose-50 text-rose-600 hover:bg-rose-100 border-rose-200"
+                                                onPress={fetchBiodatas}
+                                                startContent={<Sparkles className="h-4 w-4" />}
+                                            >
+                                                Refresh Profiles
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                ) : (
+                                    <div className="space-y-4 md:space-y-8">
+                                        <div className="text-center space-y-4">
+                                            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-rose-600 to-purple-600 bg-clip-text text-transparent">
+                                                All Biodatas
+                                            </h1>
+                                            <p className="text-gray-600 text-lg">Discover and connect with verified profiles</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <User className="h-8 w-8 text-red-500" />
+                                            </div>
+                                            <h3 className="text-xl font-semibold text-gray-900 mb-2">Oops! Something went wrong</h3>
+                                            <p className="text-red-600 mb-6">{error}</p>
+                                            <Button
+                                                color="primary"
+                                                onPress={() => window.location.reload()}
+                                                className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600"
+                                            >
+                                                Try Again
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )
+                                }
+                            </div>
+                        </CardBody>
+                    </Card>
                 )}
 
                 {/* Pagination */}

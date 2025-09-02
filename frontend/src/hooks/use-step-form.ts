@@ -130,7 +130,12 @@ export function useStepForm(totalSteps: number) {
   const [errors, setErrors] = useState<any>({});
 
   const updateFormData = (data: Partial<any>) => {
-    setFormData((prev: any) => ({ ...prev, ...data }));
+    console.log('📝 Form data update:', data);
+    setFormData((prev: any) => {
+      const newData = { ...prev, ...data };
+      console.log('📝 New form data:', newData);
+      return newData;
+    });
     
     // Clear errors for updated fields
     const newErrors = { ...errors };
@@ -170,6 +175,8 @@ export function useStepForm(totalSteps: number) {
     const stepSchema = stepSchemas[currentStep - 1];
     if (!stepSchema) return true;
 
+    console.log(`🔍 Validating step ${currentStep}`, { formData, currentStep });
+
     try {
       // For step 1, handle conditional validation for present address
       if (currentStep === 1) {
@@ -182,9 +189,11 @@ export function useStepForm(totalSteps: number) {
           'permanentLocation', 'permanentArea', 'healthIssues'
         ];
         
-        // Check if all required fields are present
+        // Check if all required fields are present and not empty
         for (const field of requiredFields) {
-          if (!validationData[field]) {
+          const value = validationData[field];
+          if (!value || (typeof value === 'string' && value.trim() === '')) {
+            console.log(`❌ Validation failed: ${field} is missing or empty`, { field, value });
             setErrors({ [field]: `${field} is required` });
             return false;
           }
@@ -208,6 +217,7 @@ export function useStepForm(totalSteps: number) {
           }
           
           if (hasPresentAddressError) {
+            console.log('❌ Validation failed: Present address errors', presentAddressErrors);
             setErrors(presentAddressErrors);
             return false;
           }
@@ -219,6 +229,7 @@ export function useStepForm(totalSteps: number) {
             validationData.presentArea = validationData.permanentArea;
           } else {
             // If sameAsPermanent is true but permanent data is missing, that's an error
+            console.log('❌ Validation failed: Permanent address missing when sameAsPermanent is true');
             setErrors({ 
               permanentLocation: 'Permanent location is required when present address is same as permanent',
               permanentArea: 'Permanent area is required when present address is same as permanent'
@@ -233,6 +244,7 @@ export function useStepForm(totalSteps: number) {
         stepSchema.parse(formData);
       }
       
+      console.log('✅ Validation passed for step', currentStep);
       setErrors({});
       return true;
     } catch (error) {
@@ -243,6 +255,7 @@ export function useStepForm(totalSteps: number) {
             fieldErrors[err.path[0]] = err.message;
           }
         });
+        console.log('❌ Zod validation failed:', fieldErrors);
         setErrors(fieldErrors);
       }
       return false;

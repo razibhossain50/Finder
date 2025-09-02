@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import {AppLayoutContent} from '@/components/layout/AppLayoutContent';
 import { AuthProvider } from '@/context/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { AdminGuard } from '@/components/AdminGuard'
 
 
 
@@ -39,18 +40,19 @@ export default function AdminLayout({
   return (
     <html lang="en">
       <body className={`${outfit.className} bg-white-100 dark:bg-gray-900`} >
-        
         <AuthProvider>
-      <ProtectedRoute>
-        <ThemeProvider>
-          <SidebarProvider>
-            <AppLayoutContent>{children}</AppLayoutContent>
-          </SidebarProvider>
-        </ThemeProvider>
-        </ProtectedRoute>
+          <ProtectedRoute requiredRoles={['admin', 'superadmin']}>
+            <AdminGuard>
+              <ThemeProvider>
+                <SidebarProvider>
+                  <AppLayoutContent>{children}</AppLayoutContent>
+                </SidebarProvider>
+              </ThemeProvider>
+            </AdminGuard>
+          </ProtectedRoute>
         </AuthProvider>
-        </body>
-        </html>
-      );
+      </body>
+    </html>
+  );
 }
 

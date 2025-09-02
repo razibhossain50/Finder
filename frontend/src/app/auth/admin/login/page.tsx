@@ -1,17 +1,38 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { Eye, EyeOff, Shield, AlertCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import "../../../admin/globals.css"
 
-const Login = () => {
+const LoginForm = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/admin'
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('admin_user_access_token')
+    const userData = localStorage.getItem('user')
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData)
+        if (user.role === 'admin' || user.role === 'superadmin') {
+          router.replace(redirectTo)
+        }
+      } catch (e) {
+        // Invalid data, clear it
+        localStorage.removeItem('admin_user_access_token')
+        localStorage.removeItem('user')
+      }
+    }
+  }, [router, redirectTo])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,12 +54,20 @@ const Login = () => {
         throw new Error(data.message || 'Login failed')
       }
 
+      // Validate user role before storing
+      if (data.user.role !== 'admin' && data.user.role !== 'superadmin') {
+        throw new Error('Access denied. Admin privileges required.')
+      }
+
       // Store token and user data
       localStorage.setItem('admin_user_access_token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
-      // Redirect to admin dashboard
-      router.push('/admin/')
+      // Also set cookie for middleware
+      document.cookie = `admin_user_access_token=${data.access_token}; path=/; max-age=86400; secure; samesite=strict`
+
+      // Redirect to intended page or admin dashboard
+      router.push(redirectTo)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred. Please try again.')
     } finally {
@@ -170,6 +199,21 @@ const Login = () => {
         </div>
       </div>
     </div>
+  )
+}
+
+const Login = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading login page...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
 

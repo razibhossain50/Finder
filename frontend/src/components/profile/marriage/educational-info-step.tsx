@@ -24,7 +24,9 @@ export function EducationalInfoStep({ data, errors, updateData }: EducationalInf
           placeholder="Select Medium"
           selectedKeys={data.educationMedium ? [data.educationMedium as string] : []}
           onSelectionChange={(keys) => {
-            const value = Array.from(keys)[0] as string;
+            const keyArray = Array.from(keys);
+            const value = keyArray.length > 0 ? keyArray[0] as string : undefined;
+            console.log('🔄 Education medium selection changed:', { keys, value });
             updateData({ educationMedium: value });
           }}
           isRequired
@@ -43,7 +45,9 @@ export function EducationalInfoStep({ data, errors, updateData }: EducationalInf
           placeholder="Select Level"
           selectedKeys={data.highestEducation ? [data.highestEducation as string] : []}
           onSelectionChange={(keys) => {
-            const value = Array.from(keys)[0] as string;
+            const keyArray = Array.from(keys);
+            const value = keyArray.length > 0 ? keyArray[0] as string : undefined;
+            console.log('🔄 Highest education selection changed:', { keys, value });
             updateData({ highestEducation: value });
           }}
           isRequired
@@ -99,7 +103,9 @@ export function EducationalInfoStep({ data, errors, updateData }: EducationalInf
           placeholder="Select Result"
           selectedKeys={data.result ? [data.result as string] : []}
           onSelectionChange={(keys) => {
-            const value = Array.from(keys)[0] as string;
+            const keyArray = Array.from(keys);
+            const value = keyArray.length > 0 ? keyArray[0] as string : undefined;
+            console.log('🔄 Result selection changed:', { keys, value });
             updateData({ result: value });
           }}
           isRequired

@@ -78,7 +78,7 @@ const AllBiodatas = () => {
     return (
         <div className="-mt-20">
                 <BiodataSearch />
-            <section className="py-24 px-4 bg-gradient-to-br from-white via-rose-50/50 to-pink-50/50 relative overflow-hidden">
+            <section className="py-12 md:py-24 px-4 bg-gradient-to-br from-white via-rose-50/50 to-pink-50/50 relative overflow-hidden">
                 {/* Subtle Background Elements */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-10 left-10 text-6xl">💕</div>
@@ -197,7 +197,7 @@ const AllBiodatas = () => {
                 </div>
             </section>
 
-            <section className="py-24 px-4 bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 relative overflow-hidden">
+            <section className="py-12 md:py-24 px-4 bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 relative overflow-hidden">
                 {/* Soft Background Elements */}
                 <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute top-20 left-10">

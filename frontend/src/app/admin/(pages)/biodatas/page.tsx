@@ -1421,7 +1421,7 @@ export default function Biodatas() {
                         </Button>
 
                         {/* Status Update Section */}
-                        <div className="flex items-center gap-4 bg-content2 px-5 py-3 rounded-large border border-divider">
+                        <div className="flex flex-wrap items-center gap-4 bg-content2 px-5 py-3 rounded-large border border-divider">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                                 <span className="text-sm font-semibold text-default-700">Update Status:</span>

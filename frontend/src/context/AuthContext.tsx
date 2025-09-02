@@ -24,21 +24,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('admin_user_access_token')
-      const userData = localStorage.getItem('user')
+      try {
+        const token = localStorage.getItem('admin_user_access_token')
+        const userData = localStorage.getItem('user')
 
-      if (token && userData) {
-        try {
-          // In a real app, you might want to validate the token with the backend
-          setUser(JSON.parse(userData))
-          logger.debug('User data loaded from localStorage', { userId: JSON.parse(userData).id }, 'AuthContext')
-        } catch (error) {
-          const appError = handleApiError(error, 'AuthContext')
-          logger.error('Failed to parse user data', appError, 'AuthContext')
-          logout()
+        if (token && userData) {
+          const parsedUser = JSON.parse(userData)
+          
+          // Validate that user has admin or superadmin role
+          if (parsedUser.role === 'admin' || parsedUser.role === 'superadmin') {
+            setUser(parsedUser)
+            logger.debug('Admin user data loaded from localStorage', { 
+              userId: parsedUser.id, 
+              role: parsedUser.role 
+            }, 'AuthContext')
+          } else {
+            // User doesn't have admin privileges, clear storage
+            logger.warn('User without admin privileges attempted access', { 
+              userId: parsedUser.id, 
+              role: parsedUser.role 
+            }, 'AuthContext')
+            localStorage.removeItem('admin_user_access_token')
+            localStorage.removeItem('user')
+          }
         }
+      } catch (error) {
+        const appError = handleApiError(error, 'AuthContext')
+        logger.error('Failed to parse user data', appError, 'AuthContext')
+        // Clear potentially corrupted data
+        localStorage.removeItem('admin_user_access_token')
+        localStorage.removeItem('user')
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
 
     initializeAuth()
@@ -46,9 +64,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      logger.info('Admin login attempt', { email }, 'AuthContext')
+      // Normalize email
+      const normalizedEmail = email.toLowerCase().trim()
       
-      const data = await authService.adminLogin({ email, password })
+      logger.info('Admin login attempt', { email: normalizedEmail }, 'AuthContext')
+      
+      const data = await authService.adminLogin({ email: normalizedEmail, password })
 
       localStorage.setItem('admin_user_access_token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
@@ -79,8 +100,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       localStorage.removeItem('admin_user_access_token')
       localStorage.removeItem('user')
+      // Clear cookie as well
+      document.cookie = 'admin_user_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
       setUser(null)
-      router.push('/admin/login')
+      router.push('/auth/admin/login')
     }
   }
 

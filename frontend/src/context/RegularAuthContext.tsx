@@ -48,11 +48,15 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (fullName: string, email: string, password: string, confirmPassword: string) => {
     try {
-      logger.info('Attempting user signup', { email }, 'RegularAuthContext')
+      // Normalize email and trim fullName
+      const normalizedEmail = email.toLowerCase().trim()
+      const trimmedFullName = fullName.trim()
+      
+      logger.info('Attempting user signup', { email: normalizedEmail }, 'RegularAuthContext')
       
       const data = await authService.signup({ 
-        fullName, 
-        email, 
+        fullName: trimmedFullName, 
+        email: normalizedEmail, 
         password, 
         confirmPassword 
       })
@@ -72,9 +76,12 @@ export const RegularAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      logger.info('Attempting user login', { email }, 'RegularAuthContext')
+      // Normalize email
+      const normalizedEmail = email.toLowerCase().trim()
       
-      const data = await authService.login({ email, password })
+      logger.info('Attempting user login', { email: normalizedEmail }, 'RegularAuthContext')
+      
+      const data = await authService.login({ email: normalizedEmail, password })
 
       // Allow users, but redirect admins to admin panel
       if (data.user.role === 'admin' || data.user.role === 'superadmin') {

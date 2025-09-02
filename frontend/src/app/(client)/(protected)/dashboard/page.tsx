@@ -106,7 +106,7 @@ export default function Dashboard() {
         {/* Welcome Header */}
         <div className="mb-10">
           <div className="mb-4">
-            <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4 leading-tight">
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4 leading-tight">
               Welcome back, {user?.fullName || user?.email}!
             </h1>
             <p className="text-slate-600 text-xl leading-relaxed">Here&apos;s what&apos;s happening with your account</p>
@@ -139,10 +139,10 @@ export default function Dashboard() {
                 <div className="flex-shrink-0">
                   <Button
                     size="lg"
-                    className="bg-white text-blue-600 hover:bg-blue-50 shadow-xl font-bold px-10 py-4 text-lg rounded-2xl transition-all duration-300 hover:scale-105"
+                    className="bg-white text-blue-600 hover:bg-blue-50 shadow-xl font-bold px-4 py-4 text-lg rounded-2xl transition-all duration-300 hover:scale-105"
                     onClick={() => logger.info('Buy more connections clicked', { userId: user?.id }, 'Dashboard')}
                   >
-                    <Plus className="mr-3 h-6 w-6" />
+                    <Plus className="h-6 w-6" />
                     Buy More Connections
                   </Button>
                 </div>
@@ -151,7 +151,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        
+
 
         {/* Stats Grid */}
         <div className="grid gap-8 md:grid-cols-3 mb-10">

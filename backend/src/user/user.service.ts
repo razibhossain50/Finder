@@ -30,24 +30,37 @@ export class UserService {
       throw new BadRequestException('Password and confirm password do not match');
     }
 
-    const userExists = await this.userRepository.findOne({ where: { email } });
+    // Normalize email to lowercase for consistency
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const userExists = await this.userRepository.findOne({ where: { email: normalizedEmail } });
     if (userExists) {
-      throw new BadRequestException('Email already in use');
+      throw new BadRequestException('An account with this email already exists. Please use a different email or try logging in.');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = this.userRepository.create({
-      fullName,
-      email,
-      password: hashedPassword,
-      role: (role as 'user' | 'admin' | 'superadmin') || 'user' // Use provided role or default to 'user'
-    });
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = this.userRepository.create({
+        fullName: fullName?.trim(),
+        email: normalizedEmail,
+        password: hashedPassword,
+        role: (role as 'user' | 'admin' | 'superadmin') || 'user' // Use provided role or default to 'user'
+      });
 
-    const savedUser = await this.userRepository.save(user);
+      const savedUser = await this.userRepository.save(user);
 
-    // Return user without password
-    const { password: _, ...userWithoutPassword } = savedUser;
-    return userWithoutPassword;
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = savedUser;
+      return userWithoutPassword;
+    } catch (error) {
+      // Handle database-level unique constraint violations
+      if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('unique constraint')) {
+        throw new BadRequestException('An account with this email already exists. Please use a different email or try logging in.');
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   async findById(id: number) {
@@ -67,21 +80,40 @@ export class UserService {
 
     // Check if email is being updated and if it's already in use by another user
     if (updateUserDto.email && updateUserDto.email !== user.email) {
+      const normalizedEmail = updateUserDto.email.toLowerCase().trim();
       const existingUser = await this.userRepository.findOne({
-        where: { email: updateUserDto.email }
+        where: { email: normalizedEmail }
       });
       if (existingUser && existingUser.id !== id) {
-        throw new BadRequestException('Email already in use');
+        throw new BadRequestException('An account with this email already exists. Please use a different email.');
       }
+      // Update the DTO with normalized email
+      updateUserDto.email = normalizedEmail;
+    }
+
+    // Normalize fullName if provided
+    if (updateUserDto.fullName) {
+      updateUserDto.fullName = updateUserDto.fullName.trim();
     }
 
     // Update user fields
     Object.assign(user, updateUserDto);
-    const updatedUser = await this.userRepository.save(user);
-
-    // Return user without password
-    const { password: _, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
+    
+    try {
+      const updatedUser = await this.userRepository.save(user);
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      return userWithoutPassword;
+    } catch (error) {
+      // Handle database-level unique constraint violations
+      if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('unique constraint')) {
+        throw new BadRequestException('An account with this email already exists. Please use a different email.');
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   async updatePassword(id: number, updatePasswordDto: UpdatePasswordDto) {

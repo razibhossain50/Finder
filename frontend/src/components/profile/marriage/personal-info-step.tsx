@@ -61,13 +61,15 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
     if (typeof selection === 'string') {
       value = selection;
     } else if (selection instanceof Set) {
-      value = selection.values().next().value;
+      const setValues = Array.from(selection);
+      value = setValues.length > 0 ? setValues[0] : undefined;
     } else if (selection && typeof selection === 'object' && 'currentKey' in selection) {
       value = (selection as { currentKey: string }).currentKey;
     } else if (Array.isArray(selection)) {
-      value = selection[0];
+      value = selection.length > 0 ? selection[0] : undefined;
     }
 
+    console.log(`🔄 Selection changed for ${field}:`, { selection, value });
     updateData({ [field]: value });
   };
 
@@ -199,7 +201,10 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
             label="Height"
             placeholder="Select Height"
             selectedKeys={data.height ? [data.height as string] : []}
-            onSelectionChange={(keys) => handleSelectionChange(keys, 'height')}
+            onSelectionChange={(keys) => {
+              console.log('🔄 Height selection changed:', { keys, currentHeight: data.height });
+              handleSelectionChange(keys, 'height');
+            }}
             isRequired
             errorMessage={errors.height}
             isInvalid={!!errors.height}

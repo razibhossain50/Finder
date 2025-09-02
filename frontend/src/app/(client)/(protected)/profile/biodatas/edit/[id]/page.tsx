@@ -243,34 +243,28 @@ export default function BiodataForm() {
     }
 
     const handleNext = async () => {
+        console.log('🚀 Next button clicked for step', currentStep);
+        
         // Prevent multiple clicks
         if (saveStepMutation.isPending) {
+            console.log('⏳ Mutation already pending, ignoring click');
             return;
         }
         
         const isValid = validateCurrentStep();
+        console.log('🔍 Validation result:', isValid);
         
         if (!isValid) {
-            return;
+            console.log('❌ Validation failed, stopping navigation');
+            return; // Stop here if validation fails
         }
 
-        try {
-            // Save current step data - nextStep() will be called in onSuccess callback
-            saveStepMutation.mutate({
-                stepData: formData,
-                step: currentStep,
-            });
-            
-            // Fallback: if mutation doesn't complete within 5 seconds, proceed anyway
-            setTimeout(() => {
-                if (saveStepMutation.isPending) {
-                    nextStep();
-                }
-            }, 5000);
-        } catch (error) {
-            // If there's an error, still proceed to next step
-            nextStep();
-        }
+        console.log('✅ Validation passed, saving step data');
+        // Save current step data - nextStep() will be called in onSuccess callback
+        saveStepMutation.mutate({
+            stepData: formData,
+            step: currentStep,
+        });
     };
 
     const handleSubmit = async () => {

@@ -25,12 +25,15 @@ export function FamilyInfoStep({ data, errors, updateData }: FamilyInfoStepProps
     if (typeof selection === 'string') {
       value = selection;
     } else if (selection instanceof Set) {
-      value = selection.values().next().value;
+      const setValues = Array.from(selection);
+      value = setValues.length > 0 ? setValues[0] : undefined;
     } else if (selection?.currentKey) {
       value = selection.currentKey;
     } else if (Array.isArray(selection)) {
-      value = selection[0];
+      value = selection.length > 0 ? selection[0] : undefined;
     }
+
+    console.log(`🔄 Family info selection changed for ${field}:`, { selection, value });
 
     if (field === 'brothersCount') {
       setLocalBrothersCount(value || '');

@@ -81,7 +81,7 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
               description={
                 <div className="flex items-center gap-1 text-xs text-slate-500">
                   <Info className="w-3 h-3" />
-                  Only visible for admin
+                  Use profile picture for more Visibility
                 </div>
               }
               endContent={

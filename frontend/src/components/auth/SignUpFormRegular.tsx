@@ -19,10 +19,17 @@ import { useRegularAuth } from "@/context/RegularAuthContext";
 import GoogleOAuthButton from "./GoogleOAuthButton";
 
 const signupSchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  fullName: z.string()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be less than 100 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
   email: z.string()
-    .email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+    .email("Please enter a valid email address")
+    .toLowerCase()
+    .transform(val => val.trim()),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password must be less than 128 characters"),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -113,7 +120,7 @@ export default function SignupFormRegular() {
                 <Chip
                   color="danger"
                   variant="flat"
-                  className="w-full p-3 h-auto"
+                  className="w-full p-3 h-auto flex-wrap whitespace-normal"
                   startContent={<Sparkles className="w-4 h-4" />}
                 >
                   {error}
