@@ -77,6 +77,20 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
     if (data.dateOfBirth) {
       const dob = new Date(data.dateOfBirth as string);
       const today = new Date();
+      
+      // Check if the date is valid
+      if (isNaN(dob.getTime())) {
+        setCalculatedAge(null);
+        return;
+      }
+      
+      // Check if the date is in the future
+      if (dob > today) {
+        setCalculatedAge(null);
+        updateData({ age: undefined });
+        return;
+      }
+      
       let age = today.getFullYear() - dob.getFullYear();
       const monthDiff = today.getMonth() - dob.getMonth();
 
@@ -87,10 +101,14 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
       setCalculatedAge(age);
       // Update age in form data only if it's different
       if (data.age !== age) {
+        console.log(`📅 Age calculated from date of birth: ${age} years`);
         updateData({ age });
       }
+    } else {
+      setCalculatedAge(null);
+      updateData({ age: undefined });
     }
-  }, [data.dateOfBirth]);
+  }, [data.dateOfBirth, updateData]);
 
   // Check if permanent address fields are complete
   const isPermanentAddressComplete = () => {
@@ -195,6 +213,14 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
               errorMessage={errors.dateOfBirth}
               isInvalid={!!errors.dateOfBirth}
             />
+            {/* Age Display and Error */}
+            {calculatedAge !== null && (
+              <div className="flex items-center justify-between text-sm">
+                {errors.age && (
+                  <span className="text-red-500 text-xs">{errors.age}</span>
+                )}
+              </div>
+            )}
           </div>
           {/* Height */}
           <Select

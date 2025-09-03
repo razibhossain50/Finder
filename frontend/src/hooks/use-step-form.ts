@@ -14,17 +14,17 @@ const biodataSchema = z.object({
   complexion: z.string().min(1, "Complexion is required"),
   profession: z.string().min(1, "Profession is required"),
   bloodGroup: z.string().min(1, "Blood group is required"),
-  
+
   // Address Information - Using new LocationSelector field names
   permanentLocation: z.string().min(1, "Permanent location is required"),
   permanentArea: z.string().min(1, "Permanent area is required"),
-  
+
   presentLocation: z.string().min(1, "Present location is required"),
   presentArea: z.string().min(1, "Present area is required"),
   sameAsPermanent: z.boolean().default(false),
-  
+
   healthIssues: z.string().min(1, "Health issues field is required"),
-  
+
   // Educational Information
   educationMedium: z.string().min(1, "Education medium is required"),
   highestEducation: z.string().min(1, "Highest education is required"),
@@ -32,7 +32,7 @@ const biodataSchema = z.object({
   subject: z.string().optional(),
   passingYear: z.number().min(1950, "Invalid passing year").max(2030, "Invalid passing year"),
   result: z.string().min(1, "Result is required"),
-  
+
   // Family Information
   economicCondition: z.string().min(1, "Economic condition is required"),
   fatherName: z.string().min(1, "Father's name is required"),
@@ -44,7 +44,7 @@ const biodataSchema = z.object({
   brothersCount: z.number().min(0, "Invalid number").max(10, "Invalid number"),
   sistersCount: z.number().min(0, "Invalid number").max(10, "Invalid number"),
   familyDetails: z.string().optional(),
-  
+
   // Partner Preferences
   partnerAgeMin: z.number().min(18, "Minimum age should be 18").max(70, "Maximum age should be 70"),
   partnerAgeMax: z.number().min(18, "Minimum age should be 18").max(70, "Maximum age should be 70"),
@@ -54,7 +54,7 @@ const biodataSchema = z.object({
   partnerProfession: z.string().optional(),
   partnerLocation: z.string().optional(),
   partnerDetails: z.string().optional(),
-  
+
   // Contact Information
   fullName: z.string().min(1, "Full name is required"),
   profilePicture: z.string().optional(),
@@ -82,7 +82,7 @@ const stepSchemas = [
     presentArea: true,
     healthIssues: true,
   }),
-  
+
   // Step 2: Educational Information
   biodataSchema.pick({
     educationMedium: true,
@@ -91,7 +91,7 @@ const stepSchemas = [
     passingYear: true,
     result: true,
   }),
-  
+
   // Step 3: Family Information
   biodataSchema.pick({
     economicCondition: true,
@@ -104,13 +104,13 @@ const stepSchemas = [
     brothersCount: true,
     sistersCount: true,
   }),
-  
+
   // Step 4: Partner Preferences
   biodataSchema.pick({
     partnerAgeMin: true,
     partnerAgeMax: true,
   }),
-  
+
   // Step 5: Contact Information
   biodataSchema.pick({
     fullName: true,
@@ -136,7 +136,7 @@ export function useStepForm(totalSteps: number) {
       console.log('📝 New form data:', newData);
       return newData;
     });
-    
+
     // Clear errors for updated fields
     const newErrors = { ...errors };
     Object.keys(data).forEach(key => {
@@ -148,17 +148,17 @@ export function useStepForm(totalSteps: number) {
   const loadFormData = useCallback((data: any) => {
     // Convert old address field names to new field names
     const convertedData = { ...data };
-    
+
     // Convert permanent address fields
     if (data.permanentCountry && data.permanentDivision && data.permanentZilla && data.permanentUpazilla) {
       convertedData.permanentLocation = `${data.permanentCountry} > ${data.permanentDivision} > ${data.permanentZilla} > ${data.permanentUpazilla}`;
     }
-    
+
     // Convert present address fields
     if (data.presentCountry && data.presentDivision && data.presentZilla && data.presentUpazilla) {
       convertedData.presentLocation = `${data.presentCountry} > ${data.presentDivision} > ${data.presentZilla} > ${data.presentUpazilla}`;
     }
-    
+
     setFormData((prev: any) => ({
       ...prev,
       ...convertedData,
@@ -181,14 +181,14 @@ export function useStepForm(totalSteps: number) {
       // For step 1, handle conditional validation for present address
       if (currentStep === 1) {
         const validationData = { ...formData };
-        
+
         // Additional validation: ensure required fields are present
         const requiredFields = [
           'religion', 'biodataType', 'maritalStatus', 'dateOfBirth', 'age',
           'height', 'weight', 'complexion', 'profession', 'bloodGroup',
           'permanentLocation', 'permanentArea', 'healthIssues'
         ];
-        
+
         // Check if all required fields are present and not empty
         for (const field of requiredFields) {
           const value = validationData[field];
@@ -198,24 +198,37 @@ export function useStepForm(totalSteps: number) {
             return false;
           }
         }
-        
+
+        // Special validation for age
+        if (validationData.age && validationData.age < 18) {
+          console.log(`❌ Validation failed: Age is too low`, { age: validationData.age });
+          setErrors({ age: 'You must be at least 18 years old' });
+          return false;
+        }
+
+        if (validationData.age && validationData.age > 70) {
+          console.log(`❌ Validation failed: Age is too high`, { age: validationData.age });
+          setErrors({ age: 'Age must be 70 years or less' });
+          return false;
+        }
+
         // Check present address requirements
         if (!formData.sameAsPermanent) {
           const presentAddressErrors: any = {};
           let hasPresentAddressError = false;
-          
+
           // Check present location
           if (!validationData.presentLocation || validationData.presentLocation.trim() === '') {
             presentAddressErrors.presentLocation = 'Present location is required';
             hasPresentAddressError = true;
           }
-          
+
           // Check present area
           if (!validationData.presentArea || validationData.presentArea.trim() === '') {
             presentAddressErrors.presentArea = 'Present area is required';
             hasPresentAddressError = true;
           }
-          
+
           if (hasPresentAddressError) {
             console.log('❌ Validation failed: Present address errors', presentAddressErrors);
             setErrors(presentAddressErrors);
@@ -223,27 +236,27 @@ export function useStepForm(totalSteps: number) {
           }
         } else {
           // If sameAsPermanent is true, copy permanent data to present data for validation
-          if (validationData.permanentLocation && validationData.permanentArea && 
-              validationData.permanentLocation.trim() !== '' && validationData.permanentArea.trim() !== '') {
+          if (validationData.permanentLocation && validationData.permanentArea &&
+            validationData.permanentLocation.trim() !== '' && validationData.permanentArea.trim() !== '') {
             validationData.presentLocation = validationData.permanentLocation;
             validationData.presentArea = validationData.permanentArea;
           } else {
             // If sameAsPermanent is true but permanent data is missing, that's an error
             console.log('❌ Validation failed: Permanent address missing when sameAsPermanent is true');
-            setErrors({ 
+            setErrors({
               permanentLocation: 'Permanent location is required when present address is same as permanent',
               permanentArea: 'Permanent area is required when present address is same as permanent'
             });
             return false;
           }
         }
-        
+
         // Now run Zod validation with the prepared data
         stepSchema.parse(validationData);
       } else {
         stepSchema.parse(formData);
       }
-      
+
       console.log('✅ Validation passed for step', currentStep);
       setErrors({});
       return true;
@@ -263,8 +276,12 @@ export function useStepForm(totalSteps: number) {
   };
 
   const nextStep = () => {
+    console.log(`🚀 nextStep called: ${currentStep} -> ${currentStep + 1} (max: ${totalSteps})`);
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
+      console.log(`✅ Step changed successfully to ${currentStep + 1}`);
+    } else {
+      console.log(`⚠️ Already at last step (${currentStep}), cannot go further`);
     }
   };
 

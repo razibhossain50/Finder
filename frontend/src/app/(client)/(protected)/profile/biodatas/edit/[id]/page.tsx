@@ -159,12 +159,25 @@ export default function BiodataForm() {
 
             return result;
         },
-        onSuccess: (data) => {
-            // Invalidate and refetch biodata to update completed steps
-            queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
-
-            // Move to next step on successful save (no toast for step saves)
-            nextStep();
+        onSuccess: async (data) => {
+            console.log('✅ Step saved successfully, updating cache and moving to next step');
+            
+            try {
+                // Invalidate and refetch biodata to update completed steps
+                await queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
+                console.log('🔄 Cache invalidated successfully');
+                
+                // Small delay to ensure UI updates are processed
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Move to next step on successful save (no toast for step saves)
+                nextStep();
+                console.log('➡️ Moved to next step');
+            } catch (error) {
+                console.error('❌ Error in onSuccess callback:', error);
+                // Still move to next step even if cache invalidation fails
+                nextStep();
+            }
         },
         onError: (error: unknown) => {
             const stepError = handleApiError(error, 'BiodataEdit');
@@ -437,7 +450,10 @@ export default function BiodataForm() {
                             ) : (
                                 <Button
                                     color="primary"
-                                    onClick={handleNext}
+                                    onClick={() => {
+                                        console.log('🔘 Next button clicked, current step:', currentStep);
+                                        handleNext();
+                                    }}
                                     isDisabled={saveStepMutation.isPending}
                                     endContent={<ChevronRight className="w-4 h-4" />}
                                 >
