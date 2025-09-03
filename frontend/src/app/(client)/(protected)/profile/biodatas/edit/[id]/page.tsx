@@ -257,6 +257,8 @@ export default function BiodataForm() {
 
     const handleNext = async () => {
         console.log('🚀 Next button clicked for step', currentStep);
+        console.log('🚀 Current form data:', formData);
+        console.log('🚀 Current errors:', errors);
         
         // Prevent multiple clicks
         if (saveStepMutation.isPending) {
@@ -266,6 +268,7 @@ export default function BiodataForm() {
         
         const isValid = validateCurrentStep();
         console.log('🔍 Validation result:', isValid);
+        console.log('🔍 Errors after validation:', errors);
         
         if (!isValid) {
             console.log('❌ Validation failed, stopping navigation');

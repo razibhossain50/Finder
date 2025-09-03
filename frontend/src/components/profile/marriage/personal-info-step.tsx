@@ -74,23 +74,22 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
   };
 
   useEffect(() => {
-    if (data.dateOfBirth) {
-      const dob = new Date(data.dateOfBirth as string);
+    if (data.dateOfBirth && typeof data.dateOfBirth === 'string' && data.dateOfBirth.trim() !== '') {
+      const dob = new Date(data.dateOfBirth);
       const today = new Date();
-      
+
       // Check if the date is valid
       if (isNaN(dob.getTime())) {
         setCalculatedAge(null);
         return;
       }
-      
+
       // Check if the date is in the future
       if (dob > today) {
         setCalculatedAge(null);
-        updateData({ age: undefined });
         return;
       }
-      
+
       let age = today.getFullYear() - dob.getFullYear();
       const monthDiff = today.getMonth() - dob.getMonth();
 
@@ -99,23 +98,25 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
       }
 
       setCalculatedAge(age);
-      // Update age in form data only if it's different
-      if (data.age !== age) {
+      // Update age in form data only if it's different and valid
+      if (data.age !== age && age >= 0) {
         console.log(`📅 Age calculated from date of birth: ${age} years`);
         updateData({ age });
       }
     } else {
-      setCalculatedAge(null);
-      updateData({ age: undefined });
+      // Only clear if we had a calculated age before
+      if (calculatedAge !== null) {
+        setCalculatedAge(null);
+      }
     }
-  }, [data.dateOfBirth, updateData]);
+  }, [data.dateOfBirth]); // Removed updateData from dependencies to prevent infinite loops
 
   // Check if permanent address fields are complete
   const isPermanentAddressComplete = () => {
     const permanentLocation = data.permanentLocation as string;
     const permanentArea = data.permanentArea as string;
-    return !!(permanentLocation && permanentArea && 
-              permanentLocation.trim() !== '' && permanentArea.trim() !== '');
+    return !!(permanentLocation && permanentArea &&
+      permanentLocation.trim() !== '' && permanentArea.trim() !== '');
   };
 
   const handleSameAddressChange = (checked: boolean) => {
@@ -124,13 +125,18 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
       return;
     }
 
+    console.log('🏠 Same address checkbox changed:', { checked, permanentLocation: data.permanentLocation, permanentArea: data.permanentArea });
+
     updateData({ sameAsPermanent: checked });
 
     if (checked) {
-      updateData({
+      // Copy permanent address to present address
+      const updates = {
         presentLocation: data.permanentLocation,
         presentArea: data.permanentArea,
-      });
+      };
+      console.log('🏠 Copying permanent to present address:', updates);
+      updateData(updates);
     } else {
       // When unchecking, clear present address fields to force user to fill them
       updateData({
@@ -321,7 +327,7 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
                 data={data}
                 errors={errors}
                 updateData={updateData}
-                onLocationSelect={() => {}}
+                onLocationSelect={() => { }}
                 label="Permanent Address"
                 placeholder="Select permanent address"
                 value={data.permanentLocation as string}
@@ -365,7 +371,7 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
                 data={data}
                 errors={errors}
                 updateData={updateData}
-                onLocationSelect={() => {}}
+                onLocationSelect={() => { }}
                 label="Present Address"
                 placeholder="Select present address"
                 value={data.presentLocation as string}

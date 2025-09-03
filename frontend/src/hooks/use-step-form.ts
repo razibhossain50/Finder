@@ -130,10 +130,13 @@ export function useStepForm(totalSteps: number) {
   const [errors, setErrors] = useState<any>({});
 
   const updateFormData = (data: Partial<any>) => {
-    console.log('📝 Form data update:', data);
+    // Only log significant updates, not undefined values
+    if (Object.values(data).some(value => value !== undefined)) {
+      console.log('📝 Form data update:', data);
+    }
+    
     setFormData((prev: any) => {
       const newData = { ...prev, ...data };
-      console.log('📝 New form data:', newData);
       return newData;
     });
 
@@ -176,6 +179,8 @@ export function useStepForm(totalSteps: number) {
     if (!stepSchema) return true;
 
     console.log(`🔍 Validating step ${currentStep}`, { formData, currentStep });
+    console.log('🔍 Form data keys:', Object.keys(formData));
+    console.log('🔍 sameAsPermanent value:', formData.sameAsPermanent);
 
     try {
       // For step 1, handle conditional validation for present address
@@ -190,8 +195,10 @@ export function useStepForm(totalSteps: number) {
         ];
 
         // Check if all required fields are present and not empty
+        console.log('🔍 Checking required fields:', requiredFields);
         for (const field of requiredFields) {
           const value = validationData[field];
+          console.log(`🔍 Checking field ${field}:`, { value, type: typeof value });
           if (!value || (typeof value === 'string' && value.trim() === '')) {
             console.log(`❌ Validation failed: ${field} is missing or empty`, { field, value });
             setErrors({ [field]: `${field} is required` });
@@ -200,20 +207,26 @@ export function useStepForm(totalSteps: number) {
         }
 
         // Special validation for age
-        if (validationData.age && validationData.age < 18) {
+        if (validationData.age === undefined || validationData.age === null) {
+          console.log(`❌ Validation failed: Age is missing`, { age: validationData.age });
+          setErrors({ dateOfBirth: 'Please enter a valid date of birth to calculate your age' });
+          return false;
+        }
+
+        if (validationData.age < 18) {
           console.log(`❌ Validation failed: Age is too low`, { age: validationData.age });
           setErrors({ age: 'You must be at least 18 years old' });
           return false;
         }
 
-        if (validationData.age && validationData.age > 70) {
+        if (validationData.age > 70) {
           console.log(`❌ Validation failed: Age is too high`, { age: validationData.age });
           setErrors({ age: 'Age must be 70 years or less' });
           return false;
         }
 
         // Check present address requirements
-        if (!formData.sameAsPermanent) {
+        if (!validationData.sameAsPermanent) {
           const presentAddressErrors: any = {};
           let hasPresentAddressError = false;
 
@@ -240,6 +253,10 @@ export function useStepForm(totalSteps: number) {
             validationData.permanentLocation.trim() !== '' && validationData.permanentArea.trim() !== '') {
             validationData.presentLocation = validationData.permanentLocation;
             validationData.presentArea = validationData.permanentArea;
+            console.log('🏠 Copied permanent address to present for validation:', {
+              presentLocation: validationData.presentLocation,
+              presentArea: validationData.presentArea
+            });
           } else {
             // If sameAsPermanent is true but permanent data is missing, that's an error
             console.log('❌ Validation failed: Permanent address missing when sameAsPermanent is true');
@@ -250,6 +267,12 @@ export function useStepForm(totalSteps: number) {
             return false;
           }
         }
+
+        console.log('🔍 Final validation data before Zod:', {
+          presentLocation: validationData.presentLocation,
+          presentArea: validationData.presentArea,
+          sameAsPermanent: validationData.sameAsPermanent
+        });
 
         // Now run Zod validation with the prepared data
         stepSchema.parse(validationData);
