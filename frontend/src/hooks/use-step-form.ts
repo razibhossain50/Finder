@@ -134,7 +134,7 @@ export function useStepForm(totalSteps: number) {
     if (Object.values(data).some(value => value !== undefined)) {
       console.log('📝 Form data update:', data);
     }
-    
+
     setFormData((prev: any) => {
       const newData = { ...prev, ...data };
       return newData;
@@ -301,8 +301,9 @@ export function useStepForm(totalSteps: number) {
   const nextStep = () => {
     console.log(`🚀 nextStep called: ${currentStep} -> ${currentStep + 1} (max: ${totalSteps})`);
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-      console.log(`✅ Step changed successfully to ${currentStep + 1}`);
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      console.log(`✅ Step changed successfully to ${newStep}`);
     } else {
       console.log(`⚠️ Already at last step (${currentStep}), cannot go further`);
     }

@@ -30,6 +30,7 @@ export default function BiodataForm() {
     const params = useParams();
     const biodataId = params.id as string;
     const biodataIdRef = useRef<number | null>(null);
+    const hasLoadedInitialData = useRef(false);
 
     // Check if this is create mode (id = "new") or edit mode (id = actual ID)
     const isCreateMode = biodataId === "new";
@@ -166,11 +167,11 @@ export default function BiodataForm() {
             nextStep();
             console.log('➡️ Moved to next step');
             
-            // Invalidate cache in the background without waiting
+            // Invalidate cache in the background after step transition completes
             setTimeout(() => {
                 queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
                 console.log('🔄 Cache invalidated in background');
-            }, 0);
+            }, 100);
         },
         onError: (error: unknown) => {
             const stepError = handleApiError(error, 'BiodataEdit');
@@ -228,11 +229,13 @@ export default function BiodataForm() {
         },
     });
 
-    // Load existing data when component mounts
+    // Load existing data when component mounts (only once)
     useEffect(() => {
-        if (existingBiodata && !existingBiodata.redirecting) {
+        if (existingBiodata && !existingBiodata.redirecting && !hasLoadedInitialData.current) {
             biodataIdRef.current = existingBiodata.id;
             loadFormData(existingBiodata);
+            hasLoadedInitialData.current = true;
+            console.log('📊 Initial data loaded, preventing future loads');
         }
     }, [existingBiodata, loadFormData]);
 
