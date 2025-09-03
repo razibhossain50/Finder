@@ -160,24 +160,17 @@ export default function BiodataForm() {
             return result;
         },
         onSuccess: async (data) => {
-            console.log('✅ Step saved successfully, updating cache and moving to next step');
+            console.log('✅ Step saved successfully, moving to next step');
             
-            try {
-                // Invalidate and refetch biodata to update completed steps
-                await queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
-                console.log('🔄 Cache invalidated successfully');
-                
-                // Small delay to ensure UI updates are processed
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                // Move to next step on successful save (no toast for step saves)
-                nextStep();
-                console.log('➡️ Moved to next step');
-            } catch (error) {
-                console.error('❌ Error in onSuccess callback:', error);
-                // Still move to next step even if cache invalidation fails
-                nextStep();
-            }
+            // Move to next step immediately on successful save
+            nextStep();
+            console.log('➡️ Moved to next step');
+            
+            // Invalidate cache in the background without waiting
+            setTimeout(() => {
+                queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
+                console.log('🔄 Cache invalidated in background');
+            }, 0);
         },
         onError: (error: unknown) => {
             const stepError = handleApiError(error, 'BiodataEdit');
@@ -299,6 +292,7 @@ export default function BiodataForm() {
     };
 
     const renderCurrentStep = () => {
+        console.log('🎨 Rendering step:', currentStep);
         switch (currentStep) {
             case 1:
                 return (
@@ -341,6 +335,7 @@ export default function BiodataForm() {
                     />
                 );
             default:
+                console.log('⚠️ Unknown step:', currentStep);
                 return null;
         }
     };
