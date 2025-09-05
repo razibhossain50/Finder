@@ -148,7 +148,7 @@ export function useStepForm(totalSteps: number) {
     setErrors(newErrors);
   };
 
-  const loadFormData = useCallback((data: any) => {
+  const loadFormData = useCallback((data: any, preserveStep: boolean = false) => {
     // Convert old address field names to new field names
     const convertedData = { ...data };
 
@@ -172,6 +172,11 @@ export function useStepForm(totalSteps: number) {
     }));
     // Clear any existing errors when loading data
     setErrors({});
+    
+    // Only reset step if not preserving it (for initial load)
+    if (!preserveStep && data.currentStep) {
+      setCurrentStep(data.currentStep);
+    }
   }, []);
 
   const validateCurrentStep = () => {

@@ -80,8 +80,7 @@ export default function LoginFormRegular() {
                 <Chip
                   color="danger"
                   variant="flat"
-                  className="w-full p-3 h-auto"
-                  startContent={<Sparkles className="w-4 h-4" />}
+                  className="w-full p-3 h-auto whitespace-normal"
                 >
                   {error}
                 </Chip>

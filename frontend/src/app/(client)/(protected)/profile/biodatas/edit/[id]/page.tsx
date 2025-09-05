@@ -167,11 +167,9 @@ export default function BiodataForm() {
             nextStep();
             console.log('➡️ Moved to next step');
             
-            // Invalidate cache in the background after step transition completes
-            setTimeout(() => {
-                queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
-                console.log('🔄 Cache invalidated in background');
-            }, 100);
+            // Don't invalidate cache immediately to prevent step reset
+            // The data is already saved and the step transition is complete
+            // Cache will be invalidated on final submission or page refresh
         },
         onError: (error: unknown) => {
             const stepError = handleApiError(error, 'BiodataEdit');
@@ -233,7 +231,7 @@ export default function BiodataForm() {
     useEffect(() => {
         if (existingBiodata && !existingBiodata.redirecting && !hasLoadedInitialData.current) {
             biodataIdRef.current = existingBiodata.id;
-            loadFormData(existingBiodata);
+            loadFormData(existingBiodata, false); // Don't preserve step for initial load
             hasLoadedInitialData.current = true;
             console.log('📊 Initial data loaded, preventing future loads');
         }
