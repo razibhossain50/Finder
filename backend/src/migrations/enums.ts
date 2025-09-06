@@ -16,7 +16,7 @@ export class CreateEnums {
       DO $$
       BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'biodata_approval_status_enum') THEN
-          CREATE TYPE biodata_approval_status_enum AS ENUM ('pending', 'approved', 'rejected', 'inactive');
+          CREATE TYPE biodata_approval_status_enum AS ENUM ('in_progress', 'pending', 'approved', 'rejected', 'inactive');
         END IF;
       END
       $$;

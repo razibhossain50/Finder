@@ -1,4 +1,5 @@
 export enum BiodataApprovalStatus {
+  IN_PROGRESS = 'in_progress',
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
@@ -11,6 +12,7 @@ export enum BiodataVisibilityStatus {
 }
 
 export const BIODATA_APPROVAL_STATUS_DESCRIPTIONS = {
+  [BiodataApprovalStatus.IN_PROGRESS]: 'Form is being filled - not yet complete',
   [BiodataApprovalStatus.PENDING]: 'Waiting for admin review',
   [BiodataApprovalStatus.APPROVED]: 'Approved by admin - ready to go live',
   [BiodataApprovalStatus.REJECTED]: 'Rejected by admin - needs corrections',
@@ -23,6 +25,12 @@ export const BIODATA_VISIBILITY_STATUS_DESCRIPTIONS = {
 };
 
 export const BIODATA_STATUS_COLORS = {
+  [BiodataApprovalStatus.IN_PROGRESS]: {
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    text: 'text-blue-800',
+    dot: 'bg-blue-500'
+  },
   [BiodataApprovalStatus.PENDING]: {
     bg: 'bg-amber-50',
     border: 'border-amber-200',

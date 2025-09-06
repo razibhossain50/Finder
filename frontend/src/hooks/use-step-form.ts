@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { z } from "zod";
 
 const biodataSchema = z.object({
@@ -122,8 +122,9 @@ const stepSchemas = [
 
 export function useStepForm(totalSteps: number) {
   const [currentStep, setCurrentStep] = useState(1);
+  const currentStepRef = useRef(1);
   const [formData, setFormData] = useState<any>({
-    partnerAgeMin: 25,
+    partnerAgeMin: 18,
     partnerAgeMax: 35,
     sameAsPermanent: false,
   });
@@ -149,6 +150,9 @@ export function useStepForm(totalSteps: number) {
   };
 
   const loadFormData = useCallback((data: any, preserveStep: boolean = false) => {
+    console.log('🔄 loadFormData called with:', { data, preserveStep, currentStep: currentStepRef.current });
+    console.log('📍 loadFormData call stack:', new Error().stack);
+    
     // Convert old address field names to new field names
     const convertedData = { ...data };
 
@@ -166,7 +170,7 @@ export function useStepForm(totalSteps: number) {
       ...prev,
       ...convertedData,
       // Ensure default values are preserved if not in loaded data
-      partnerAgeMin: convertedData.partnerAgeMin || 25,
+      partnerAgeMin: convertedData.partnerAgeMin || 18,
       partnerAgeMax: convertedData.partnerAgeMax || 35,
       sameAsPermanent: convertedData.sameAsPermanent || false,
     }));
@@ -175,7 +179,11 @@ export function useStepForm(totalSteps: number) {
     
     // Only reset step if not preserving it (for initial load)
     if (!preserveStep && data.currentStep) {
+      console.log('⚠️ Resetting step from', currentStepRef.current, 'to', data.currentStep);
       setCurrentStep(data.currentStep);
+      currentStepRef.current = data.currentStep;
+    } else {
+      console.log('✅ Preserving current step:', currentStepRef.current);
     }
   }, []);
 
@@ -308,7 +316,12 @@ export function useStepForm(totalSteps: number) {
     if (currentStep < totalSteps) {
       const newStep = currentStep + 1;
       setCurrentStep(newStep);
+      currentStepRef.current = newStep;
       console.log(`✅ Step changed successfully to ${newStep}`);
+      // Add a small delay to ensure state update is processed
+      setTimeout(() => {
+        console.log(`🔍 Step state after update: ${newStep}`);
+      }, 100);
     } else {
       console.log(`⚠️ Already at last step (${currentStep}), cannot go further`);
     }
@@ -316,13 +329,16 @@ export function useStepForm(totalSteps: number) {
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      currentStepRef.current = newStep;
     }
   };
 
   const goToStep = (step: number) => {
     if (step >= 1 && step <= totalSteps) {
       setCurrentStep(step);
+      currentStepRef.current = step;
     }
   };
 

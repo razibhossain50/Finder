@@ -59,7 +59,7 @@ export class CreateBiodataTable {
         "email" character varying,
         "guardianMobile" character varying,
         "ownMobile" character varying,
-        "biodataApprovalStatus" biodata_approval_status_enum NOT NULL DEFAULT 'pending',
+        "biodataApprovalStatus" biodata_approval_status_enum NOT NULL DEFAULT 'in_progress',
         "biodataVisibilityStatus" biodata_visibility_status_enum NOT NULL DEFAULT 'active',
         "viewCount" integer NOT NULL DEFAULT 0,
         "createdAt" TIMESTAMP NOT NULL DEFAULT now(),

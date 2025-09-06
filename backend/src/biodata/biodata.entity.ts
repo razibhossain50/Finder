@@ -178,7 +178,7 @@ export class Biodata {
   @Column({
     type: 'enum',
     enum: BiodataApprovalStatus,
-    default: BiodataApprovalStatus.PENDING
+    default: BiodataApprovalStatus.IN_PROGRESS
   })
   biodataApprovalStatus: BiodataApprovalStatus;
 
@@ -194,7 +194,7 @@ export class Biodata {
   viewCount: number;
 
   // Get the effective status for public display
-  getEffectiveStatus(): 'active' | 'inactive' | 'pending' | 'rejected' {
+  getEffectiveStatus(): 'active' | 'inactive' | 'in_progress' | 'pending' | 'rejected' {
     // If not approved by admin, show admin approval status
     if (this.biodataApprovalStatus !== BiodataApprovalStatus.APPROVED) {
       return this.biodataApprovalStatus;

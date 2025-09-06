@@ -81,6 +81,15 @@ export const BiodataStatusToggle: React.FC<BiodataStatusToggleProps> = ({
     const colors = BIODATA_STATUS_COLORS[biodataApprovalStatus];
 
     switch (biodataApprovalStatus) {
+      case BiodataApprovalStatus.IN_PROGRESS:
+        return {
+          icon: <RefreshCw className="h-5 w-5 text-blue-500 animate-spin" />,
+          title: "In Progress",
+          description: "Your biodata is being processed",
+          canToggle: false,
+          toggleMessage: "Cannot toggle while in progress"
+        };
+
       case BiodataApprovalStatus.PENDING:
         return {
           icon: <RefreshCw className="h-5 w-5 text-amber-500 animate-spin" />,

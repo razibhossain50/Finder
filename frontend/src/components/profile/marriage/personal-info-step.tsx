@@ -221,11 +221,13 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
             />
             {/* Age Display and Error */}
             {calculatedAge !== null && (
-              <div className="flex items-center justify-between text-sm">
-                {errors.age && (
+              <>
+              {errors.age && (
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-red-500 text-xs">{errors.age}</span>
+                  </div>
                 )}
-              </div>
+                </>
             )}
           </div>
           {/* Height */}

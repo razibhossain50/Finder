@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Metadata } from "next";
 import { Card, CardBody, CardHeader } from '@heroui/react';
 import { Users, FileText } from 'lucide-react';
+import Link from 'next/link';
 import { logger } from '@/lib/logger';
 import { handleApiError } from '@/lib/error-handler';
 import { userService, biodataService } from '@/lib/api-services';
@@ -74,70 +75,74 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* Total Users Card */}
-        <Card className="relative overflow-hidden bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-blue-400/5 to-transparent"></div>
-          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3 pt-6 px-6">
-            <div className="flex flex-col space-y-1">
-              <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Users</h3>
-              <p className="text-xs text-gray-500">Registered members</p>
-            </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
-              <Users className="h-6 w-6 text-white" />
-            </div>
-          </CardHeader>
-          <CardBody className="relative pt-0 pb-6 px-6">
-            <div className="flex flex-col space-y-2">
-              <span className="text-3xl font-bold text-gray-900">
-                {loading ? (
-                  <div className="h-9 w-20 bg-gray-200 animate-pulse rounded"></div>
-                ) : (
-                  stats.totalUsers.toLocaleString()
-                )}
-              </span>
-              
-              <span className="text-xs text-gray-500">
-                {loading ? (
-                  <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
-                ) : (
-                  'All registered accounts'
-                )}
-              </span>
-            </div>
-          </CardBody>
-        </Card>
+        <Link href="/admin/users" className="block">
+          <Card className="relative overflow-hidden bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-blue-400/5 to-transparent"></div>
+            <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3 pt-6 px-6">
+              <div className="flex flex-col space-y-1">
+                <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Users</h3>
+                <p className="text-xs text-gray-500">Registered members</p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+            </CardHeader>
+            <CardBody className="relative pt-0 pb-6 px-6">
+              <div className="flex flex-col space-y-2">
+                <span className="text-3xl font-bold text-gray-900">
+                  {loading ? (
+                    <div className="h-9 w-20 bg-gray-200 animate-pulse rounded"></div>
+                  ) : (
+                    stats.totalUsers.toLocaleString()
+                  )}
+                </span>
+                
+                <span className="text-xs text-gray-500">
+                  {loading ? (
+                    <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
+                  ) : (
+                    'All registered accounts'
+                  )}
+                </span>
+              </div>
+            </CardBody>
+          </Card>
+        </Link>
 
         {/* Total Biodatas Card */}
-        <Card className="relative overflow-hidden bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-green-400/5 to-transparent"></div>
-          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3 pt-6 px-6">
-            <div className="flex flex-col space-y-1">
-              <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Biodatas</h3>
-              <p className="text-xs text-gray-500">Profile submissions</p>
-            </div>
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-md">
-              <FileText className="h-6 w-6 text-white" />
-            </div>
-          </CardHeader>
-          <CardBody className="relative pt-0 pb-6 px-6">
-            <div className="flex flex-col space-y-2">
-              <span className="text-3xl font-bold text-gray-900">
-                {loading ? (
-                  <div className="h-9 w-20 bg-gray-200 animate-pulse rounded"></div>
-                ) : (
-                  stats.totalBiodatas.toLocaleString()
-                )}
-              </span>
-              
-              <span className="text-xs text-gray-500">
-                {loading ? (
-                  <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
-                ) : (
-                  'Complete profiles created'
-                )}
-              </span>
-            </div>
-          </CardBody>
-        </Card>
+        <Link href="/admin/biodatas" className="block">
+          <Card className="relative overflow-hidden bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-green-400/5 to-transparent"></div>
+            <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3 pt-6 px-6">
+              <div className="flex flex-col space-y-1">
+                <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Biodatas</h3>
+                <p className="text-xs text-gray-500">Profile submissions</p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-md">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+            </CardHeader>
+            <CardBody className="relative pt-0 pb-6 px-6">
+              <div className="flex flex-col space-y-2">
+                <span className="text-3xl font-bold text-gray-900">
+                  {loading ? (
+                    <div className="h-9 w-20 bg-gray-200 animate-pulse rounded"></div>
+                  ) : (
+                    stats.totalBiodatas.toLocaleString()
+                  )}
+                </span>
+                
+                <span className="text-xs text-gray-500">
+                  {loading ? (
+                    <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
+                  ) : (
+                    'Complete profiles created'
+                  )}
+                </span>
+              </div>
+            </CardBody>
+          </Card>
+        </Link>
       </div>
       
       {/* Additional Dashboard Content */}

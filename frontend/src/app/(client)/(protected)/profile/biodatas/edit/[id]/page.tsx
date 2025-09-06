@@ -24,6 +24,9 @@ const steps = [
     { title: "Contact Information", subtitle: "Final details" },
 ];
 
+// Total number of steps - can be easily modified to add more steps
+const TOTAL_STEPS = steps.length;
+
 export default function BiodataForm() {
     const queryClient = useQueryClient();
     const router = useRouter();
@@ -41,12 +44,13 @@ export default function BiodataForm() {
         errors,
         nextStep,
         prevStep,
+        goToStep,
         updateFormData,
         validateCurrentStep,
         isLastStep,
         isFirstStep,
         loadFormData,
-    } = useStepForm(5);
+    } = useStepForm(TOTAL_STEPS);
 
     // Query to fetch existing biodata for editing
     const { data: existingBiodata, isLoading, error } = useQuery({
@@ -115,6 +119,13 @@ export default function BiodataForm() {
                 convertedData.permanentDivision = parts[1];
                 convertedData.permanentZilla = parts[2];
                 convertedData.permanentUpazilla = parts[3];
+            } else {
+                // If the format is not as expected, set default values
+                console.warn('Permanent location format not as expected:', data.permanentLocation);
+                convertedData.permanentCountry = 'Bangladesh';
+                convertedData.permanentDivision = 'Dhaka';
+                convertedData.permanentZilla = 'Dhaka';
+                convertedData.permanentUpazilla = 'Dhanmondi';
             }
         }
         
@@ -126,6 +137,13 @@ export default function BiodataForm() {
                 convertedData.presentDivision = parts[1];
                 convertedData.presentZilla = parts[2];
                 convertedData.presentUpazilla = parts[3];
+            } else {
+                // If the format is not as expected, set default values
+                console.warn('Present location format not as expected:', data.presentLocation);
+                convertedData.presentCountry = 'Bangladesh';
+                convertedData.presentDivision = 'Dhaka';
+                convertedData.presentZilla = 'Dhaka';
+                convertedData.presentUpazilla = 'Dhanmondi';
             }
         }
         
@@ -133,25 +151,51 @@ export default function BiodataForm() {
         delete convertedData.permanentLocation;
         delete convertedData.presentLocation;
         
+        console.log('🔄 Converted data for backend:', convertedData);
         return convertedData;
     };
 
     // Mutation for saving step data
     const saveStepMutation = useMutation({
         mutationFn: async ({ stepData, step }: { stepData: Record<string, unknown>; step: number }) => {
+            console.log('🚀 saveStepMutation called with:', { stepData, step });
+            
             // Convert new field names to backend format
             const convertedStepData = convertToBackendFormat(stepData);
             
             // For both create and edit mode, we use PUT /current to update user's biodata
             // This endpoint will create if doesn't exist, or update if exists
+            // Calculate completed steps properly
+            const currentCompletedSteps = existingBiodata?.completedSteps || [];
+            const parsedCurrentCompleted = Array.isArray(currentCompletedSteps) 
+                ? currentCompletedSteps.map((s: any) => {
+                    const num = typeof s === 'string' ? parseInt(s) : s;
+                    return isNaN(num) ? null : num;
+                  }).filter((n: any) => n !== null) as number[]
+                : [];
+            
+            // When completing a step, all previous steps should also be completed
+            // If completing step 3, then steps 1, 2, and 3 should all be marked as completed
+            const allStepsUpToCurrent = Array.from({ length: step }, (_, i) => i + 1);
+            const newCompletedSteps = [...new Set([...parsedCurrentCompleted, ...allStepsUpToCurrent])].sort((a, b) => a - b);
+            
+            // Determine the approval status based on completion
+            const isAllStepsCompleted = newCompletedSteps.length === TOTAL_STEPS && 
+                                      newCompletedSteps.every((s, index) => s === index + 1);
+            
+            const approvalStatus = isAllStepsCompleted ? 'pending' : 'in_progress';
+            
             const payload = {
                 ...convertedStepData,
                 step,
-                completedSteps: step === 1 ? [step] : [...(existingBiodata?.completedSteps || []), step].filter((s, i, arr) => arr.indexOf(s) === i), // Add current step to completed steps
+                completedSteps: newCompletedSteps,
+                biodataApprovalStatus: approvalStatus,
             };
 
+            console.log('📤 Sending payload to backend:', payload);
             const response = await apiRequest("PUT", "/api/biodatas/current", payload);
             const result = await response.json();
+            console.log('📥 Received response from backend:', result);
 
             // Update biodataIdRef if we got an ID back
             if (result.id && !biodataIdRef.current) {
@@ -161,17 +205,15 @@ export default function BiodataForm() {
             return result;
         },
         onSuccess: async (data) => {
-            console.log('✅ Step saved successfully, moving to next step');
-            
+            console.log('✅ saveStepMutation onSuccess called with:', data);
             // Move to next step immediately on successful save
             nextStep();
-            console.log('➡️ Moved to next step');
             
-            // Don't invalidate cache immediately to prevent step reset
-            // The data is already saved and the step transition is complete
-            // Cache will be invalidated on final submission or page refresh
+            // Invalidate the query cache to refresh the biodata data with updated completedSteps
+            queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
         },
         onError: (error: unknown) => {
+            console.log('❌ saveStepMutation onError called with:', error);
             const stepError = handleApiError(error, 'BiodataEdit');
             logger.error('saveStepMutation error', stepError, 'BiodataEdit');
             // No toast for step save errors - user will see validation errors in the form
@@ -188,9 +230,9 @@ export default function BiodataForm() {
             // This ensures the biodata is associated with the current logged-in user
             const payload = {
                 ...convertedData,
-                biodataApprovalStatus: 'pending',
+                biodataApprovalStatus: 'pending', // Final submission always sets to pending
                 biodataVisibilityStatus: 'active',
-                completedSteps: [1, 2, 3, 4, 5], // Mark all steps as completed
+                completedSteps: Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1), // Mark all steps as completed
             };
 
             const response = await apiRequest("PUT", "/api/biodatas/current", payload);
@@ -229,13 +271,40 @@ export default function BiodataForm() {
 
     // Load existing data when component mounts (only once)
     useEffect(() => {
+        console.log('🔄 useEffect triggered:', { 
+            existingBiodata: !!existingBiodata, 
+            redirecting: existingBiodata?.redirecting, 
+            hasLoadedInitialData: hasLoadedInitialData.current,
+            currentStep 
+        });
+        console.log('📍 useEffect call stack:', new Error().stack);
+        
         if (existingBiodata && !existingBiodata.redirecting && !hasLoadedInitialData.current) {
+            console.log('📥 Loading initial biodata data');
             biodataIdRef.current = existingBiodata.id;
+            
+            // Fix completedSteps order if it's out of order
+            if (existingBiodata.completedSteps && Array.isArray(existingBiodata.completedSteps)) {
+                const parsedSteps = existingBiodata.completedSteps.map((s: any) => {
+                    const num = typeof s === 'string' ? parseInt(s) : s;
+                    return isNaN(num) ? null : num;
+                }).filter((n: any) => n !== null) as number[];
+                
+                const sortedSteps = [...parsedSteps].sort((a, b) => a - b);
+                const isOutOfOrder = JSON.stringify(parsedSteps) !== JSON.stringify(sortedSteps);
+                
+                if (isOutOfOrder) {
+                    // Update the completedSteps in the existing data
+                    existingBiodata.completedSteps = sortedSteps;
+                }
+            }
+            
             loadFormData(existingBiodata, false); // Don't preserve step for initial load
             hasLoadedInitialData.current = true;
-            console.log('📊 Initial data loaded, preventing future loads');
+        } else if (existingBiodata && !existingBiodata.redirecting && hasLoadedInitialData.current) {
+            console.log('⚠️ useEffect running again after initial load - this might be causing the step reset!');
         }
-    }, [existingBiodata, loadFormData]);
+    }, [existingBiodata]);
 
     // Show loading state if we're redirecting
     if (existingBiodata?.redirecting) {
@@ -250,26 +319,23 @@ export default function BiodataForm() {
     }
 
     const handleNext = async () => {
-        console.log('🚀 Next button clicked for step', currentStep);
-        console.log('🚀 Current form data:', formData);
-        console.log('🚀 Current errors:', errors);
+        console.log('🔄 handleNext called, currentStep:', currentStep);
         
         // Prevent multiple clicks
         if (saveStepMutation.isPending) {
-            console.log('⏳ Mutation already pending, ignoring click');
+            console.log('⏳ Mutation is pending, skipping');
             return;
         }
         
         const isValid = validateCurrentStep();
-        console.log('🔍 Validation result:', isValid);
-        console.log('🔍 Errors after validation:', errors);
+        console.log('✅ Validation result:', isValid);
         
         if (!isValid) {
-            console.log('❌ Validation failed, stopping navigation');
+            console.log('❌ Validation failed, stopping');
             return; // Stop here if validation fails
         }
 
-        console.log('✅ Validation passed, saving step data');
+        console.log('🚀 Calling saveStepMutation.mutate');
         // Save current step data - nextStep() will be called in onSuccess callback
         saveStepMutation.mutate({
             stepData: formData,
@@ -292,8 +358,46 @@ export default function BiodataForm() {
         }
     };
 
+    const handleStepClick = (stepNumber: number) => {
+        // Ensure completedSteps is always an array of numbers in correct order
+        let completedSteps: number[] = [];
+        if (existingBiodata?.completedSteps) {
+            if (Array.isArray(existingBiodata.completedSteps)) {
+                // Handle array of strings or numbers
+                completedSteps = existingBiodata.completedSteps.map((s: any) => {
+                    const num = typeof s === 'string' ? parseInt(s) : s;
+                    return isNaN(num) ? null : num;
+                }).filter((n: any) => n !== null) as number[];
+            } else if (typeof existingBiodata.completedSteps === 'string') {
+                // Parse string representation of array
+                try {
+                    const parsed = JSON.parse(existingBiodata.completedSteps);
+                    if (Array.isArray(parsed)) {
+                        completedSteps = parsed.map((s: any) => {
+                            const num = typeof s === 'string' ? parseInt(s) : s;
+                            return isNaN(num) ? null : num;
+                        }).filter((n: any) => n !== null) as number[];
+                    }
+                } catch (e) {
+                    // If JSON parsing fails, try splitting by comma
+                    completedSteps = existingBiodata.completedSteps.split(',').map((s: string) => parseInt(s.trim())).filter((n: number) => !isNaN(n));
+                }
+            } else if (typeof existingBiodata.completedSteps === 'number') {
+                // If it's a single number, convert to array
+                completedSteps = [existingBiodata.completedSteps];
+            }
+        }
+        
+        // Always sort to ensure correct order
+        completedSteps = completedSteps.sort((a, b) => a - b);
+        
+        // Only allow navigation to completed steps or the current step
+        if (completedSteps.includes(stepNumber) || stepNumber === currentStep) {
+            goToStep(stepNumber);
+        }
+    };
+
     const renderCurrentStep = () => {
-        console.log('🎨 Rendering step:', currentStep);
         switch (currentStep) {
             case 1:
                 return (
@@ -336,7 +440,6 @@ export default function BiodataForm() {
                     />
                 );
             default:
-                console.log('⚠️ Unknown step:', currentStep);
                 return null;
         }
     };
@@ -402,8 +505,10 @@ export default function BiodataForm() {
                     steps={steps}
                     currentStep={currentStep}
                     completedSteps={existingBiodata?.completedSteps || []}
+                    onStepClick={handleStepClick}
                     className="mb-8"
                 />
+                
 
                 {/* Form Content */}
                 <Card className="shadow-sm">
@@ -449,10 +554,7 @@ export default function BiodataForm() {
                             ) : (
                                 <Button
                                     color="primary"
-                                    onClick={() => {
-                                        console.log('🔘 Next button clicked, current step:', currentStep);
-                                        handleNext();
-                                    }}
+                                    onClick={handleNext}
                                     isDisabled={saveStepMutation.isPending}
                                     endContent={<ChevronRight className="w-4 h-4" />}
                                 >

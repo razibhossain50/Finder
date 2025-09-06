@@ -1,4 +1,5 @@
 export enum BiodataApprovalStatus {
+  IN_PROGRESS = 'in_progress',
   PENDING = 'pending',
   APPROVED = 'approved', 
   REJECTED = 'rejected',
@@ -6,6 +7,7 @@ export enum BiodataApprovalStatus {
 }
 
 export const BIODATA_APPROVAL_STATUS_DESCRIPTIONS = {
+  [BiodataApprovalStatus.IN_PROGRESS]: 'Form is being filled - not yet complete',
   [BiodataApprovalStatus.PENDING]: 'Waiting for admin review',
   [BiodataApprovalStatus.APPROVED]: 'Approved by admin - ready to go live',
   [BiodataApprovalStatus.REJECTED]: 'Rejected by admin - needs corrections',
