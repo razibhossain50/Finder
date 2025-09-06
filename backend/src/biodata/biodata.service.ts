@@ -192,30 +192,74 @@ export class BiodataService {
     try {
       console.log('=== updateByUserId called ===');
       console.log('userId:', userId);
+      console.log('updateBiodataDto type:', typeof updateBiodataDto);
+      console.log('updateBiodataDto keys:', Object.keys(updateBiodataDto || {}));
       console.log('updateBiodataDto:', JSON.stringify(updateBiodataDto, null, 2));
 
+      // Validate userId
+      if (!userId || typeof userId !== 'number') {
+        throw new Error(`Invalid userId: ${userId}`);
+      }
+
       // First check if user has existing biodata
+      console.log('Checking for existing biodata...');
       const existingBiodata = await this.findByUserId(userId);
       console.log('existingBiodata found:', !!existingBiodata);
+      if (existingBiodata) {
+        console.log('existingBiodata ID:', existingBiodata.id);
+      }
 
       if (existingBiodata) {
         // Update existing biodata
         console.log('Updating existing biodata with ID:', existingBiodata.id);
-        await this.biodataRepository.update(existingBiodata.id, updateBiodataDto);
+        console.log('Update data being sent to repository:', updateBiodataDto);
+        
+        // Filter out undefined values to avoid database issues
+        const filteredUpdateData = Object.fromEntries(
+          Object.entries(updateBiodataDto).filter(([_, value]) => value !== undefined)
+        );
+        console.log('Filtered update data:', filteredUpdateData);
+        
+        await this.biodataRepository.update(existingBiodata.id, filteredUpdateData);
         const result = await this.findOneInternal(existingBiodata.id);
         console.log('Update successful, returning result');
         return result;
       } else {
         // Create new biodata if none exists
         console.log('Creating new biodata');
-        const biodata = this.biodataRepository.create({ ...updateBiodataDto, userId });
+        
+        // Filter out undefined values and ensure userId is set
+        const createData = { ...updateBiodataDto, userId };
+        const filteredCreateData = Object.fromEntries(
+          Object.entries(createData).filter(([_, value]) => value !== undefined)
+        );
+        console.log('Create data being sent to repository:', filteredCreateData);
+        
+        const biodata = this.biodataRepository.create(filteredCreateData);
+        console.log('Created biodata entity:', biodata);
+        
         const result = await this.biodataRepository.save(biodata);
         console.log('Create successful, returning result');
         return result;
       }
     } catch (error) {
       console.error('Error in updateByUserId:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
       console.error('Error stack:', error.stack);
+      
+      // Provide more specific error messages
+      if (error.code === '23505') {
+        throw new Error('Duplicate entry: A biodata with this information already exists');
+      } else if (error.code === '23503') {
+        throw new Error('Foreign key constraint violation: Invalid user reference');
+      } else if (error.code === '23502') {
+        throw new Error('Not null constraint violation: Required field is missing');
+      } else if (error.code === '23514') {
+        throw new Error('Check constraint violation: Invalid data format');
+      }
+      
       throw error;
     }
   }

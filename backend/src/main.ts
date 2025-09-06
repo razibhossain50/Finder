@@ -7,6 +7,7 @@ import { AppModule } from './app.module';
 import { AuthService } from './auth/auth.service';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -22,6 +23,9 @@ async function bootstrap() {
     forbidNonWhitelisted: false, // Temporarily allow unknown properties
     transform: true,
   }));
+
+  // Enable global exception filter
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   // Set global prefix for all routes
   app.setGlobalPrefix('api');

@@ -41,7 +41,7 @@ import { UploadModule } from './upload/upload.module';
           // Add connection pool settings
           max: 10,
           idleTimeoutMillis: 30000,
-          connectionTimeoutMillis: 2000,
+          connectionTimeoutMillis: 10000, // Increased from 2000 to 10000ms
         }
       }),
     }),

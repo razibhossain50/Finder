@@ -8,123 +8,160 @@ export class CreateBiodataDto {
   step?: number;
 
   @IsNumber()
-  partnerAgeMin: number;
+  @IsOptional()
+  partnerAgeMin?: number;
 
   @IsNumber()
-  partnerAgeMax: number;
+  @IsOptional()
+  partnerAgeMax?: number;
 
   @IsBoolean()
   @IsOptional()
   sameAsPermanent?: boolean;
 
   @IsString()
-  religion: string;
+  @IsOptional()
+  religion?: string;
 
   @IsString()
-  biodataType: string;
+  @IsOptional()
+  biodataType?: string;
 
   @IsString()
-  maritalStatus: string;
+  @IsOptional()
+  maritalStatus?: string;
 
   @IsString()
-  dateOfBirth: string;
+  @IsOptional()
+  dateOfBirth?: string;
 
   @IsNumber()
-  age: number;
+  @IsOptional()
+  age?: number;
 
   @IsString()
-  height: string;
+  @IsOptional()
+  height?: string;
 
   @IsNumber()
-  weight: number;
+  @IsOptional()
+  weight?: number;
 
   @IsString()
-  complexion: string;
+  @IsOptional()
+  complexion?: string;
 
   @IsString()
-  profession: string;
+  @IsOptional()
+  profession?: string;
 
   @IsString()
-  bloodGroup: string;
+  @IsOptional()
+  bloodGroup?: string;
 
   @IsString()
-  permanentCountry: string;
+  @IsOptional()
+  permanentCountry?: string;
 
   @IsString()
-  permanentDivision: string;
+  @IsOptional()
+  permanentDivision?: string;
 
   @IsString()
-  permanentZilla: string;
+  @IsOptional()
+  permanentZilla?: string;
 
   @IsString()
-  permanentUpazilla: string;
+  @IsOptional()
+  permanentUpazilla?: string;
 
   @IsString()
-  permanentArea: string;
+  @IsOptional()
+  permanentArea?: string;
 
   @IsString()
-  presentCountry: string;
+  @IsOptional()
+  presentCountry?: string;
 
   @IsString()
-  presentDivision: string;
+  @IsOptional()
+  presentDivision?: string;
 
   @IsString()
-  presentZilla: string;
+  @IsOptional()
+  presentZilla?: string;
 
   @IsString()
-  presentUpazilla: string;
+  @IsOptional()
+  presentUpazilla?: string;
 
   @IsString()
-  presentArea: string;
+  @IsOptional()
+  presentArea?: string;
 
   @IsString()
-  healthIssues: string;
+  @IsOptional()
+  healthIssues?: string;
 
   @IsString()
-  educationMedium: string;
+  @IsOptional()
+  educationMedium?: string;
 
   @IsString()
-  highestEducation: string;
+  @IsOptional()
+  highestEducation?: string;
 
   @IsString()
-  instituteName: string;
+  @IsOptional()
+  instituteName?: string;
 
   @IsString()
   @IsOptional()
   subject?: string;
 
   @IsNumber()
-  passingYear: number;
+  @IsOptional()
+  passingYear?: number;
 
   @IsString()
-  result: string;
+  @IsOptional()
+  result?: string;
 
   @IsString()
-  economicCondition: string;
+  @IsOptional()
+  economicCondition?: string;
 
   @IsString()
-  fatherName: string;
+  @IsOptional()
+  fatherName?: string;
 
   @IsString()
-  fatherProfession: string;
+  @IsOptional()
+  fatherProfession?: string;
 
   @IsString()
-  fatherAlive: string;
+  @IsOptional()
+  fatherAlive?: string;
 
   @IsString()
-  motherName: string;
+  @IsOptional()
+  motherName?: string;
 
   @IsString()
-  motherProfession: string;
+  @IsOptional()
+  motherProfession?: string;
 
   @IsString()
-  motherAlive: string;
+  @IsOptional()
+  motherAlive?: string;
 
   @IsNumber()
-  brothersCount: number;
+  @IsOptional()
+  brothersCount?: number;
 
   @IsNumber()
-  sistersCount: number;
+  @IsOptional()
+  sistersCount?: number;
 
   @IsString()
   @IsOptional()
@@ -155,20 +192,24 @@ export class CreateBiodataDto {
   partnerDetails?: string;
 
   @IsString()
-  fullName: string;
+  @IsOptional()
+  fullName?: string;
 
   @IsString()
   @IsOptional()
   profilePicture?: string;
 
   @IsString()
-  email: string;
+  @IsOptional()
+  email?: string;
 
   @IsString()
-  guardianMobile: string;
+  @IsOptional()
+  guardianMobile?: string;
 
   @IsString()
-  ownMobile: string;
+  @IsOptional()
+  ownMobile?: string;
 
   @IsOptional()
   completedSteps?: number[];

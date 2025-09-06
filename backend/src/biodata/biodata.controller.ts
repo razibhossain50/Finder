@@ -157,18 +157,31 @@ export class BiodataController {
     console.log('Update data keys:', Object.keys(updateBiodataDto || {}));
 
     if (!user?.id) {
+      console.error('Controller: No user ID found in JWT payload');
       throw new Error('User authentication required');
     }
 
+    // Validate user ID type
+    if (typeof user.id !== 'number') {
+      console.error('Controller: Invalid user ID type:', typeof user.id, user.id);
+      throw new Error('Invalid user ID format');
+    }
+
     try {
+      console.log('Controller: Calling service with userId:', user.id);
       const result = await this.biodataService.updateByUserId(user.id, updateBiodataDto);
-      console.log('Controller: Update successful');
+      console.log('Controller: Update successful, result:', result);
       return result;
     } catch (error) {
       console.error('Controller: Error updating biodata:', error);
+      console.error('Controller: Error name:', error.name);
       console.error('Controller: Error message:', error.message);
+      console.error('Controller: Error code:', error.code);
       console.error('Controller: Error stack:', error.stack);
-      throw error;
+      
+      // Re-throw with more context
+      const errorMessage = error.message || 'Unknown error occurred';
+      throw new Error(`Failed to update biodata: ${errorMessage}`);
     }
   }
 
