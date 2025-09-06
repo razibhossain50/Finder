@@ -177,8 +177,8 @@ export function useStepForm(totalSteps: number) {
     // Clear any existing errors when loading data
     setErrors({});
     
-    // Only reset step if not preserving it (for initial load)
-    if (!preserveStep && data.currentStep) {
+    // Only reset step if not preserving it (for initial load) and we're at step 1
+    if (!preserveStep && data.currentStep && currentStepRef.current === 1) {
       console.log('⚠️ Resetting step from', currentStepRef.current, 'to', data.currentStep);
       setCurrentStep(data.currentStep);
       currentStepRef.current = data.currentStep;

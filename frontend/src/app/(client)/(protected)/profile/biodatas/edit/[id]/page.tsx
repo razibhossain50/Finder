@@ -206,11 +206,38 @@ export default function BiodataForm() {
         },
         onSuccess: async (data) => {
             console.log('✅ saveStepMutation onSuccess called with:', data);
-            // Move to next step immediately on successful save
+            
+            // Store the current step before moving to next
+            const completedStep = currentStep;
+            const nextStepNumber = currentStep + 1;
+            
+            // Move to next step
             nextStep();
             
-            // Invalidate the query cache to refresh the biodata data with updated completedSteps
-            queryClient.invalidateQueries({ queryKey: ['biodata', biodataId] });
+            // Update the query cache to reflect the completed step and new current step
+            queryClient.setQueryData(['biodata', biodataId], (oldData: any) => {
+                if (!oldData) return oldData;
+                
+                // Calculate the new completedSteps based on the completed step
+                const currentCompletedSteps = oldData.completedSteps || [];
+                const parsedCurrentCompleted = Array.isArray(currentCompletedSteps) 
+                    ? currentCompletedSteps.map((s: any) => {
+                        const num = typeof s === 'string' ? parseInt(s) : s;
+                        return isNaN(num) ? null : num;
+                      }).filter((n: any) => n !== null) as number[]
+                    : [];
+                
+                // When completing a step, all previous steps should also be completed
+                const allStepsUpToCompleted = Array.from({ length: completedStep }, (_, i) => i + 1);
+                const newCompletedSteps = [...new Set([...parsedCurrentCompleted, ...allStepsUpToCompleted])].sort((a, b) => a - b);
+                
+                return {
+                    ...oldData,
+                    ...data,
+                    completedSteps: newCompletedSteps,
+                    step: nextStepNumber // The new current step
+                };
+            });
         },
         onError: (error: unknown) => {
             console.log('❌ saveStepMutation onError called with:', error);
@@ -240,11 +267,22 @@ export default function BiodataForm() {
             return result;
         },
         onSuccess: (data) => {
+            // Update the query cache to reflect the final submission
+            queryClient.setQueryData(['biodata', biodataId], (oldData: any) => {
+                if (!oldData) return data;
+                return {
+                    ...oldData,
+                    ...data,
+                    completedSteps: Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1),
+                    biodataApprovalStatus: 'pending',
+                    biodataVisibilityStatus: 'active'
+                };
+            });
+            
             // Show HeroUI success toast
             addToast({
                 title: "Success!",
                 color: "success",
-
                 description: isCreateMode
                     ? "Your biodata has been created and submitted successfully!"
                     : "Your biodata has been updated and submitted successfully!",
@@ -304,7 +342,7 @@ export default function BiodataForm() {
         } else if (existingBiodata && !existingBiodata.redirecting && hasLoadedInitialData.current) {
             console.log('⚠️ useEffect running again after initial load - this might be causing the step reset!');
         }
-    }, [existingBiodata]);
+    }, [existingBiodata?.id, existingBiodata?.redirecting]); // Only depend on stable values
 
     // Show loading state if we're redirecting
     if (existingBiodata?.redirecting) {
