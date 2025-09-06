@@ -177,11 +177,13 @@ export function useStepForm(totalSteps: number) {
     // Clear any existing errors when loading data
     setErrors({});
     
-    // Only reset step if not preserving it (for initial load) and we're at step 1
-    if (!preserveStep && data.currentStep && currentStepRef.current === 1) {
-      console.log('⚠️ Resetting step from', currentStepRef.current, 'to', data.currentStep);
-      setCurrentStep(data.currentStep);
-      currentStepRef.current = data.currentStep;
+    // Only reset step if not preserving it (for initial load)
+    // Check both 'step' and 'currentStep' fields for backward compatibility
+    const stepToLoad = data.step || data.currentStep;
+    if (!preserveStep && stepToLoad) {
+      console.log('⚠️ Resetting step from', currentStepRef.current, 'to', stepToLoad);
+      setCurrentStep(stepToLoad);
+      currentStepRef.current = stepToLoad;
     } else {
       console.log('✅ Preserving current step:', currentStepRef.current);
     }
@@ -222,7 +224,7 @@ export function useStepForm(totalSteps: number) {
         // Special validation for age
         if (validationData.age === undefined || validationData.age === null) {
           console.log(`❌ Validation failed: Age is missing`, { age: validationData.age });
-          setErrors({ dateOfBirth: 'Please enter a valid date of birth to calculate your age' });
+          setErrors({ age: 'Please enter a valid date of birth to calculate your age' });
           return false;
         }
 

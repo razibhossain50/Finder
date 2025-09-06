@@ -174,10 +174,9 @@ export default function BiodataForm() {
                   }).filter((n: any) => n !== null) as number[]
                 : [];
             
-            // When completing a step, all previous steps should also be completed
-            // If completing step 3, then steps 1, 2, and 3 should all be marked as completed
-            const allStepsUpToCurrent = Array.from({ length: step }, (_, i) => i + 1);
-            const newCompletedSteps = [...new Set([...parsedCurrentCompleted, ...allStepsUpToCurrent])].sort((a, b) => a - b);
+            // When completing a step, mark only the current step as completed
+            // This ensures that each step is only marked complete when actually completed
+            const newCompletedSteps = [...new Set([...parsedCurrentCompleted, step])].sort((a, b) => a - b);
             
             // Determine the approval status based on completion
             const isAllStepsCompleted = newCompletedSteps.length === TOTAL_STEPS && 
@@ -227,9 +226,8 @@ export default function BiodataForm() {
                       }).filter((n: any) => n !== null) as number[]
                     : [];
                 
-                // When completing a step, all previous steps should also be completed
-                const allStepsUpToCompleted = Array.from({ length: completedStep }, (_, i) => i + 1);
-                const newCompletedSteps = [...new Set([...parsedCurrentCompleted, ...allStepsUpToCompleted])].sort((a, b) => a - b);
+                // When completing a step, mark only the completed step as completed
+                const newCompletedSteps = [...new Set([...parsedCurrentCompleted, completedStep])].sort((a, b) => a - b);
                 
                 return {
                     ...oldData,
@@ -429,9 +427,48 @@ export default function BiodataForm() {
         // Always sort to ensure correct order
         completedSteps = completedSteps.sort((a, b) => a - b);
         
-        // Only allow navigation to completed steps or the current step
-        if (completedSteps.includes(stepNumber) || stepNumber === currentStep) {
+        // Apply the same enhanced fallback logic as StepIndicator
+        const getEffectiveCompletedSteps = () => {
+            let effective = [...completedSteps];
+            
+            // If we have any completed steps, we can infer that previous steps are also completed
+            if (completedSteps.length > 0) {
+                const maxCompletedStep = Math.max(...completedSteps);
+                // Add all steps from 1 to the max completed step
+                for (let i = 1; i <= maxCompletedStep; i++) {
+                    if (!effective.includes(i)) {
+                        effective.push(i);
+                    }
+                }
+            }
+            
+            // If current step is higher than any completed step, consider previous steps as completed
+            if (currentStep > 1) {
+                for (let i = 1; i < currentStep; i++) {
+                    if (!effective.includes(i)) {
+                        effective.push(i);
+                    }
+                }
+            }
+            
+            return effective.sort((a, b) => a - b);
+        };
+        
+        const effectiveCompletedSteps = getEffectiveCompletedSteps();
+        
+        // Allow navigation to completed steps or the current step
+        console.log('🎯 Step click debug:', {
+            stepNumber,
+            currentStep,
+            completedSteps,
+            effectiveCompletedSteps,
+            canNavigate: effectiveCompletedSteps.includes(stepNumber) || stepNumber === currentStep
+        });
+        
+        if (effectiveCompletedSteps.includes(stepNumber) || stepNumber === currentStep) {
             goToStep(stepNumber);
+        } else {
+            console.log('❌ Navigation blocked for step:', stepNumber);
         }
     };
 

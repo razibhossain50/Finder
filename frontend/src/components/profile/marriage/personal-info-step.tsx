@@ -80,13 +80,17 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
 
       // Check if the date is valid
       if (isNaN(dob.getTime())) {
+        console.log('❌ Invalid date format');
         setCalculatedAge(null);
+        updateData({ age: undefined });
         return;
       }
 
       // Check if the date is in the future
       if (dob > today) {
+        console.log('❌ Date of birth cannot be in the future');
         setCalculatedAge(null);
+        updateData({ age: undefined });
         return;
       }
 
@@ -97,6 +101,14 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
         age--;
       }
 
+      // Check for reasonable age range
+      if (age < 0 || age > 120) {
+        console.log('❌ Age is outside reasonable range:', age);
+        setCalculatedAge(null);
+        updateData({ age: undefined });
+        return;
+      }
+
       setCalculatedAge(age);
       // Update age in form data only if it's different and valid
       if (data.age !== age && age >= 0) {
@@ -104,9 +116,10 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
         updateData({ age });
       }
     } else {
-      // Only clear if we had a calculated age before
-      if (calculatedAge !== null) {
-        setCalculatedAge(null);
+      // Clear calculated age and form age when date of birth is empty
+      setCalculatedAge(null);
+      if (data.age !== undefined) {
+        updateData({ age: undefined });
       }
     }
   }, [data.dateOfBirth]); // Removed updateData from dependencies to prevent infinite loops
@@ -221,13 +234,14 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
             />
             {/* Age Display and Error */}
             {calculatedAge !== null && (
-              <>
-              {errors.age && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-red-500 text-xs">{errors.age}</span>
-                  </div>
-                )}
-                </>
+              <div className="text-sm text-green-600 font-medium">
+                Age: {calculatedAge} years
+              </div>
+            )}
+            {errors.age && (
+              <div className="text-sm text-red-500">
+                {errors.age}
+              </div>
             )}
           </div>
           {/* Height */}

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { memo } from "react";
 
 interface Step {
   title: string;
@@ -14,8 +15,7 @@ interface StepIndicatorProps {
   onStepClick?: (stepNumber: number) => void;
 }
 
-export function StepIndicator({ steps, currentStep, completedSteps = [], className, onStepClick }: StepIndicatorProps) {
-  console.log('🎯 StepIndicator rendered with:', { currentStep, completedSteps });
+const StepIndicatorComponent = ({ steps, currentStep, completedSteps = [], className, onStepClick }: StepIndicatorProps) => {
   const currentStepInfo = steps[currentStep - 1];
   
   // Ensure completedSteps is always an array of numbers in correct order
@@ -50,6 +50,45 @@ export function StepIndicator({ steps, currentStep, completedSteps = [], classNa
   };
   
   const parsedCompletedSteps = parseCompletedSteps(completedSteps);
+  
+  // Enhanced fallback logic: Determine which steps should be considered completed
+  // 1. Include steps explicitly marked as completed in backend data
+  // 2. Include steps that are logically completed based on current progress
+  const getEffectiveCompletedSteps = () => {
+    let effective = [...parsedCompletedSteps];
+    
+    // If we have any completed steps, we can infer that previous steps are also completed
+    if (parsedCompletedSteps.length > 0) {
+      const maxCompletedStep = Math.max(...parsedCompletedSteps);
+      // Add all steps from 1 to the max completed step
+      for (let i = 1; i <= maxCompletedStep; i++) {
+        if (!effective.includes(i)) {
+          effective.push(i);
+        }
+      }
+    }
+    
+    // If current step is higher than any completed step, consider previous steps as completed
+    if (currentStep > 1) {
+      for (let i = 1; i < currentStep; i++) {
+        if (!effective.includes(i)) {
+          effective.push(i);
+        }
+      }
+    }
+    
+    return effective.sort((a, b) => a - b);
+  };
+  
+  const effectiveCompletedSteps = getEffectiveCompletedSteps();
+  
+  // Debug logging to help understand the completed steps logic
+  console.log('🎯 StepIndicator completed steps debug:', {
+    currentStep,
+    parsedCompletedSteps,
+    effectiveCompletedSteps,
+    maxCompleted: parsedCompletedSteps.length > 0 ? Math.max(...parsedCompletedSteps) : 0
+  });
 
   return (
     <div className={cn("w-full", className)}>
@@ -69,7 +108,7 @@ export function StepIndicator({ steps, currentStep, completedSteps = [], classNa
         {steps.map((step, index) => {
           const stepNumber = index + 1;
           const isActive = stepNumber === currentStep;
-          const isCompleted = parsedCompletedSteps.includes(stepNumber);
+          const isCompleted = effectiveCompletedSteps.includes(stepNumber);
           const isClickable = (isCompleted || stepNumber === currentStep) && onStepClick;
 
           const handleStepClick = () => {
@@ -109,7 +148,7 @@ export function StepIndicator({ steps, currentStep, completedSteps = [], classNa
                 <div
                   className={cn(
                     "h-0.5 w-4 md:w-16 lg:w-20 mx-2 transition-colors duration-200",
-                    parsedCompletedSteps.includes(stepNumber + 1) ? "bg-green-600" : "bg-gray-300"
+                    effectiveCompletedSteps.includes(stepNumber + 1) ? "bg-green-600" : "bg-gray-300"
                   )}
                 />
               )}
@@ -121,4 +160,7 @@ export function StepIndicator({ steps, currentStep, completedSteps = [], classNa
 
     </div>
   );
-}
+};
+
+// Memoize the component to prevent unnecessary re-renders
+export const StepIndicator = memo(StepIndicatorComponent);
