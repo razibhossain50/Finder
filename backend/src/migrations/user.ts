@@ -2,8 +2,13 @@ export class CreateUserTable {
   name = 'CreateUserTable';
 
   async up(queryRunner: any): Promise<void> {
+    // Drop existing table to ensure clean creation
     await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS "user" (
+      DROP TABLE IF EXISTS "user" CASCADE;
+    `);
+
+    await queryRunner.query(`
+      CREATE TABLE "user" (
         "id" SERIAL NOT NULL,
         "fullName" character varying,
         "email" character varying NOT NULL,
@@ -28,6 +33,10 @@ export class CreateUserTable {
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "IDX_user_google_id" ON "user" ("googleId") WHERE "googleId" IS NOT NULL;
     `);
+  }
+
+  async down(queryRunner: any): Promise<void> {
+    await queryRunner.query(`DROP TABLE IF EXISTS "user" CASCADE;`);
   }
 }
 

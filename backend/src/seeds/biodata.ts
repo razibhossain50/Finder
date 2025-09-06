@@ -105,7 +105,7 @@ export async function seedBiodata(dataSource: any): Promise<void> {
     'Looking for a kind and supportive partner',
     '01700000000',
     '01800000000',
-    'pending',
+    'in_progress',
     'active'
   ]);
 }

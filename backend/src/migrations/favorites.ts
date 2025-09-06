@@ -2,8 +2,13 @@ export class CreateFavoritesTable {
   name = 'CreateFavoritesTable';
 
   async up(queryRunner: any): Promise<void> {
+    // Drop existing table to ensure clean creation
     await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS "favorites" (
+      DROP TABLE IF EXISTS "favorites" CASCADE;
+    `);
+
+    await queryRunner.query(`
+      CREATE TABLE "favorites" (
         "id" SERIAL NOT NULL,
         "userId" integer NOT NULL,
         "biodataId" integer NOT NULL,
@@ -53,6 +58,10 @@ export class CreateFavoritesTable {
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "IDX_favorites_biodata_id" ON "favorites" ("biodataId");
     `);
+  }
+
+  async down(queryRunner: any): Promise<void> {
+    await queryRunner.query(`DROP TABLE IF EXISTS "favorites" CASCADE;`);
   }
 }
 

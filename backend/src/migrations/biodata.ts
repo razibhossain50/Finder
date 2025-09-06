@@ -2,8 +2,13 @@ export class CreateBiodataTable {
   name = 'CreateBiodataTable';
 
   async up(queryRunner: any): Promise<void> {
+    // First, check if the table exists and drop it if it does to ensure clean creation
     await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS "biodata" (
+      DROP TABLE IF EXISTS "biodata" CASCADE;
+    `);
+
+    await queryRunner.query(`
+      CREATE TABLE "biodata" (
         "id" SERIAL NOT NULL,
         "step" integer NOT NULL DEFAULT 1,
         "userId" integer,
@@ -93,6 +98,10 @@ export class CreateBiodataTable {
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "IDX_biodata_visibility_status" ON "biodata" ("biodataVisibilityStatus");
     `);
+  }
+
+  async down(queryRunner: any): Promise<void> {
+    await queryRunner.query(`DROP TABLE IF EXISTS "biodata" CASCADE;`);
   }
 }
 

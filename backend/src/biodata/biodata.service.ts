@@ -214,10 +214,28 @@ export class BiodataService {
         console.log('Updating existing biodata with ID:', existingBiodata.id);
         console.log('Update data being sent to repository:', updateBiodataDto);
         
-        // Filter out undefined values to avoid database issues
+        // Filter out undefined values and validate enum values
         const filteredUpdateData = Object.fromEntries(
           Object.entries(updateBiodataDto).filter(([_, value]) => value !== undefined)
         );
+        
+        // Validate and fix enum values
+        if (filteredUpdateData.biodataApprovalStatus && typeof filteredUpdateData.biodataApprovalStatus === 'string') {
+          const validApprovalStatuses = ['in_progress', 'pending', 'approved', 'rejected', 'inactive'];
+          if (!validApprovalStatuses.includes(filteredUpdateData.biodataApprovalStatus)) {
+            console.warn('Invalid biodataApprovalStatus:', filteredUpdateData.biodataApprovalStatus, 'setting to in_progress');
+            filteredUpdateData.biodataApprovalStatus = 'in_progress';
+          }
+        }
+        
+        if (filteredUpdateData.biodataVisibilityStatus && typeof filteredUpdateData.biodataVisibilityStatus === 'string') {
+          const validVisibilityStatuses = ['active', 'inactive'];
+          if (!validVisibilityStatuses.includes(filteredUpdateData.biodataVisibilityStatus)) {
+            console.warn('Invalid biodataVisibilityStatus:', filteredUpdateData.biodataVisibilityStatus, 'setting to active');
+            filteredUpdateData.biodataVisibilityStatus = 'active';
+          }
+        }
+        
         console.log('Filtered update data:', filteredUpdateData);
         
         await this.biodataRepository.update(existingBiodata.id, filteredUpdateData);
@@ -233,6 +251,24 @@ export class BiodataService {
         const filteredCreateData = Object.fromEntries(
           Object.entries(createData).filter(([_, value]) => value !== undefined)
         );
+        
+        // Validate and fix enum values
+        if (filteredCreateData.biodataApprovalStatus && typeof filteredCreateData.biodataApprovalStatus === 'string') {
+          const validApprovalStatuses = ['in_progress', 'pending', 'approved', 'rejected', 'inactive'];
+          if (!validApprovalStatuses.includes(filteredCreateData.biodataApprovalStatus)) {
+            console.warn('Invalid biodataApprovalStatus:', filteredCreateData.biodataApprovalStatus, 'setting to in_progress');
+            filteredCreateData.biodataApprovalStatus = 'in_progress';
+          }
+        }
+        
+        if (filteredCreateData.biodataVisibilityStatus && typeof filteredCreateData.biodataVisibilityStatus === 'string') {
+          const validVisibilityStatuses = ['active', 'inactive'];
+          if (!validVisibilityStatuses.includes(filteredCreateData.biodataVisibilityStatus)) {
+            console.warn('Invalid biodataVisibilityStatus:', filteredCreateData.biodataVisibilityStatus, 'setting to active');
+            filteredCreateData.biodataVisibilityStatus = 'active';
+          }
+        }
+        
         console.log('Create data being sent to repository:', filteredCreateData);
         
         const biodata = this.biodataRepository.create(filteredCreateData);

@@ -15,19 +15,13 @@ export class CreateEnums {
     await queryRunner.query(`
       DO $$
       BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'biodata_approval_status_enum') THEN
-          CREATE TYPE biodata_approval_status_enum AS ENUM ('in_progress', 'pending', 'approved', 'rejected', 'inactive');
-        END IF;
-      END
-      $$;
-    `);
-
-    await queryRunner.query(`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'biodata_visibility_status_enum') THEN
-          CREATE TYPE biodata_visibility_status_enum AS ENUM ('active', 'inactive');
-        END IF;
+        -- Drop existing enum types if they exist to ensure clean creation with correct values
+        DROP TYPE IF EXISTS biodata_approval_status_enum CASCADE;
+        DROP TYPE IF EXISTS biodata_visibility_status_enum CASCADE;
+        
+        -- Create enum types with correct values
+        CREATE TYPE biodata_approval_status_enum AS ENUM ('in_progress', 'pending', 'approved', 'rejected', 'inactive');
+        CREATE TYPE biodata_visibility_status_enum AS ENUM ('active', 'inactive');
       END
       $$;
     `);

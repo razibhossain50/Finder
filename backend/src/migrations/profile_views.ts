@@ -2,8 +2,13 @@ export class CreateProfileViewsTable {
   name = 'CreateProfileViewsTable';
 
   async up(queryRunner: any): Promise<void> {
+    // Drop existing table to ensure clean creation
     await queryRunner.query(`
-      CREATE TABLE IF NOT EXISTS "profile_views" (
+      DROP TABLE IF EXISTS "profile_views" CASCADE;
+    `);
+
+    await queryRunner.query(`
+      CREATE TABLE "profile_views" (
         "id" SERIAL NOT NULL,
         "biodataId" integer NOT NULL,
         "viewerId" integer,
@@ -53,6 +58,10 @@ export class CreateProfileViewsTable {
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS "IDX_profile_views_viewed_at" ON "profile_views" ("viewedAt");
     `);
+  }
+
+  async down(queryRunner: any): Promise<void> {
+    await queryRunner.query(`DROP TABLE IF EXISTS "profile_views" CASCADE;`);
   }
 }
 
