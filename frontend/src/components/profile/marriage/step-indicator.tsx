@@ -55,7 +55,7 @@ const StepIndicatorComponent = ({ steps, currentStep, completedSteps = [], class
   // 1. Include steps explicitly marked as completed in backend data
   // 2. Include steps that are logically completed based on current progress
   const getEffectiveCompletedSteps = () => {
-    let effective = [...parsedCompletedSteps];
+    const effective = [...parsedCompletedSteps];
     
     // If we have any completed steps, we can infer that previous steps are also completed
     if (parsedCompletedSteps.length > 0) {
@@ -81,14 +81,6 @@ const StepIndicatorComponent = ({ steps, currentStep, completedSteps = [], class
   };
   
   const effectiveCompletedSteps = getEffectiveCompletedSteps();
-  
-  // Debug logging to help understand the completed steps logic
-  console.log('🎯 StepIndicator completed steps debug:', {
-    currentStep,
-    parsedCompletedSteps,
-    effectiveCompletedSteps,
-    maxCompleted: parsedCompletedSteps.length > 0 ? Math.max(...parsedCompletedSteps) : 0
-  });
 
   return (
     <div className={cn("w-full", className)}>

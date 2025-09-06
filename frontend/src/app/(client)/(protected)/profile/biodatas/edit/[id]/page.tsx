@@ -429,7 +429,7 @@ export default function BiodataForm() {
         
         // Apply the same enhanced fallback logic as StepIndicator
         const getEffectiveCompletedSteps = () => {
-            let effective = [...completedSteps];
+            const effective = [...completedSteps];
             
             // If we have any completed steps, we can infer that previous steps are also completed
             if (completedSteps.length > 0) {
@@ -457,18 +457,8 @@ export default function BiodataForm() {
         const effectiveCompletedSteps = getEffectiveCompletedSteps();
         
         // Allow navigation to completed steps or the current step
-        console.log('🎯 Step click debug:', {
-            stepNumber,
-            currentStep,
-            completedSteps,
-            effectiveCompletedSteps,
-            canNavigate: effectiveCompletedSteps.includes(stepNumber) || stepNumber === currentStep
-        });
-        
         if (effectiveCompletedSteps.includes(stepNumber) || stepNumber === currentStep) {
             goToStep(stepNumber);
-        } else {
-            console.log('❌ Navigation blocked for step:', stepNumber);
         }
     };
 
