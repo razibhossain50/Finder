@@ -10,12 +10,13 @@ interface Step {
 interface StepIndicatorProps {
   steps: Step[];
   currentStep: number;
+  highestStepReached?: number;
   completedSteps?: number[] | string[] | string | number;
   className?: string;
   onStepClick?: (stepNumber: number) => void;
 }
 
-const StepIndicatorComponent = ({ steps, currentStep, completedSteps = [], className, onStepClick }: StepIndicatorProps) => {
+const StepIndicatorComponent = ({ steps, currentStep, highestStepReached = currentStep, completedSteps = [], className, onStepClick }: StepIndicatorProps) => {
   const currentStepInfo = steps[currentStep - 1];
   
   // Ensure completedSteps is always an array of numbers in correct order
@@ -54,6 +55,7 @@ const StepIndicatorComponent = ({ steps, currentStep, completedSteps = [], class
   // Enhanced fallback logic: Determine which steps should be considered completed
   // 1. Include steps explicitly marked as completed in backend data
   // 2. Include steps that are logically completed based on current progress
+  // 3. Use highestStepReached to maintain navigation capability when going back
   const getEffectiveCompletedSteps = () => {
     const effective = [...parsedCompletedSteps];
     
@@ -68,9 +70,10 @@ const StepIndicatorComponent = ({ steps, currentStep, completedSteps = [], class
       }
     }
     
-    // If current step is higher than any completed step, consider previous steps as completed
-    if (currentStep > 1) {
-      for (let i = 1; i < currentStep; i++) {
+    // Consider steps up to the highest step reached in current session as accessible
+    // This is the key improvement: use highestStepReached instead of currentStep
+    if (highestStepReached > 1) {
+      for (let i = 1; i < highestStepReached; i++) {
         if (!effective.includes(i)) {
           effective.push(i);
         }
@@ -101,7 +104,8 @@ const StepIndicatorComponent = ({ steps, currentStep, completedSteps = [], class
           const stepNumber = index + 1;
           const isActive = stepNumber === currentStep;
           const isCompleted = effectiveCompletedSteps.includes(stepNumber);
-          const isClickable = (isCompleted || stepNumber === currentStep) && onStepClick;
+          const isAccessible = isCompleted || stepNumber === currentStep || stepNumber <= highestStepReached;
+          const isClickable = isAccessible && onStepClick;
 
           const handleStepClick = () => {
             if (isClickable) {

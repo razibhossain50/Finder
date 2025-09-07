@@ -123,6 +123,8 @@ const stepSchemas = [
 export function useStepForm(totalSteps: number) {
   const [currentStep, setCurrentStep] = useState(1);
   const currentStepRef = useRef(1);
+  const [highestStepReached, setHighestStepReached] = useState(1);
+  const highestStepReachedRef = useRef(1);
   const [formData, setFormData] = useState<any>({
     partnerAgeMin: 18,
     partnerAgeMax: 35,
@@ -184,6 +186,24 @@ export function useStepForm(totalSteps: number) {
       console.log('⚠️ Resetting step from', currentStepRef.current, 'to', stepToLoad);
       setCurrentStep(stepToLoad);
       currentStepRef.current = stepToLoad;
+      
+      // Set highest step reached based on completed steps or current step
+      const completedSteps = data.completedSteps || [];
+      let maxCompletedStep = 1;
+      
+      if (Array.isArray(completedSteps) && completedSteps.length > 0) {
+        const parsedSteps = completedSteps.map((s: any) => {
+          const num = typeof s === 'string' ? parseInt(s) : s;
+          return isNaN(num) ? 1 : num;
+        });
+        maxCompletedStep = Math.max(...parsedSteps);
+      }
+      
+      // Use the higher of stepToLoad or maxCompletedStep
+      const highestReached = Math.max(stepToLoad, maxCompletedStep);
+      setHighestStepReached(highestReached);
+      highestStepReachedRef.current = highestReached;
+      console.log('📈 Set highest step reached on data load:', highestReached);
     } else {
       console.log('✅ Preserving current step:', currentStepRef.current);
     }
@@ -319,6 +339,14 @@ export function useStepForm(totalSteps: number) {
       const newStep = currentStep + 1;
       setCurrentStep(newStep);
       currentStepRef.current = newStep;
+      
+      // Update highest step reached if we're going to a new step
+      if (newStep > highestStepReached) {
+        setHighestStepReached(newStep);
+        highestStepReachedRef.current = newStep;
+        console.log(`📈 New highest step reached: ${newStep}`);
+      }
+      
       console.log(`✅ Step changed successfully to ${newStep}`);
       // Add a small delay to ensure state update is processed
       setTimeout(() => {
@@ -341,6 +369,13 @@ export function useStepForm(totalSteps: number) {
     if (step >= 1 && step <= totalSteps) {
       setCurrentStep(step);
       currentStepRef.current = step;
+      
+      // Update highest step reached if we're going to a new step
+      if (step > highestStepReached) {
+        setHighestStepReached(step);
+        highestStepReachedRef.current = step;
+        console.log(`📈 New highest step reached via goToStep: ${step}`);
+      }
     }
   };
 
@@ -349,6 +384,7 @@ export function useStepForm(totalSteps: number) {
 
   return {
     currentStep,
+    highestStepReached,
     formData,
     errors,
     updateFormData,

@@ -40,6 +40,7 @@ export default function BiodataForm() {
 
     const {
         currentStep,
+        highestStepReached,
         formData,
         errors,
         nextStep,
@@ -427,14 +428,14 @@ export default function BiodataForm() {
         // Always sort to ensure correct order
         completedSteps = completedSteps.sort((a, b) => a - b);
         
-        // Apply the same enhanced fallback logic as StepIndicator
+        // Enhanced fallback logic that considers both server-side completed steps 
+        // and client-side progress (highest step reached in current session)
         const getEffectiveCompletedSteps = () => {
             const effective = [...completedSteps];
             
-            // If we have any completed steps, we can infer that previous steps are also completed
+            // If we have any completed steps from server, infer that previous steps are also completed
             if (completedSteps.length > 0) {
                 const maxCompletedStep = Math.max(...completedSteps);
-                // Add all steps from 1 to the max completed step
                 for (let i = 1; i <= maxCompletedStep; i++) {
                     if (!effective.includes(i)) {
                         effective.push(i);
@@ -442,9 +443,10 @@ export default function BiodataForm() {
                 }
             }
             
-            // If current step is higher than any completed step, consider previous steps as completed
-            if (currentStep > 1) {
-                for (let i = 1; i < currentStep; i++) {
+            // Consider steps up to the highest step reached in current session as accessible
+            // This is the key fix: use highestStepReached instead of currentStep
+            if (highestStepReached > 1) {
+                for (let i = 1; i < highestStepReached; i++) {
                     if (!effective.includes(i)) {
                         effective.push(i);
                     }
@@ -456,8 +458,17 @@ export default function BiodataForm() {
         
         const effectiveCompletedSteps = getEffectiveCompletedSteps();
         
-        // Allow navigation to completed steps or the current step
-        if (effectiveCompletedSteps.includes(stepNumber) || stepNumber === currentStep) {
+        console.log('🔄 handleStepClick:', {
+            stepNumber,
+            currentStep,
+            highestStepReached,
+            completedSteps,
+            effectiveCompletedSteps,
+            canNavigate: effectiveCompletedSteps.includes(stepNumber) || stepNumber === currentStep
+        });
+        
+        // Allow navigation to completed steps, current step, or if we've reached this step before
+        if (effectiveCompletedSteps.includes(stepNumber) || stepNumber === currentStep || stepNumber <= highestStepReached) {
             goToStep(stepNumber);
         }
     };
@@ -569,6 +580,7 @@ export default function BiodataForm() {
                 <StepIndicator
                     steps={steps}
                     currentStep={currentStep}
+                    highestStepReached={highestStepReached}
                     completedSteps={existingBiodata?.completedSteps || []}
                     onStepClick={handleStepClick}
                     className="mb-8"

@@ -96,7 +96,7 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
           <div className="col-span-2 space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm font-medium">Profile Picture</span>
-              <Tooltip content="Only visible for admin and who bought the connection. Only JPEG/PNG Image">
+              <Tooltip content="profile pic is optional. Only JPEG/PNG Image">
                 <Info className="w-4 h-4 text-slate-400 cursor-help" />
               </Tooltip>
             </div>
@@ -164,7 +164,7 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
 
             <p className="text-xs text-slate-500 flex items-center gap-1">
               <Info className="w-3 h-3" />
-              Only visible for admin and who bought the connection
+              Profile pic is optional. Only JPEG/PNG Image
             </p>
           </div>
 

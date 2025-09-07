@@ -244,7 +244,7 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex  ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+        className={`py-5 flex  ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
           }`}
       >
         <Link className="text-3xl" href="/">

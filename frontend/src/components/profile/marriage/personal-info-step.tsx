@@ -1,7 +1,8 @@
 'use client';
-import { Input, Select, SelectItem, Textarea, Checkbox, Card, CardBody, CardHeader } from "@heroui/react";
+import { Input, Select, SelectItem, Textarea, Checkbox, Card, CardBody, CardHeader, DatePicker } from "@heroui/react";
 import { LocationSelector } from "@/components/form/LocationSelector";
 import { useState, useEffect } from "react";
+import { parseDate, CalendarDate, DateValue } from "@internationalized/date";
 
 interface PersonalInfoStepProps {
   data: Record<string, unknown>;
@@ -75,45 +76,51 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
 
   useEffect(() => {
     if (data.dateOfBirth && typeof data.dateOfBirth === 'string' && data.dateOfBirth.trim() !== '') {
-      const dob = new Date(data.dateOfBirth);
-      const today = new Date();
+      try {
+        const dob = new Date(data.dateOfBirth);
+        const today = new Date();
 
-      // Check if the date is valid
-      if (isNaN(dob.getTime())) {
-        console.log('❌ Invalid date format');
+        // Check if the date is valid
+        if (isNaN(dob.getTime())) {
+          console.log('❌ Invalid date format');
+          setCalculatedAge(null);
+          updateData({ age: undefined });
+          return;
+        }
+
+        // Check if the date is in the future
+        if (dob > today) {
+          console.log('❌ Date of birth cannot be in the future');
+          setCalculatedAge(null);
+          updateData({ age: undefined });
+          return;
+        }
+
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+          age--;
+        }
+
+        // Check for reasonable age range
+        if (age < 0 || age > 120) {
+          console.log('❌ Age is outside reasonable range:', age);
+          setCalculatedAge(null);
+          updateData({ age: undefined });
+          return;
+        }
+
+        setCalculatedAge(age);
+        // Update age in form data only if it's different and valid
+        if (data.age !== age && age >= 0) {
+          console.log(`📅 Age calculated from date of birth: ${age} years`);
+          updateData({ age });
+        }
+      } catch (error) {
+        console.log('❌ Error parsing date:', error);
         setCalculatedAge(null);
         updateData({ age: undefined });
-        return;
-      }
-
-      // Check if the date is in the future
-      if (dob > today) {
-        console.log('❌ Date of birth cannot be in the future');
-        setCalculatedAge(null);
-        updateData({ age: undefined });
-        return;
-      }
-
-      let age = today.getFullYear() - dob.getFullYear();
-      const monthDiff = today.getMonth() - dob.getMonth();
-
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-        age--;
-      }
-
-      // Check for reasonable age range
-      if (age < 0 || age > 120) {
-        console.log('❌ Age is outside reasonable range:', age);
-        setCalculatedAge(null);
-        updateData({ age: undefined });
-        return;
-      }
-
-      setCalculatedAge(age);
-      // Update age in form data only if it's different and valid
-      if (data.age !== age && age >= 0) {
-        console.log(`📅 Age calculated from date of birth: ${age} years`);
-        updateData({ age });
       }
     } else {
       // Clear calculated age and form age when date of birth is empty
@@ -223,14 +230,33 @@ export function PersonalInfoStep({ data, errors, updateData }: PersonalInfoStepP
 
           {/* Date of Birth */}
           <div className="space-y-2.5">
-            <Input
-              type="date"
+            <DatePicker
               label="Date of Birth"
-              value={(data.dateOfBirth as string) || ""}
-              onChange={(e) => updateData({ dateOfBirth: e.target.value })}
+              value={(() => {
+                try {
+                  return data.dateOfBirth && typeof data.dateOfBirth === 'string' && data.dateOfBirth.trim() 
+                    ? parseDate(data.dateOfBirth as string) as any
+                    : null;
+                } catch (error) {
+                  console.log('❌ Error parsing date for DatePicker:', error);
+                  return null;
+                }
+              })()}
+              onChange={(date) => {
+                if (date) {
+                  const dateString = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+                  updateData({ dateOfBirth: dateString });
+                } else {
+                  updateData({ dateOfBirth: "" });
+                }
+              }}
+              maxValue={parseDate(new Date().toISOString().split('T')[0]) as any}
+              showMonthAndYearPickers
               isRequired
-              errorMessage={errors.dateOfBirth}
-              isInvalid={!!errors.dateOfBirth}
+              errorMessage={errors.dateOfBirth || errors.age}
+              isInvalid={!!(errors.dateOfBirth || errors.age)}
+              variant="flat"
+              granularity="day"
             />
             {/* Age Display and Error */}
             {calculatedAge !== null && (
