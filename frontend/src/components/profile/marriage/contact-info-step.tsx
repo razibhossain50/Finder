@@ -34,18 +34,18 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
 
       try {
         setIsUploading(true);
-        
+
         // Upload file to backend using API client
         const result = await apiClient.uploadFile('/api/upload/profile-picture', file, 'profilePicture') as FileUploadResponse;
-        
+
         setUploadedFile(file);
         // Store the URL returned from backend
         updateData({ profilePicture: result.url });
-        
+
         logger.debug('File uploaded successfully', result, 'Contact-info-step');
       } catch (error) {
         const appError = handleApiError(error, 'Component');
-            logger.error('Upload error', appError, 'Contact-info-step');
+        logger.error('Upload error', appError, 'Contact-info-step');
         alert('Failed to upload file. Please try again.');
       } finally {
         setIsUploading(false);
@@ -101,11 +101,10 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
               </Tooltip>
             </div>
 
-            <Card className={`border-2 border-dashed transition-colors ${
-              isUploading ? 'border-blue-300 bg-blue-50' : 
-              uploadedFile ? 'border-emerald-300 bg-emerald-50' : 
-              'border-slate-300 hover:border-slate-400'
-            }`}>
+            <Card className={`border-2 border-dashed transition-colors ${isUploading ? 'border-blue-300 bg-blue-50' :
+              uploadedFile ? 'border-emerald-300 bg-emerald-50' :
+                'border-slate-300 hover:border-slate-400'
+              }`}>
               <CardBody className="p-6">
                 <div className="text-center">
                   {isUploading ? (
@@ -170,17 +169,17 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
 
           {/* Email */}
           <div className="col-span-2">
-              <Input
-                className="col-span-2"
-                type="email"
-                label="Email"
-                placeholder="Enter email address"
-                value={(data.email as string) || ""}
-                onChange={(e) => updateData({ email: e.target.value })}
-                isRequired
-                errorMessage={errors.email}
-                isInvalid={!!errors.email}
-              />
+            <Input
+              className="col-span-2"
+              type="email"
+              label="Email"
+              placeholder="Enter email address"
+              value={(data.email as string) || ""}
+              onChange={(e) => updateData({ email: e.target.value })}
+              isRequired
+              errorMessage={errors.email}
+              isInvalid={!!errors.email}
+            />
           </div>
 
           {/* Guardian's Mobile */}

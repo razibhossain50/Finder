@@ -129,7 +129,7 @@ class ApiClient {
 
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       if (error instanceof ApiError) {
         throw error;
       }
@@ -188,7 +188,7 @@ class ApiClient {
 
     const url = `${this.baseURL}${endpoint}`;
     const token = this.getAuthToken(config?.tokenType || 'regular');
-    
+
     if (config?.requireAuth !== false && token) {
       requestHeaders.Authorization = `Bearer ${token}`;
     }
@@ -243,5 +243,6 @@ export const adminApi = {
   get: <T>(endpoint: string) => apiClient.get<T>(`/api${endpoint}`, { requireAuth: true, tokenType: 'admin' }),
   post: <T>(endpoint: string, body?: any) => apiClient.post<T>(`/api${endpoint}`, body, { requireAuth: true, tokenType: 'admin' }),
   put: <T>(endpoint: string, body?: any) => apiClient.put<T>(`/api${endpoint}`, body, { requireAuth: true, tokenType: 'admin' }),
-  delete: <T>(endpoint: string) => apiClient.delete<T>(`/api${endpoint}`, { requireAuth: true, tokenType: 'admin' })
+  delete: <T>(endpoint: string) => apiClient.delete<T>(`/api${endpoint}`, { requireAuth: true, tokenType: 'admin' }),
+  uploadFile: <T>(endpoint: string, file: File, fieldName = 'file') => apiClient.uploadFile<T>(`/api${endpoint}`, file, fieldName, { requireAuth: true, tokenType: 'admin' })
 };

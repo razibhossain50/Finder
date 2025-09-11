@@ -1373,5 +1373,45 @@ WHERE "biodataApprovalStatus" = 'approved' AND "biodataVisibilityStatus" = 'acti
 - **Query Performance**: monitor public biodata queries
 - **Database Load**: track index usage and query efficiency
 - **API Response Times**: monitor status update endpoints
+## 4. Agentic Coding Guidelines
 
-This comprehensive biodata status management system provides a robust, scalable solution that maintains clear authority hierarchy while giving users appropriate control over their profiles, ensuring optimal user experience and efficient admin management.
+This section defines the coding standards for the SLA Cloud App project built with **Next.js + TypeScript + Tailwind CSS**.  
+The goal is to ensure **clean, reusable, human-readable, and consistent code** across the project.
+
+### 4.1 Styling & Design
+
+- **Tailwind First**: Always use Tailwind utilities for styling.
+- **Avoid raw CSS** unless absolutely necessary.
+- **Breakpoints**: Use only **three breakpoints**:
+  - `xs` (default, mobile-first)
+  - `md` (tablet)
+  - `xl` (desktop)
+- **Colors**: Always use **global color variables** defined in the Tailwind theme.
+  - Example: `bg-bg-primary`, `text-text-base`.
+  - Never hardcode hex values inside components.
+- **UX-First Design**:
+  - Ensure accessibility (ARIA roles, alt tags, semantic HTML).
+  - Maintain consistent spacing, padding, and font hierarchy.
+  - Follow standard UX-friendly layouts.
+
+### 4.2 Code Organization & Reusability
+
+- **Reusable Utilities**: Extract common logic into functions in the `services/` folder.
+- **Component Design**: Keep components reusable.
+- **Check Before Creating**: Always search for existing code to avoid duplication.
+- **Global Configs**: Colors, spacing, and typography should come from **global variables** and **Tailwind theme tokens**.
+
+### 4.3 Naming Conventions
+
+| Category              | Convention Example                                 |
+| --------------------- | -------------------------------------------------- |
+| **Components**        | `PascalCase` → `UserCard.tsx`                      |
+| **Hooks**             | `useCamelCase` → `useAuth.ts`                      |
+| **Types/Interfaces**  | `PascalCase` → `User`, `UserProps`                 |
+| **Utility Functions** | `camelCase` → `formatDate.ts`                      |
+| **File Names**        | Descriptive → `fetchUserData.ts` ( not `utils.ts`) |
+
+### 4.4 Type Safety
+
+- Always use **TypeScript types** for data structures.
+- Keep all global/shared types in the `types/` directory.

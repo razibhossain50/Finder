@@ -22,7 +22,7 @@ import { BiodataApprovalStatus } from './enums/admin-approval-status.enum';
 
 @Controller('biodatas')
 export class BiodataController {
-  constructor(private readonly biodataService: BiodataService) {}
+  constructor(private readonly biodataService: BiodataService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -79,14 +79,14 @@ export class BiodataController {
     if (!user?.id) {
       throw new Error('User authentication required');
     }
-    
+
     const biodata = await this.biodataService.findByUserId(user.id);
-    
+
     // Return null if no biodata exists, but as proper JSON
     if (!biodata) {
       return null;
     }
-    
+
     return biodata;
   }
 
@@ -131,6 +131,8 @@ export class BiodataController {
     const biodataId = +id;
     return this.biodataService.updateApprovalStatus(biodataId, statusData.status);
   }
+
+
 
   @Put('current/toggle-visibility')
   @UseGuards(JwtAuthGuard)
@@ -178,24 +180,49 @@ export class BiodataController {
       console.error('Controller: Error message:', error.message);
       console.error('Controller: Error code:', error.code);
       console.error('Controller: Error stack:', error.stack);
-      
+
       // Re-throw with more context
       const errorMessage = error.message || 'Unknown error occurred';
       throw new Error(`Failed to update biodata: ${errorMessage}`);
     }
   }
 
-  @Patch(':id')
+  @Put(':id')
   @UseGuards(JwtAuthGuard)
   async update(@Param('id') id: string, @Body() updateBiodataDto: UpdateBiodataDto, @CurrentUser() user: any) {
     if (!user?.id) {
       throw new Error('User authentication required');
     }
 
-    // Validate ownership
-    const isOwner = await this.biodataService.validateOwnership(+id, user.id);
-    if (!isOwner) {
-      throw new Error('You can only update your own biodata');
+    // Allow admin and superadmin to edit any biodata, otherwise validate ownership
+    if (user.role !== 'admin' && user.role !== 'superadmin') {
+      const isOwner = await this.biodataService.validateOwnership(+id, user.id);
+      if (!isOwner) {
+        throw new Error('You can only update your own biodata');
+      }
+    }
+
+    console.log('=== PUT /api/biodatas/:id ===');
+    console.log('User:', user);
+    console.log('Biodata ID:', id);
+    console.log('Update data:', updateBiodataDto);
+
+    return this.biodataService.update(+id, updateBiodataDto);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  async patch(@Param('id') id: string, @Body() updateBiodataDto: UpdateBiodataDto, @CurrentUser() user: any) {
+    if (!user?.id) {
+      throw new Error('User authentication required');
+    }
+
+    // Allow admin and superadmin to edit any biodata, otherwise validate ownership
+    if (user.role !== 'admin' && user.role !== 'superadmin') {
+      const isOwner = await this.biodataService.validateOwnership(+id, user.id);
+      if (!isOwner) {
+        throw new Error('You can only update your own biodata');
+      }
     }
 
     return this.biodataService.update(+id, updateBiodataDto);

@@ -12,12 +12,11 @@ import { logger } from '@/lib/logger';
 import { handleApiError } from '@/lib/error-handler';
 import { adminApi } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/image-service';
+import EditBiodataDrawer from '@/components/admin/EditBiodataDrawer';
 
 
 
-type IconSvgProps = SVGProps<SVGSVGElement> & {
-    size?: number;
-};
+
 
 function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
@@ -49,7 +48,7 @@ interface Biodata {
     id: number;
     step: number;
     userId: number | null;
-    completedSteps: number | null;
+    completedSteps: number[] | null;
     partnerAgeMin: number;
     partnerAgeMax: number;
     sameAsPermanent: boolean;
@@ -142,6 +141,7 @@ export default function Biodatas() {
     const [page, setPage] = React.useState(1);
     const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
     const [viewModalOpen, setViewModalOpen] = React.useState(false);
+    const [editDrawerOpen, setEditDrawerOpen] = React.useState(false);
     const [selectedBiodata, setSelectedBiodata] = React.useState<Biodata | null>(null);
     const [newStatus, setNewStatus] = React.useState<string>("");
     const [isDeleting, setIsDeleting] = React.useState(false);
@@ -150,16 +150,28 @@ export default function Biodatas() {
     // Check if current user is superadmin
     const isSuperAdmin = user?.role === 'superadmin';
 
+    // Handle biodata updated from drawer
+    const handleBiodataUpdated = (updatedBiodata: Biodata) => {
+        setBiodatas(prev => prev.map(biodata =>
+            biodata.id === updatedBiodata.id ? updatedBiodata : biodata
+        ));
+    };
+
+    // Handle new biodata created from drawer
+    const handleBiodataCreated = (newBiodata: Biodata) => {
+        setBiodatas(prev => [newBiodata, ...prev]);
+    };
+
     // Handle status update
     const handleStatusUpdate = async () => {
         if (!selectedBiodata || !newStatus || newStatus === selectedBiodata.biodataApprovalStatus) return;
 
         try {
             setIsUpdatingStatus(true);
-            logger.info('Updating biodata status', { 
-                biodataId: selectedBiodata.id, 
-                oldStatus: selectedBiodata.biodataApprovalStatus, 
-                newStatus 
+            logger.info('Updating biodata status', {
+                biodataId: selectedBiodata.id,
+                oldStatus: selectedBiodata.biodataApprovalStatus,
+                newStatus
             }, 'AdminBiodatas');
 
             await adminApi.put(`/biodatas/${selectedBiodata.id}/approval-status`, { status: newStatus });
@@ -174,10 +186,10 @@ export default function Biodatas() {
             setSelectedBiodata(prev => prev ? { ...prev, biodataApprovalStatus: newStatus } : null);
             // Close the modal after successful update
             setViewModalOpen(false);
-            
-            logger.info('Biodata status updated successfully', { 
-                biodataId: selectedBiodata.id, 
-                newStatus 
+
+            logger.info('Biodata status updated successfully', {
+                biodataId: selectedBiodata.id,
+                newStatus
             }, 'AdminBiodatas');
         } catch (error) {
             const appError = handleApiError(error, 'AdminBiodatas');
@@ -202,7 +214,7 @@ export default function Biodatas() {
             setBiodatas(prev => prev.filter(biodata => biodata.id !== selectedBiodata.id));
             setDeleteModalOpen(false);
             setSelectedBiodata(null);
-            
+
             logger.info('Biodata deleted successfully', { biodataId: selectedBiodata.id }, 'AdminBiodatas');
         } catch (error) {
             const appError = handleApiError(error, 'AdminBiodatas');
@@ -222,7 +234,7 @@ export default function Biodatas() {
 
                 const data = await adminApi.get('/biodatas/admin/all') as Biodata[];
                 setBiodatas(data);
-                
+
                 logger.info('Biodatas fetched successfully', { count: data.length }, 'AdminBiodatas');
             } catch (err) {
                 const appError = handleApiError(err, 'AdminBiodatas');
@@ -377,12 +389,16 @@ export default function Biodatas() {
                                     setSelectedBiodata(biodata);
                                     setNewStatus(biodata.biodataApprovalStatus || 'pending');
                                     setViewModalOpen(true);
+                                } else if (key === "edit") {
+                                    setSelectedBiodata(biodata);
+                                    setEditDrawerOpen(true);
                                 } else if (key === "delete") {
                                     setSelectedBiodata(biodata);
                                     setDeleteModalOpen(true);
                                 }
                             }}>
-                                <DropdownItem key="view">View & Edit</DropdownItem>
+                                <DropdownItem key="view">View</DropdownItem>
+                                <DropdownItem key="edit">Edit</DropdownItem>
                                 {isSuperAdmin ? (
                                     <DropdownItem key="delete" className="text-danger" color="danger">
                                         Delete
@@ -464,7 +480,14 @@ export default function Biodatas() {
                             </DropdownMenu>
                         </Dropdown>
 
-                        <Button color="primary" endContent={<Plus />}>
+                        <Button 
+                            color="primary" 
+                            endContent={<Plus />}
+                            onPress={() => {
+                                setSelectedBiodata(null);
+                                setEditDrawerOpen(true);
+                            }}
+                        >
                             Add New
                         </Button>
                     </div>
@@ -940,18 +963,18 @@ export default function Biodatas() {
                                         </div>
                                         <div>
                                             <span className="text-sm text-gray-600">Completed Steps:</span>
-                                            <p className="font-medium">{selectedBiodata.completedSteps || 0}</p>
+                                            <p className="font-medium">{selectedBiodata.completedSteps?.length || 0}</p>
                                         </div>
                                         <div>
                                             <span className="text-sm text-gray-600">Progress:</span>
                                             <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
                                                 <div
                                                     className="bg-blue-600 h-2.5 rounded-full"
-                                                    style={{ width: `${((selectedBiodata.completedSteps || 0) / 8) * 100}%` }}
+                                                    style={{ width: `${((selectedBiodata.completedSteps?.length || 0) / 8) * 100}%` }}
                                                 ></div>
                                             </div>
                                             <p className="text-xs text-gray-500 mt-1">
-                                                {Math.round(((selectedBiodata.completedSteps || 0) / 8) * 100)}% Complete
+                                                {Math.round(((selectedBiodata.completedSteps?.length || 0) / 8) * 100)}% Complete
                                             </p>
                                         </div>
                                     </div>
@@ -1084,7 +1107,7 @@ export default function Biodatas() {
                                             </Chip>
                                             <div className="bg-content2 px-3 py-1 rounded-full">
                                                 <span className="text-xs font-medium text-default-700">
-                                                    {Math.round(((selectedBiodata.completedSteps || 0) / 8) * 100)}% Complete
+                                                    {Math.round(((selectedBiodata.completedSteps?.length || 0) / 8) * 100)}% Complete
                                                 </span>
                                             </div>
                                         </div>
@@ -1390,18 +1413,18 @@ export default function Biodatas() {
                                         </div>
                                         <div>
                                             <span className="text-sm text-gray-600">Completed Steps:</span>
-                                            <p className="font-medium">{selectedBiodata.completedSteps || 0}</p>
+                                            <p className="font-medium">{selectedBiodata.completedSteps?.length || 0}</p>
                                         </div>
                                         <div>
                                             <span className="text-sm text-gray-600">Progress:</span>
                                             <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
                                                 <div
                                                     className="bg-blue-600 h-2.5 rounded-full"
-                                                    style={{ width: `${((selectedBiodata.completedSteps || 0) / 8) * 100}%` }}
+                                                    style={{ width: `${((selectedBiodata.completedSteps?.length || 0) / 8) * 100}%` }}
                                                 ></div>
                                             </div>
                                             <p className="text-xs text-gray-500 mt-1">
-                                                {Math.round(((selectedBiodata.completedSteps || 0) / 8) * 100)}% Complete
+                                                {Math.round(((selectedBiodata.completedSteps?.length || 0) / 8) * 100)}% Complete
                                             </p>
                                         </div>
                                     </div>
@@ -1474,6 +1497,15 @@ export default function Biodatas() {
                     </ModalFooter>
                 </ModalContent>
             </Modal >
+
+            {/* Edit Biodata Drawer */}
+            <EditBiodataDrawer
+                isOpen={editDrawerOpen}
+                onClose={() => setEditDrawerOpen(false)}
+                selectedBiodata={selectedBiodata}
+                onBiodataUpdated={handleBiodataUpdated}
+                onBiodataCreated={handleBiodataCreated}
+            />
         </>
     );
 }
