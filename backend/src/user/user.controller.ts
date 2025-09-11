@@ -60,6 +60,11 @@ export class UserController {
     console.log('User from JWT:', req.user);
     console.log('Updating user ID:', id);
     console.log('Update data:', updateUserDto);
+
+    // Ensure user can only update their own profile (unless they're superadmin)
+    if (req.user.id !== +id && req.user.role !== 'superadmin') {
+      throw new UnauthorizedException('You can only update your own profile');
+    }
     return this.userService.update(+id, updateUserDto);
   }
 

@@ -11,16 +11,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: false,
       secretOrKey: 'your-secret-key'
     });
-    console.log('JWT Strategy initialized with secret:', 'your-secret-key');
   }
 
   validate(payload: AuthPayload) {
-    console.log('=== JWT VALIDATION ===');
-    console.log('JWT Strategy - validating payload:', payload);
-    console.log('JWT Strategy - payload type:', typeof payload);
-    console.log('JWT Strategy - payload keys:', Object.keys(payload));
+    if (!payload || !payload.id) {
+      return null;
+    }
+    
     const user = { id: payload.id, email: payload.email, role: payload.role };
-    console.log('JWT Strategy - returning user:', user);
     return user;
   }
 }

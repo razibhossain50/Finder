@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiRequest } from '@/lib/queryClient';
 import { logger } from '@/lib/logger';
 import { handleApiError } from '@/lib/error-handler';
+import { useRouter } from 'next/navigation';
 
 interface SettingsFormData {
   fullName: string;
@@ -17,6 +18,7 @@ interface SettingsFormData {
 
 export default function AdminSettingsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [formData, setFormData] = useState<SettingsFormData>({
     fullName: '',
     email: '',
@@ -59,7 +61,7 @@ export default function AdminSettingsPage() {
 
     // Validate password change - user must provide current password to change password
     const hasPasswordChange = formData.newPassword || formData.confirmPassword;
-    
+
     if (hasPasswordChange) {
       if (!formData.currentPassword) {
         newErrors.currentPassword = 'Enter your current password to verify your identity';
@@ -75,7 +77,7 @@ export default function AdminSettingsPage() {
         newErrors.confirmPassword = 'Passwords do not match';
       }
     }
-    
+
     // If only current password is provided without new password
     if (formData.currentPassword && !formData.newPassword) {
       newErrors.newPassword = 'Enter a new password to change your current password';
@@ -87,7 +89,7 @@ export default function AdminSettingsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -96,38 +98,50 @@ export default function AdminSettingsPage() {
     setMessage(null);
 
     try {
-      const updateData: any = {
+      const hasPasswordChange = formData.currentPassword && formData.newPassword;
+
+      // Update profile information (fullName)
+      const profileUpdateData = {
         fullName: formData.fullName
-        // Email is not included as it cannot be changed
       };
 
-      // Include password change if provided
-      if (formData.currentPassword && formData.newPassword) {
-        updateData.currentPassword = formData.currentPassword;
-        updateData.newPassword = formData.newPassword;
+      const profileResponse = await apiRequest('PUT', `/api/users/${user?.id}`, profileUpdateData);
+
+      if (!profileResponse.ok) {
+        throw new Error('Failed to update profile information');
       }
 
-      const response = await apiRequest('PUT', '/api/admin/profile', updateData);
-      
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Settings updated successfully!' });
-        // Clear password fields after successful update
-        setFormData(prev => ({
-          ...prev,
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        }));
-        logger.info('Admin settings updated successfully', { userId: user?.id }, 'AdminSettings');
-      } else {
-        throw new Error('Failed to update settings');
+      // Update password if provided
+      if (hasPasswordChange) {
+        const passwordUpdateData = {
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword
+        };
+
+        const passwordResponse = await apiRequest('PUT', `/api/users/${user?.id}/password`, passwordUpdateData);
+
+        if (!passwordResponse.ok) {
+          throw new Error('Failed to update password');
+        }
       }
+
+      setMessage({ type: 'success', text: 'Settings updated successfully!' });
+      // Clear password fields after successful update
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }));
+      logger.info('Admin settings updated successfully', { userId: user?.id }, 'AdminSettings');
+
     } catch (error) {
       const appError = handleApiError(error, 'AdminSettings');
       logger.error('Failed to update admin settings', appError, 'AdminSettings');
-      setMessage({ 
-        type: 'error', 
-        text: appError.message || 'Failed to update settings. Please try again.' 
+      setMessage({
+        type: 'error',
+        text: appError.message || 'Failed to update settings. Please try again.'
       });
     } finally {
       setIsLoading(false);
@@ -152,11 +166,10 @@ export default function AdminSettingsPage() {
         <CardBody>
           <form onSubmit={handleSubmit} className="space-y-6">
             {message && (
-              <div className={`p-4 rounded-lg ${
-                message.type === 'success' 
-                  ? 'bg-green-50 text-green-800 border border-green-200' 
-                  : 'bg-red-50 text-red-800 border border-red-200'
-              }`}>
+              <div className={`p-4 rounded-lg ${message.type === 'success'
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-red-50 text-red-800 border border-red-200'
+                }`}>
                 {message.text}
               </div>
             )}
@@ -166,7 +179,7 @@ export default function AdminSettingsPage() {
               <h3 className="text-lg font-medium text-gray-800 dark:text-white">
                 Basic Information
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label="Full Name"
@@ -177,7 +190,7 @@ export default function AdminSettingsPage() {
                   isInvalid={!!errors.fullName}
                   variant="bordered"
                 />
-                
+
                 <Input
                   label="Email Address"
                   type="email"
@@ -198,7 +211,7 @@ export default function AdminSettingsPage() {
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 To change your password, you must first enter your current password to verify your identity
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Input
                   label="Current Password"
@@ -210,7 +223,7 @@ export default function AdminSettingsPage() {
                   isInvalid={!!errors.currentPassword}
                   variant="bordered"
                 />
-                
+
                 <Input
                   label="New Password"
                   type="password"
@@ -221,7 +234,7 @@ export default function AdminSettingsPage() {
                   isInvalid={!!errors.newPassword}
                   variant="bordered"
                 />
-                
+
                 <Input
                   label="Confirm New Password"
                   type="password"

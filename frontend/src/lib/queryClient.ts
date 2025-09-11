@@ -16,8 +16,10 @@ export async function apiRequest(
   const regularToken = localStorage.getItem('regular_user_access_token');
   const adminToken = localStorage.getItem('admin_user_access_token');
 
-  // Use regular token first, fallback to admin token
-  const token = regularToken || adminToken;
+  // Determine which token to use based on current path or admin token availability
+  // If we're on an admin route or admin token exists, prioritize admin token
+  const isAdminContext = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  const token = (isAdminContext && adminToken) ? adminToken : (regularToken || adminToken);
 
   const headers: Record<string, string> = {};
 
@@ -50,8 +52,10 @@ export const getQueryFn: <T>(options: {
       const regularToken = localStorage.getItem('regular_user_access_token');
       const adminToken = localStorage.getItem('admin_user_access_token');
 
-      // Use regular token first, fallback to admin token
-      const token = regularToken || adminToken;
+      // Determine which token to use based on current path or admin token availability
+      // If we're on an admin route or admin token exists, prioritize admin token
+      const isAdminContext = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+      const token = (isAdminContext && adminToken) ? adminToken : (regularToken || adminToken);
 
       const headers: Record<string, string> = {};
 
