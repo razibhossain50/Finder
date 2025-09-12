@@ -3,6 +3,7 @@ import './polyfills';
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AuthService } from './auth/auth.service';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -29,6 +30,31 @@ async function bootstrap() {
 
   // Set global prefix for all routes
   app.setGlobalPrefix('api');
+
+  // Setup Swagger documentation
+  const config = new DocumentBuilder()
+    .setTitle('Backend API')
+    .setDescription('API documentation for the backend application')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth', // This name here is important for matching up with @ApiBearerAuth() in your controller!
+    )
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
   // Enable CORS for the frontend application
   // Allow both local and deployed frontend origins, configurable via env
