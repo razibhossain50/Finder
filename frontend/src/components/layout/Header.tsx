@@ -9,7 +9,40 @@ import { handleApiError } from '@/lib/error-handler';
 import { userApi } from '@/lib/api-client';
 import { BiodataProfile } from '@/types/api';
 
-function Header() {
+type ServiceType = 'mawami' | 'profinder';
+
+interface HeaderProps {
+  type?: ServiceType;
+}
+
+const SERVICE_CONFIG = {
+  mawami: {
+    name: 'Mawami',
+    tagline: 'Your Story Begins Here',
+    logo: '/images/logo/logo.png',
+    navLabel: 'Find your partner',
+    navHref: '/',
+    signupHref: '/auth/signup',
+    signupText: 'Sign Up',
+    profileEditHref: (id: number | null) => id ? `/profile/biodatas/edit/${id}` : '/profile/biodatas/edit/new',
+    profileEditText: (id: number | null) => id ? 'Edit Biodata' : 'Create Biodata',
+    dashboardHref: '/dashboard'
+  },
+  profinder: {
+    name: 'Professional Services',
+    tagline: 'Find Trusted Professionals',
+    logo: null,
+    navLabel: 'Find professionals',
+    navHref: '/profinder',
+    signupHref: '/profinder/profile',
+    signupText: 'Join as Professional',
+    profileEditHref: (id: number | null) => id ? `/profinder/profile/edit/${id}` : '/profinder/profile',
+    profileEditText: (id: number | null) => id ? 'Edit Profile' : 'Create Profile',
+    dashboardHref: '/profinder/dashboard'
+  }
+};
+
+function Header({ type = 'mawami' }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [biodataId, setBiodataId] = useState<number | null>(null);
@@ -18,38 +51,46 @@ function Header() {
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, logout } = useRegularAuth();
 
+  const config = SERVICE_CONFIG[type];
   const navItems = [
-    { label: 'Find your partner', href: '/', active: true }
+    { label: config.navLabel, href: config.navHref, active: true }
   ];
 
-  // Fetch user's biodata ID when authenticated
+  // Fetch user's profile ID when authenticated
   useEffect(() => {
-    const fetchUserBiodataId = async () => {
+    const fetchUserProfileId = async () => {
       if (!isAuthenticated) {
         setBiodataLoading(false);
         return;
       }
 
       try {
-        logger.debug('Fetching user biodata ID', { userId: user?.id }, 'Header');
+        logger.debug(`Fetching user ${type} profile ID`, { userId: user?.id }, 'Header');
         
-        const data = await userApi.get('/biodatas/current') as BiodataProfile | null;
-        
-        if (data && data.id) {
-          setBiodataId(data.id);
-          logger.debug('User biodata ID found', { biodataId: data.id }, 'Header');
+        if (type === 'mawami') {
+          const data = await userApi.get('/biodatas/current') as BiodataProfile | null;
+          
+          if (data && data.id) {
+            setBiodataId(data.id);
+            logger.debug('User biodata ID found', { biodataId: data.id }, 'Header');
+          } else {
+            setBiodataId(null);
+            logger.debug('No biodata found for user', undefined, 'Header');
+          }
         } else {
+          // For profinder, we would fetch professional profile
+          // const data = await userApi.get('/professionals/current') as ProfessionalProfile | null;
           setBiodataId(null);
-          logger.debug('No biodata found for user', undefined, 'Header');
+          logger.debug('No professional profile found for user', undefined, 'Header');
         }
       } catch (error) {
-        // Handle 404 or other errors gracefully - user might not have biodata yet
+        // Handle 404 or other errors gracefully - user might not have profile yet
         const appError = handleApiError(error, 'Header');
         if (appError.statusCode === 404) {
           setBiodataId(null);
-          logger.debug('User has no biodata yet', undefined, 'Header');
+          logger.debug(`User has no ${type} profile yet`, undefined, 'Header');
         } else {
-          logger.error('Error fetching biodata ID', appError, 'Header');
+          logger.error(`Error fetching ${type} profile ID`, appError, 'Header');
           setBiodataId(null);
         }
       } finally {
@@ -57,8 +98,8 @@ function Header() {
       }
     };
 
-    fetchUserBiodataId();
-  }, [isAuthenticated, user]);
+    fetchUserProfileId();
+  }, [isAuthenticated, user, type]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -139,15 +180,27 @@ function Header() {
 
              {/* Logo */}
             <div className="order-2 md:order-1 flex-1 md:flex-0 text-center">
-              <Link href="/" className="inline-block px-4 w-[180px]">
+              <Link href={config.navHref} className="inline-block px-4 w-[180px]">
+                {config.logo ? (
                   <Image
-                    src="/images/logo/logo.png"
-                    alt="Mawami logo"
+                    src={config.logo}
+                    alt={`${config.name} logo`}
                     width={240}
                     height={80}
                     priority
                   />
-                  <span className="sr-only">Mawami</span>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">PS</span>
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-lg text-gray-900 leading-tight">Professional</div>
+                      <div className="text-xs text-gray-500 leading-tight">Services</div>
+                    </div>
+                  </div>
+                )}
+                <span className="sr-only">{config.name}</span>
               </Link>
             </div>
 
@@ -163,11 +216,11 @@ function Header() {
                     Login
                   </Link>
                   <Link
-                    href="/auth/signup"
+                    href={config.signupHref}
                     className="relative px-4 py-2 text-sm font-medium text-rose-500 hover:text-white bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg hover:from-brand-600 hover:to-brand-700 transition-all duration-200 ease-in-out shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <span className="relative">Sign Up</span>
+                    <span className="relative">{config.signupText}</span>
                   </Link>
                 </div>
               )}
@@ -210,18 +263,18 @@ function Header() {
                     <>
                       <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Account</div>
                       <Link
-                        href="/dashboard"
+                        href={config.dashboardHref}
                         className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-rose-50 hover:text-brand-700 rounded-lg mx-2 transition-all duration-200 dark:text-gray-300 dark:hover:text-brand-400 dark:hover:from-brand-900/20 dark:hover:to-rose-900/20"
                       >
                         <LayoutDashboard className="mr-3 h-4 w-4" />
                         Dashboard
                       </Link>
                       <Link
-                        href={biodataId ? `/profile/biodatas/edit/${biodataId}` : '/profile/biodatas/edit/new'}
+                        href={config.profileEditHref(biodataId)}
                         className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-rose-50 hover:text-brand-700 rounded-lg mx-2 transition-all duration-200 dark:text-gray-300 dark:hover:text-brand-400 dark:hover:from-brand-900/20 dark:hover:to-rose-900/20"
                       >
                         <UserRoundPen className="mr-3 h-4 w-4" />
-                        {biodataId ? 'Edit Biodata' : 'Create Biodata'}
+                        {config.profileEditText(biodataId)}
                         {biodataLoading && (
                           <div className="ml-2 w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                         )}
@@ -253,11 +306,11 @@ function Header() {
                         Login
                       </Link>
                       <Link
-                        href="/auth/signup"
+                        href={config.signupHref}
                         className="flex items-center px-4 py-2.5 text-sm text-rose-500 hover:text-white hover:bg-rose-500 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 rounded-lg mx-2 transition-all duration-200"
                       >
                         <UserPlus className="mr-3 h-4 w-4" />
-                        Sign Up
+                        {config.signupText}
                       </Link>
                     </>
                   )}

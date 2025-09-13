@@ -1,6 +1,6 @@
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import './globals.css';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import './profinder.css';
 import { QueryProvider } from '@/components/common/QueryProvider';
 import { RegularAuthProvider } from '@/context/RegularAuthContext';
 import { HeroUIProvider } from '@heroui/react';
@@ -8,21 +8,21 @@ import { ToastProvider } from "@heroui/toast";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mawami",
-  description: "Your Story Begins Here",
+  title: "Professional Services",
+  description: "Find Trusted Professionals",
   openGraph: {
-    title: "Mawami",
-    description: "Your Story Begins Here",
-    siteName: "Mawami",
+    title: "Professional Services",
+    description: "Find Trusted Professionals",
+    siteName: "Professional Services",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mawami",
-    description: "Your Story Begins Here",
+    title: "Professional Services",
+    description: "Find Trusted Professionals",
   },
 };
 
-export default function RootLayout({
+export default function ProfessionalLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -34,9 +34,9 @@ export default function RootLayout({
           <ToastProvider placement="top-right" />
           <QueryProvider>
             <RegularAuthProvider>
-              <Header type="mawami" />
+              <Header type="profinder" />
               {children}
-              <Footer type="mawami" />
+              <Footer type="profinder" />
             </RegularAuthProvider>
           </QueryProvider>
         </HeroUIProvider>
