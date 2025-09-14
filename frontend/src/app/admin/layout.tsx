@@ -27,16 +27,23 @@ export const metadata: Metadata = {
     siteName: "Mawami",
     url: 'https://mawami.com',
     type: 'website',
+    locale: 'en_US',
     images: [
       {
         url: 'https://mawami.com/images/logo/logo-square.jpeg',
-        width: 150,
-        height: 150,
+        width: 300,
+        height: 300,
         alt: 'Mawami - Your Story Begins Here',
-        type: 'image/jpg',
+        type: 'image/jpeg',
       },
     ],
-  }
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Mawami',
+    description: 'Your Story Begins Here',
+    images: ['https://mawami.com/images/logo/logo-square.jpeg'],
+  },
 };
 
 export default function AdminLayout({
