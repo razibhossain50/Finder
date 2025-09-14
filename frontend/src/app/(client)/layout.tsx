@@ -14,11 +14,28 @@ export const metadata: Metadata = {
     title: "Mawami",
     description: "Your Story Begins Here",
     siteName: "Mawami",
+    url: 'https://mawami.com/',
+    type: 'website',
+    images: [
+      {
+        url: '/images/logo/logo-square.jpg',
+        height: 630,
+        alt: 'Mawami - Your Story Begins Here',
+        type: 'image/png',
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
+    site: '@yourtwitterhandle', // Replace with your Twitter handle
     title: "Mawami",
     description: "Your Story Begins Here",
+    images: [
+      {
+        url: 'https://yourdomain.com/images/logo/logo-transparent.png', // Replace with your actual domain
+        alt: 'Mawami - Your Story Begins Here',
+      },
+    ],
   },
 };
 

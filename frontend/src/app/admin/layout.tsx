@@ -25,12 +25,18 @@ export const metadata: Metadata = {
     title: "Mawami",
     description: "Your Story Begins Here",
     siteName: "Mawami",
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Mawami',
-    description: 'Your Story Begins Here',
-  },
+    url: 'https://mawami.com',
+    type: 'website',
+    images: [
+      {
+        url: '/images/logo/logo-square.jpg',
+        width: 150,
+        height: 150,
+        alt: 'Mawami - Your Story Begins Here',
+        type: 'image/jpg',
+      },
+    ],
+  }
 };
 
 export default function AdminLayout({
