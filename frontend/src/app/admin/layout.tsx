@@ -32,8 +32,8 @@ export const metadata: Metadata = {
       {
         url: 'https://mawami.com/images/logo/logo-square.jpeg',
         secureUrl: 'https://mawami.com/images/logo/logo-square.jpeg',
-        width: 1200,
-        height: 630,
+        width: 100,
+        height: 100,
         alt: 'Mawami - Your Story Begins Here',
         type: 'image/jpeg',
       },
