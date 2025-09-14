@@ -20,10 +20,10 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "Mawami",
-  description: "Your Story Begins Here",
+  description: "Matrimony - Your Story Begins Here",
   openGraph: {
     title: "Mawami",
-    description: "Your Story Begins Here",
+    description: "Matrimony - Your Story Begins Here",
     siteName: "Mawami",
     url: 'https://mawami.com',
     type: 'website',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
         secureUrl: 'https://mawami.com/images/logo/logo-square.jpeg',
         width: 100,
         height: 100,
-        alt: 'Mawami - Your Story Begins Here',
+        alt: 'Mawami',
         type: 'image/jpeg',
       },
     ],
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary',
     title: 'Mawami',
-    description: 'Your Story Begins Here',
+    description: 'Matrimony - Your Story Begins Here',
     images: ['https://mawami.com/images/logo/logo-square.jpeg'],
   },
 };
