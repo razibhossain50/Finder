@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/images/logo/logo-square.jpg',
+        url: 'https://mawami.com/images/logo/logo-square.jpeg',
         width: 150,
         height: 150,
         alt: 'Mawami - Your Story Begins Here',
