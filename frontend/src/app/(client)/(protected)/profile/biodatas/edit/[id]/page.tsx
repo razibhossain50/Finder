@@ -9,12 +9,12 @@ import { PartnerPreferencesStep } from "@/components/profile/marriage/partner-pr
 import { Button, Card, CardBody, addToast } from "@heroui/react";
 import { ChevronLeft, ChevronRight, Check, ArrowLeft } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest } from "@/services/queryClient";
 import { useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
 
 const steps = [
     { title: "Personal Information", subtitle: "Basic details about you" },

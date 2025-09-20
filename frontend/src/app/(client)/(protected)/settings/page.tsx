@@ -4,9 +4,9 @@ import { Lock, User, Mail, AtSign } from "lucide-react";
 import { Card, CardBody, CardHeader, Input, Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useRegularAuth } from "@/context/RegularAuthContext";
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
-import { userApi } from '@/lib/api-client';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
+import { userApi } from '@/services/api-client';
 
 export default function Settings() {
   const [name, setName] = useState("");

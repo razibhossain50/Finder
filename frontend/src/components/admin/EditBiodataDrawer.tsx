@@ -7,9 +7,9 @@ import {
 import { parseDate } from "@internationalized/date";
 import { Info, Upload } from "lucide-react";
 import { LocationSelector } from '@/components/form/LocationSelector';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
-import { adminApi, apiClient } from '@/lib/api-client';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
+import { adminApi, apiClient } from '@/services/api-client';
 import { useToast } from '@/context/ToastContext';
 import { FileUploadResponse } from '@/types/api';
 
@@ -1327,16 +1327,7 @@ export default function EditBiodataDrawer({
                             </div>
                         </div>
                 </DrawerBody>
-                <DrawerFooter className="flex justify-between items-center px-6 py-4 bg-content1/50">
-                    <Button
-                        variant="light"
-                        onPress={handleClose}
-                        size="md"
-                        className="font-medium text-default-600 hover:text-foreground"
-                        isDisabled={isUpdatingBiodata}
-                    >
-                        Cancel
-                    </Button>
+                <DrawerFooter className="flex justify-end items-center px-6 py-4 bg-content1/50">
                     <Button
                         color="primary"
                         size="md"

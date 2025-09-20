@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "context7-heroui": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {
+        "CONTEXT7_CUSTOM_DOCS": "https://context7.com/websites/heroui/llms.txt"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "mcp_context7_get_library_docs"
+      ],
+      "disabledTools": []
+    }
+  }
+}

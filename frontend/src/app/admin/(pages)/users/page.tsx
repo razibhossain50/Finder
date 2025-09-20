@@ -7,9 +7,9 @@ import {
     Dropdown, DropdownMenu, DropdownItem, Chip, User, Pagination, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Select, SelectItem
 } from "@heroui/react";
 import { Plus, EllipsisVertical, Search, ChevronDown, Trash2 } from "lucide-react";
-import { logger } from '@/lib/logger';
-import { adminApi } from '@/lib/api-client';
-import { handleApiError } from '@/lib/error-handler';
+import { logger } from '@/services/logger';
+import { adminApi } from '@/services/api-client';
+import { handleApiError } from '@/services/error-handler';
 
 
 type IconSvgProps = SVGProps<SVGSVGElement> & {

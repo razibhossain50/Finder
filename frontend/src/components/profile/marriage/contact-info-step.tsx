@@ -4,9 +4,9 @@ import { Info, Upload, Crop as CropIcon, X, Check } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
-import { apiClient } from '@/lib/api-client';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
+import { apiClient } from '@/services/api-client';
 import { FileUploadResponse } from '@/types/api';
 
 interface ContactInfoStepProps {

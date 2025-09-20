@@ -4,9 +4,9 @@ import Image from 'next/image';
 import { Layout, Menu, X, User, ChevronDown, LogIn, UserPlus, Settings, LogOut, UserRoundPen, LayoutDashboard, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRegularAuth } from '@/context/RegularAuthContext';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
-import { userApi } from '@/lib/api-client';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
+import { userApi } from '@/services/api-client';
 import { BiodataProfile } from '@/types/api';
 
 function Header() {

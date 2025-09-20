@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Button, Card, CardBody, CardHeader } from '@heroui/react';
 import { useAuth } from '@/context/AuthContext';
-import { apiRequest } from '@/lib/queryClient';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
+import { apiRequest } from '@/services/queryClient';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
 import { useRouter } from 'next/navigation';
 
 interface SettingsFormData {

@@ -6,10 +6,10 @@ import {
 } from "@heroui/react";
 import { Heart, Eye, Star, Search, Sparkles, User, ArrowLeft, Filter, Copy, Trash2, ExternalLink } from "lucide-react";
 import { useRegularAuth } from "@/context/RegularAuthContext";
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
-import { userApi } from '@/lib/api-client';
-import { getImageUrl } from '@/lib/image-service';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
+import { userApi } from '@/services/api-client';
+import { getImageUrl } from '@/services/image-service';
 
 interface Biodata {
     id: number;

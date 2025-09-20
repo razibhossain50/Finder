@@ -2,9 +2,9 @@
 
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { logger } from '@/lib/logger'
-import { authService } from '@/lib/api-services'
-import { handleApiError } from '@/lib/error-handler'
+import { logger } from '@/services/logger'
+import { authService } from '@/services/api-services'
+import { handleApiError } from '@/services/error-handler'
 import { User, LoginResponse } from '@/types/api'
 
 interface RegularAuthContextType {

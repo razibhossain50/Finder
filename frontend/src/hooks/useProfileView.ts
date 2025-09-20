@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
 
 export const useProfileView = () => {
   const trackProfileView = useCallback(async (biodataId: number) => {

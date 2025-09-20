@@ -4,8 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useRegularAuth } from '@/context/RegularAuthContext';
 import { Card, CardBody, Spinner } from '@heroui/react';
 import { CheckCircle, XCircle } from 'lucide-react';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
 
 function GoogleCallbackContent() {
   const router = useRouter();

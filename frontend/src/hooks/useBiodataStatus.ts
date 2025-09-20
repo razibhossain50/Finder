@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BiodataApprovalStatus, BiodataVisibilityStatus } from '@/types/biodata';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
 
 interface BiodataStatusInfo {
   id?: number;

@@ -13,9 +13,9 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useProfileView } from "@/hooks/useProfileView";
 import { BiodataProfile, BiodataApprovalStatus, BiodataVisibilityStatus } from "@/types/biodata";
 import { BiodataStatusHandler } from "@/components/biodata/BiodataStatusHandler";
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
-import { resolveImageUrl } from '@/lib/image-service';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
+import { resolveImageUrl } from '@/services/image-service';
 
 // Helper function to safely display data or fallback
 const safeDisplay = (value: unknown, fallback: string = "Not provided"): string => {

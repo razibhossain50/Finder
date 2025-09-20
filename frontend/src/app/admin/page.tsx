@@ -5,9 +5,9 @@ import type { Metadata } from "next";
 import { Card, CardBody, CardHeader } from '@heroui/react';
 import { Users, FileText } from 'lucide-react';
 import Link from 'next/link';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
-import { userService, biodataService } from '@/lib/api-services';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
+import { userService, biodataService } from '@/services/api-services';
 
 interface StatsData {
   totalUsers: number;

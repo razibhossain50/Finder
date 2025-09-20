@@ -8,15 +8,11 @@ import {
 } from "@heroui/react";
 import { Plus, EllipsisVertical, Search, ChevronDown, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
-import { adminApi } from '@/lib/api-client';
-import { resolveImageUrl } from '@/lib/image-service';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
+import { adminApi } from '@/services/api-client';
+import { resolveImageUrl } from '@/services/image-service';
 import EditBiodataDrawer from '@/components/admin/EditBiodataDrawer';
-
-
-
-
 
 function capitalize(s: string) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
@@ -480,8 +476,8 @@ export default function Biodatas() {
                             </DropdownMenu>
                         </Dropdown>
 
-                        <Button 
-                            color="primary" 
+                        <Button
+                            color="primary"
                             endContent={<Plus />}
                             onPress={() => {
                                 setSelectedBiodata(null);
@@ -634,7 +630,7 @@ export default function Biodatas() {
 
                                     {/* Status Update Section */}
                                     <div className="bg-white p-4 rounded-lg border">
-                                        <h5 className="font-semibold text-gray-800 mb-3">Update Status</h5>
+                                        <h5 className="font-semibold text-gray-800 mb-3 whitespace-nowrap">Update Status</h5>
                                         <div className="flex items-center gap-4">
                                             <Select
                                                 label="Change Status"
@@ -1432,23 +1428,8 @@ export default function Biodatas() {
                             </div>
                         )}
                     </ModalBody>
-                    <ModalFooter className="flex justify-between items-center px-6 py-4 bg-content1/50">
-                        <Button
-                            variant="light"
-                            onPress={() => setViewModalOpen(false)}
-                            size="md"
-                            className="font-medium text-default-600 hover:text-foreground"
-                            startContent={<span>✕</span>}
-                        >
-                            Close
-                        </Button>
-
-                        {/* Status Update Section */}
-                        <div className="flex flex-wrap items-center gap-4 bg-content2 px-5 py-3 rounded-large border border-divider">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                                <span className="text-sm font-semibold text-default-700">Update Status:</span>
-                            </div>
+                    <ModalFooter className="flex justify-end items-center px-6 py-4 bg-content1/50">
+                             <div className="text-sm font-semibold text-default-700 whitespace-nowrap">Update Status:</div>
                             <Select
                                 size="md"
                                 placeholder="Select new status"
@@ -1493,7 +1474,6 @@ export default function Biodatas() {
                             >
                                 {isUpdatingStatus ? "Updating..." : "Update Status"}
                             </Button>
-                        </div>
                     </ModalFooter>
                 </ModalContent>
             </Modal >

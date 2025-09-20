@@ -10,10 +10,10 @@ import { LocationSelector } from "@/components/form/LocationSelector";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRegularAuth } from "@/context/RegularAuthContext";
 import { useRouter } from "next/navigation";
-import { logger } from "@/lib/logger";
-import { publicApi } from "@/lib/api-client";
-import { handleApiError } from "@/lib/error-handler";
-import { getImageUrl } from "@/lib/image-service";
+import { logger } from "@/services/logger";
+import { publicApi } from "@/services/api-client";
+import { handleApiError } from "@/services/error-handler";
+import { getImageUrl } from "@/services/image-service";
 
 interface Biodata {
     id: number;

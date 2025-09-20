@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardBody, Switch, Button, Chip, Spinner } from "@heroui/react";
 import { Eye, EyeOff, AlertCircle, Shield, RefreshCw } from "lucide-react";
 import { BiodataApprovalStatus, BiodataVisibilityStatus, BIODATA_STATUS_COLORS } from "@/types/biodata";
-import { logger } from '@/lib/logger';
-import { userApi } from '@/lib/api-client';
-import { handleApiError } from '@/lib/error-handler';
+import { logger } from '@/services/logger';
+import { userApi } from '@/services/api-client';
+import { handleApiError } from '@/services/error-handler';
 
 interface BiodataStatusToggleProps {
   biodataId?: number;

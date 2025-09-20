@@ -7,8 +7,8 @@ import { useProfileView } from "@/hooks/useProfileView";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useBiodataStatus } from "@/hooks/useBiodataStatus";
 import { BiodataStatusToggle } from "@/components/dashboard/BiodataStatusToggle";
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
 
 export default function Dashboard() {
   const { user } = useRegularAuth();

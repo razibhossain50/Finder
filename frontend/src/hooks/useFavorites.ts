@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRegularAuth } from '@/context/RegularAuthContext';
-import { logger } from '@/lib/logger';
-import { handleApiError } from '@/lib/error-handler';
-import { favoritesService } from '@/lib/api-services';
+import { logger } from '@/services/logger';
+import { handleApiError } from '@/services/error-handler';
+import { favoritesService } from '@/services/api-services';
 import { FavoritesResponse, FavoriteItem } from '@/types/api';
 
 export const useFavorites = () => {
