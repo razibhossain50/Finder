@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Code Quality Analyzer",
+  "description": "Monitors source code files for changes and analyzes modified code for potential improvements including code smells, design patterns, and best practices. Generates suggestions for improving code quality while maintaining existing functionality with focus on readability, maintainability, and performance optimizations.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "backend/src/**/*.ts",
+      "frontend/src/**/*.ts",
+      "frontend/src/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Analyze the modified code files for potential improvements. Focus on:\n\n1. **Code Smells**: Identify any code smells such as long methods, large classes, duplicate code, or complex conditionals\n2. **Design Patterns**: Suggest appropriate design patterns that could improve the code structure\n3. **Best Practices**: Check adherence to TypeScript/JavaScript best practices, React best practices (for frontend), and NestJS best practices (for backend)\n4. **Performance**: Identify potential performance optimizations\n5. **Readability**: Suggest improvements for code clarity and documentation\n6. **Maintainability**: Recommend changes that would make the code easier to maintain and extend\n\nFor each suggestion, provide:\n- Clear explanation of the issue\n- Specific code example showing the improvement\n- Reasoning for why this change would be beneficial\n- Impact on readability, maintainability, or performance\n\nMaintain the existing functionality while suggesting these improvements."
+  }
+}
