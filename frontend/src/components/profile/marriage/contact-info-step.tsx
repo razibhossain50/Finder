@@ -187,11 +187,7 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
               isRequired
               errorMessage={errors.fullName}
               isInvalid={!!errors.fullName}
-              endContent={
-                <Tooltip content="Only visible for admin">
-                  <Info className="w-4 h-4 text-slate-400 cursor-help" />
-                </Tooltip>
-              }
+              description="Only visible for premium users"
             />
           </div>
 
@@ -300,6 +296,7 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
               placeholder="Enter email address"
               value={(data.email as string) || ""}
               onChange={(e) => updateData({ email: e.target.value })}
+              description="Only visible for premium users"
               isRequired
               errorMessage={errors.email}
               isInvalid={!!errors.email}
@@ -314,6 +311,7 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
               placeholder="Enter guardian's mobile number"
               value={(data.guardianMobile as string) || ""}
               onChange={(e) => updateData({ guardianMobile: e.target.value })}
+              description="Only visible for premium users"
               isRequired
               errorMessage={errors.guardianMobile}
               isInvalid={!!errors.guardianMobile}
@@ -328,6 +326,7 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
               placeholder="Enter your mobile number"
               value={(data.ownMobile as string) || ""}
               onChange={(e) => updateData({ ownMobile: e.target.value })}
+              description="Only visible for premium users"
               isRequired
               errorMessage={errors.ownMobile}
               isInvalid={!!errors.ownMobile}

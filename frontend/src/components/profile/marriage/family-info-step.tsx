@@ -88,6 +88,7 @@ export function FamilyInfoStep({ data, errors, updateData }: FamilyInfoStepProps
               value={(data.fatherName as string) || ""}
               onChange={(e) => updateData({ fatherName: e.target.value })}
               isRequired
+              description="Only visible for premium users"
               errorMessage={errors.fatherName}
               isInvalid={!!errors.fatherName}
             />
@@ -129,6 +130,7 @@ export function FamilyInfoStep({ data, errors, updateData }: FamilyInfoStepProps
               placeholder="Enter mother's name"
               value={(data.motherName as string) || ""}
               onChange={(e) => updateData({ motherName: e.target.value })}
+              description="Only visible for premium users"
               isRequired
               errorMessage={errors.motherName}
               isInvalid={!!errors.motherName}

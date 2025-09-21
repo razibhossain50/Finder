@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   User, Heart, GraduationCap, Briefcase, MapPin, Users, Phone, Mail, Calendar, Ruler, Weight, Droplets, Shield,
-  Home, AlertCircle, RefreshCw, Star, Share2, MessageCircle, Sparkles, Edit, Plus, ArrowLeft, Search
+  Home, AlertCircle, RefreshCw, Star, Share2, MessageCircle, Sparkles, Edit, Plus, ArrowLeft, Search, Lock
 } from "lucide-react";
 import { Card, CardBody, CardHeader, Button, Chip, addToast } from "@heroui/react";
 import Image from "next/image";
@@ -711,7 +711,10 @@ export default function Profile() {
               <div className="flex-1 text-center md:text-left space-y-4 text-white">
                 <div>
                   <h2 className="text-3xl md:text-4xl font-bold mb-2">
-                    {safeDisplay(profile.fullName, "Unknown User")}
+                    {isAuthenticated && user && userHasBiodata 
+                      ? safeDisplay(profile.fullName, "Unknown User")
+                      : ""
+                    }
                   </h2>
                   <p className="text-xl text-white/90 font-medium">
                     {safeDisplay(profile.profession, "Professional")}
@@ -995,7 +998,17 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Father&apos;s Name</p>
-                      <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.fatherName)}</p>
+                      <div className="text-lg font-medium text-gray-800">
+                        {isAuthenticated && user && userHasBiodata 
+                          ? safeDisplay(profile.fatherName)
+                          : (
+                            <div className="flex items-center gap-2 text-gray-500">
+                              <Lock className="h-4 w-4" />
+                              <span className="text-sm">Login & create profile to view</span>
+                            </div>
+                          )
+                        }
+                      </div>
                     </div>
                     <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Father&apos;s Profession</p>
@@ -1024,7 +1037,17 @@ export default function Profile() {
                     </div>
                     <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Mother&apos;s Name</p>
-                      <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.motherName)}</p>
+                      <div className="text-lg font-medium text-gray-800">
+                        {isAuthenticated && user && userHasBiodata 
+                          ? safeDisplay(profile.motherName)
+                          : (
+                            <div className="flex items-center gap-2 text-gray-500">
+                              <Lock className="h-4 w-4" />
+                              <span className="text-sm">Login & create profile to view</span>
+                            </div>
+                          )
+                        }
+                      </div>
                     </div>
                     <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Mother&apos;s Profession</p>
