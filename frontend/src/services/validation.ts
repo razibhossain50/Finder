@@ -63,9 +63,7 @@ export const educationInfoSchema = z.object({
   highestEducation: z.string().min(1, 'Highest education is required'),
   instituteName: z.string().min(1, 'Institute name is required'),
   subject: z.string().min(1, 'Subject is required'),
-  passingYear: z.number()
-    .min(1950, 'Passing year must be after 1950')
-    .max(new Date().getFullYear(), 'Passing year cannot be in the future'),
+  passingYear: z.string().min(1, 'Passing year is required'),
   result: z.string().min(1, 'Result is required'),
   economicCondition: z.string().min(1, 'Economic condition is required'),
 });

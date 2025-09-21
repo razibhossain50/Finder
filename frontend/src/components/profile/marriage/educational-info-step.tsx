@@ -83,15 +83,17 @@ export function EducationalInfoStep({ data, errors, updateData }: EducationalInf
           placeholder="Enter your subject/major"
           value={(data.subject as string) || ""}
           onChange={(e) => updateData({ subject: e.target.value })}
+          isRequired
+          errorMessage={errors.subject}
+          isInvalid={!!errors.subject}
         />
 
         {/* Passing Year */}
         <Input
-          type="number"
           label="Passing Year"
           placeholder="Enter passing year"
           value={(data.passingYear as string) || ""}
-          onChange={(e) => updateData({ passingYear: parseInt(e.target.value) || "" })}
+          onChange={(e) => updateData({ passingYear: e.target.value })}
           isRequired
           errorMessage={errors.passingYear}
           isInvalid={!!errors.passingYear}
@@ -112,6 +114,7 @@ export function EducationalInfoStep({ data, errors, updateData }: EducationalInf
           errorMessage={errors.result}
           isInvalid={!!errors.result}
         >
+          <SelectItem key="Not Available">Not Available</SelectItem>
           <SelectItem key="A+">A+</SelectItem>
           <SelectItem key="A">A</SelectItem>
           <SelectItem key="A-">A-</SelectItem>

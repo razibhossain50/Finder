@@ -7,7 +7,7 @@ import { FamilyInfoStep } from "@/components/profile/marriage/family-info-step";
 import { ContactInfoStep } from "@/components/profile/marriage/contact-info-step";
 import { PartnerPreferencesStep } from "@/components/profile/marriage/partner-preferences-step";
 import { Button, Card, CardBody, addToast } from "@heroui/react";
-import { ChevronLeft, ChevronRight, Check, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/services/queryClient";
 import { useRef, useEffect } from "react";
@@ -111,7 +111,7 @@ export default function BiodataForm() {
     // Function to convert new field names back to old field names for backend compatibility
     const convertToBackendFormat = (data: Record<string, unknown>) => {
         const convertedData = { ...data };
-        
+
         // Convert permanentLocation back to individual fields
         if (data.permanentLocation && typeof data.permanentLocation === 'string') {
             const parts = (data.permanentLocation as string).split(' > ');
@@ -129,7 +129,7 @@ export default function BiodataForm() {
                 convertedData.permanentUpazilla = 'Dhanmondi';
             }
         }
-        
+
         // Convert presentLocation back to individual fields
         if (data.presentLocation && typeof data.presentLocation === 'string') {
             const parts = (data.presentLocation as string).split(' > ');
@@ -147,11 +147,11 @@ export default function BiodataForm() {
                 convertedData.presentUpazilla = 'Dhanmondi';
             }
         }
-        
+
         // Remove new field names to avoid confusion
         delete convertedData.permanentLocation;
         delete convertedData.presentLocation;
-        
+
         console.log('🔄 Converted data for backend:', convertedData);
         return convertedData;
     };
@@ -160,31 +160,31 @@ export default function BiodataForm() {
     const saveStepMutation = useMutation({
         mutationFn: async ({ stepData, step }: { stepData: Record<string, unknown>; step: number }) => {
             console.log('🚀 saveStepMutation called with:', { stepData, step });
-            
+
             // Convert new field names to backend format
             const convertedStepData = convertToBackendFormat(stepData);
-            
+
             // For both create and edit mode, we use PUT /current to update user's biodata
             // This endpoint will create if doesn't exist, or update if exists
             // Calculate completed steps properly
             const currentCompletedSteps = existingBiodata?.completedSteps || [];
-            const parsedCurrentCompleted = Array.isArray(currentCompletedSteps) 
+            const parsedCurrentCompleted = Array.isArray(currentCompletedSteps)
                 ? currentCompletedSteps.map((s: any) => {
                     const num = typeof s === 'string' ? parseInt(s) : s;
                     return isNaN(num) ? null : num;
-                  }).filter((n: any) => n !== null) as number[]
+                }).filter((n: any) => n !== null) as number[]
                 : [];
-            
+
             // When completing a step, mark only the current step as completed
             // This ensures that each step is only marked complete when actually completed
             const newCompletedSteps = [...new Set([...parsedCurrentCompleted, step])].sort((a, b) => a - b);
-            
+
             // Determine the approval status based on completion
-            const isAllStepsCompleted = newCompletedSteps.length === TOTAL_STEPS && 
-                                      newCompletedSteps.every((s, index) => s === index + 1);
-            
+            const isAllStepsCompleted = newCompletedSteps.length === TOTAL_STEPS &&
+                newCompletedSteps.every((s, index) => s === index + 1);
+
             const approvalStatus = isAllStepsCompleted ? 'pending' : 'in_progress';
-            
+
             const payload = {
                 ...convertedStepData,
                 step,
@@ -206,30 +206,30 @@ export default function BiodataForm() {
         },
         onSuccess: async (data) => {
             console.log('✅ saveStepMutation onSuccess called with:', data);
-            
+
             // Store the current step before moving to next
             const completedStep = currentStep;
             const nextStepNumber = currentStep + 1;
-            
+
             // Move to next step
             nextStep();
-            
+
             // Update the query cache to reflect the completed step and new current step
             queryClient.setQueryData(['biodata', biodataId], (oldData: any) => {
                 if (!oldData) return oldData;
-                
+
                 // Calculate the new completedSteps based on the completed step
                 const currentCompletedSteps = oldData.completedSteps || [];
-                const parsedCurrentCompleted = Array.isArray(currentCompletedSteps) 
+                const parsedCurrentCompleted = Array.isArray(currentCompletedSteps)
                     ? currentCompletedSteps.map((s: any) => {
                         const num = typeof s === 'string' ? parseInt(s) : s;
                         return isNaN(num) ? null : num;
-                      }).filter((n: any) => n !== null) as number[]
+                    }).filter((n: any) => n !== null) as number[]
                     : [];
-                
+
                 // When completing a step, mark only the completed step as completed
                 const newCompletedSteps = [...new Set([...parsedCurrentCompleted, completedStep])].sort((a, b) => a - b);
-                
+
                 return {
                     ...oldData,
                     ...data,
@@ -251,7 +251,7 @@ export default function BiodataForm() {
         mutationFn: async (data: Record<string, unknown>) => {
             // Convert new field names to backend format
             const convertedData = convertToBackendFormat(data);
-            
+
             // For both create and edit mode, use PUT /current for final submission
             // This ensures the biodata is associated with the current logged-in user
             const payload = {
@@ -277,7 +277,7 @@ export default function BiodataForm() {
                     biodataVisibilityStatus: 'active'
                 };
             });
-            
+
             // Show HeroUI success toast
             addToast({
                 title: "Success!",
@@ -308,34 +308,34 @@ export default function BiodataForm() {
 
     // Load existing data when component mounts (only once)
     useEffect(() => {
-        console.log('🔄 useEffect triggered:', { 
-            existingBiodata: !!existingBiodata, 
-            redirecting: existingBiodata?.redirecting, 
+        console.log('🔄 useEffect triggered:', {
+            existingBiodata: !!existingBiodata,
+            redirecting: existingBiodata?.redirecting,
             hasLoadedInitialData: hasLoadedInitialData.current,
-            currentStep 
+            currentStep
         });
         console.log('📍 useEffect call stack:', new Error().stack);
-        
+
         if (existingBiodata && !existingBiodata.redirecting && !hasLoadedInitialData.current) {
             console.log('📥 Loading initial biodata data');
             biodataIdRef.current = existingBiodata.id;
-            
+
             // Fix completedSteps order if it's out of order
             if (existingBiodata.completedSteps && Array.isArray(existingBiodata.completedSteps)) {
                 const parsedSteps = existingBiodata.completedSteps.map((s: any) => {
                     const num = typeof s === 'string' ? parseInt(s) : s;
                     return isNaN(num) ? null : num;
                 }).filter((n: any) => n !== null) as number[];
-                
+
                 const sortedSteps = [...parsedSteps].sort((a, b) => a - b);
                 const isOutOfOrder = JSON.stringify(parsedSteps) !== JSON.stringify(sortedSteps);
-                
+
                 if (isOutOfOrder) {
                     // Update the completedSteps in the existing data
                     existingBiodata.completedSteps = sortedSteps;
                 }
             }
-            
+
             loadFormData(existingBiodata, false); // Don't preserve step for initial load
             hasLoadedInitialData.current = true;
         } else if (existingBiodata && !existingBiodata.redirecting && hasLoadedInitialData.current) {
@@ -357,16 +357,16 @@ export default function BiodataForm() {
 
     const handleNext = async () => {
         console.log('🔄 handleNext called, currentStep:', currentStep);
-        
+
         // Prevent multiple clicks
         if (saveStepMutation.isPending) {
             console.log('⏳ Mutation is pending, skipping');
             return;
         }
-        
+
         const isValid = validateCurrentStep();
         console.log('✅ Validation result:', isValid);
-        
+
         if (!isValid) {
             console.log('❌ Validation failed, stopping');
             return; // Stop here if validation fails
@@ -424,15 +424,15 @@ export default function BiodataForm() {
                 completedSteps = [existingBiodata.completedSteps];
             }
         }
-        
+
         // Always sort to ensure correct order
         completedSteps = completedSteps.sort((a, b) => a - b);
-        
+
         // Enhanced fallback logic that considers both server-side completed steps 
         // and client-side progress (highest step reached in current session)
         const getEffectiveCompletedSteps = () => {
             const effective = [...completedSteps];
-            
+
             // If we have any completed steps from server, infer that previous steps are also completed
             if (completedSteps.length > 0) {
                 const maxCompletedStep = Math.max(...completedSteps);
@@ -442,7 +442,7 @@ export default function BiodataForm() {
                     }
                 }
             }
-            
+
             // Consider steps up to the highest step reached in current session as accessible
             // This is the key fix: use highestStepReached instead of currentStep
             if (highestStepReached > 1) {
@@ -452,12 +452,12 @@ export default function BiodataForm() {
                     }
                 }
             }
-            
+
             return effective.sort((a, b) => a - b);
         };
-        
+
         const effectiveCompletedSteps = getEffectiveCompletedSteps();
-        
+
         console.log('🔄 handleStepClick:', {
             stepNumber,
             currentStep,
@@ -466,7 +466,7 @@ export default function BiodataForm() {
             effectiveCompletedSteps,
             canNavigate: effectiveCompletedSteps.includes(stepNumber) || stepNumber === currentStep
         });
-        
+
         // Allow navigation to completed steps, current step, or if we've reached this step before
         if (effectiveCompletedSteps.includes(stepNumber) || stepNumber === currentStep || stepNumber <= highestStepReached) {
             goToStep(stepNumber);
@@ -565,7 +565,7 @@ export default function BiodataForm() {
 
                 {/* Modern Header */}
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                         {isCreateMode ? "Create Your Biodata" : "Edit Your Biodata"}
                     </h1>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -585,7 +585,7 @@ export default function BiodataForm() {
                     onStepClick={handleStepClick}
                     className="mb-8"
                 />
-                
+
 
                 {/* Form Content */}
                 <Card className="shadow-sm">

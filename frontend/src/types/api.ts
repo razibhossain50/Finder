@@ -96,7 +96,7 @@ export interface BiodataProfile {
   highestEducation: string;
   instituteName: string;
   subject: string;
-  passingYear: number;
+  passingYear: string;
   result: string;
   economicCondition: string;
   

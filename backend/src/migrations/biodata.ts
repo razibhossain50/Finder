@@ -41,7 +41,7 @@ export class CreateBiodataTable {
         "highestEducation" character varying,
         "instituteName" character varying,
         "subject" character varying,
-        "passingYear" integer,
+        "passingYear" character varying,
         "result" character varying,
         "economicCondition" character varying,
         "fatherName" character varying,

@@ -1,12 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Unique } from 'typeorm';
 import { User } from '../user/user.entity';
 import { Biodata } from '../biodata/biodata.entity';
 
 @Entity('favorites')
-@Unique(['user', 'biodata']) // Prevent duplicate favorites
+@Unique(['userId', 'biodataId']) // Prevent duplicate favorites
 export class Favorite {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column()
+  userId: number;
+
+  @Column()
+  biodataId: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
@@ -18,4 +24,7 @@ export class Favorite {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

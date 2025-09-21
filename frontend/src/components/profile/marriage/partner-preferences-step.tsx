@@ -78,38 +78,53 @@ export function PartnerPreferencesStep({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <Input
               label="Preferred Complexion"
-              placeholder="Any preference"
+              placeholder="Enter preferred complexion"
               value={(data.partnerComplexion as string) || ""}
               onChange={(e) => updateData({ partnerComplexion: e.target.value })}
+              isRequired
+              errorMessage={errors.partnerComplexion}
+              isInvalid={!!errors.partnerComplexion}
             />
 
             <Input
               label="Preferred Height"
-              placeholder="Any preference"
+              placeholder="Enter preferred height"
               value={(data.partnerHeight as string) || ""}
               onChange={(e) => updateData({ partnerHeight: e.target.value })}
+              isRequired
+              errorMessage={errors.partnerHeight}
+              isInvalid={!!errors.partnerHeight}
             />
 
             <Input
               label="Preferred Education"
-              placeholder="Any preference"
+              placeholder="Enter preferred education"
               value={(data.partnerEducation as string) || ""}
               onChange={(e) => updateData({ partnerEducation: e.target.value })}
+              isRequired
+              errorMessage={errors.partnerEducation}
+              isInvalid={!!errors.partnerEducation}
             />
 
             <Input
               label="Preferred Profession"
-              placeholder="Any preference"
+              placeholder="Enter preferred profession"
               value={(data.partnerProfession as string) || ""}
               onChange={(e) => updateData({ partnerProfession: e.target.value })}
+              isRequired
+              errorMessage={errors.partnerProfession}
+              isInvalid={!!errors.partnerProfession}
             />
           </div>
 
           <Textarea
             label="Preferred Place"
-            placeholder="Any location preference"
+            placeholder="Enter preferred location"
             value={(data.partnerLocation as string) || ""}
             onChange={(e) => updateData({ partnerLocation: e.target.value })}
+            isRequired
+            errorMessage={errors.partnerLocation}
+            isInvalid={!!errors.partnerLocation}
             minRows={2}
           />
 

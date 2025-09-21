@@ -29,8 +29,8 @@ const biodataSchema = z.object({
   educationMedium: z.string().min(1, "Education medium is required"),
   highestEducation: z.string().min(1, "Highest education is required"),
   instituteName: z.string().min(1, "Institute name is required"),
-  subject: z.string().optional(),
-  passingYear: z.number().min(1950, "Invalid passing year").max(2030, "Invalid passing year"),
+  subject: z.string().min(1, "Subject is required"),
+  passingYear: z.string().min(1, "Passing year is required"),
   result: z.string().min(1, "Result is required"),
 
   // Family Information
@@ -48,11 +48,11 @@ const biodataSchema = z.object({
   // Partner Preferences
   partnerAgeMin: z.number().min(18, "Minimum age should be 18").max(70, "Maximum age should be 70"),
   partnerAgeMax: z.number().min(18, "Minimum age should be 18").max(70, "Maximum age should be 70"),
-  partnerComplexion: z.string().optional(),
-  partnerHeight: z.string().optional(),
-  partnerEducation: z.string().optional(),
-  partnerProfession: z.string().optional(),
-  partnerLocation: z.string().optional(),
+  partnerComplexion: z.string().min(1, "Partner complexion preference is required"),
+  partnerHeight: z.string().min(1, "Partner height preference is required"),
+  partnerEducation: z.string().min(1, "Partner education preference is required"),
+  partnerProfession: z.string().min(1, "Partner profession preference is required"),
+  partnerLocation: z.string().min(1, "Partner location preference is required"),
   partnerDetails: z.string().optional(),
 
   // Contact Information
@@ -88,6 +88,7 @@ const stepSchemas = [
     educationMedium: true,
     highestEducation: true,
     instituteName: true,
+    subject: true,
     passingYear: true,
     result: true,
   }),
@@ -109,6 +110,11 @@ const stepSchemas = [
   biodataSchema.pick({
     partnerAgeMin: true,
     partnerAgeMax: true,
+    partnerComplexion: true,
+    partnerHeight: true,
+    partnerEducation: true,
+    partnerProfession: true,
+    partnerLocation: true,
   }),
 
   // Step 5: Contact Information
@@ -157,6 +163,11 @@ export function useStepForm(totalSteps: number) {
     
     // Convert old address field names to new field names
     const convertedData = { ...data };
+    
+    // Convert passingYear to string if it's a number (for backward compatibility)
+    if (convertedData.passingYear && typeof convertedData.passingYear === 'number') {
+      convertedData.passingYear = convertedData.passingYear.toString();
+    }
 
     // Convert permanent address fields
     if (data.permanentCountry && data.permanentDivision && data.permanentZilla && data.permanentUpazilla) {

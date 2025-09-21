@@ -119,9 +119,9 @@ export class CreateBiodataDto {
   @IsOptional()
   subject?: string;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  passingYear?: number;
+  passingYear?: string;
 
   @IsString()
   @IsOptional()

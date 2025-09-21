@@ -106,7 +106,7 @@ export class Biodata {
   subject: string;
 
   @Column({ nullable: true })
-  passingYear: number;
+  passingYear: string;
 
   @Column({ nullable: true })
   result: string;

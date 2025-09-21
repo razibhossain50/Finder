@@ -73,7 +73,7 @@ interface Biodata {
     highestEducation: string;
     instituteName: string;
     subject: string;
-    passingYear: number;
+    passingYear: string;
     result: string;
     economicCondition: string;
     fatherName: string;
@@ -366,8 +366,8 @@ export default function Biodatas() {
                                 />
                             );
                         })()}
-                        <div className={`w-10 h-10 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center ${biodata.profilePicture ? 'hidden' : ''}`}>
-                            <User className="w-5 h-5 text-gray-400" />
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-200 flex items-center justify-center ${biodata.profilePicture ? 'hidden' : ''}`}>
+                            <User className="w-5 h-5 text-purple-400" />
                         </div>
                     </div>
                 );
@@ -1398,33 +1398,6 @@ export default function Biodatas() {
                                         </div>
                                     );
                                 })()}
-
-                                {/* Progress Information */}
-                                <div className="bg-white p-4 rounded-lg border">
-                                    <h5 className="font-semibold text-gray-800 mb-3 border-b pb-2">Progress Information</h5>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <span className="text-sm text-gray-600">Current Step:</span>
-                                            <p className="font-medium">{selectedBiodata.step} of 8</p>
-                                        </div>
-                                        <div>
-                                            <span className="text-sm text-gray-600">Completed Steps:</span>
-                                            <p className="font-medium">{selectedBiodata.completedSteps?.length || 0}</p>
-                                        </div>
-                                        <div>
-                                            <span className="text-sm text-gray-600">Progress:</span>
-                                            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-                                                <div
-                                                    className="bg-blue-600 h-2.5 rounded-full"
-                                                    style={{ width: `${((selectedBiodata.completedSteps?.length || 0) / 8) * 100}%` }}
-                                                ></div>
-                                            </div>
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                {Math.round(((selectedBiodata.completedSteps?.length || 0) / 8) * 100)}% Complete
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         )}
                     </ModalBody>

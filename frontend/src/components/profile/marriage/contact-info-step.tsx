@@ -187,12 +187,6 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
               isRequired
               errorMessage={errors.fullName}
               isInvalid={!!errors.fullName}
-              description={
-                <div className="flex items-center gap-1 text-xs text-slate-500">
-                  <Info className="w-3 h-3" />
-                  Use profile picture for more Visibility
-                </div>
-              }
               endContent={
                 <Tooltip content="Only visible for admin">
                   <Info className="w-4 h-4 text-slate-400 cursor-help" />
@@ -204,8 +198,8 @@ export function ContactInfoStep({ data, errors, updateData }: ContactInfoStepPro
           {/* Profile Picture */}
           <div className="col-span-2 space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium">Profile Picture</span>
-              <Tooltip content="Profile pic is optional. Only JPEG/PNG Image. You can crop after upload.">
+              <div className="text-sm font-medium">Profile Picture</div>
+              <Tooltip content="Only JPEG/PNG Image">
                 <Info className="w-4 h-4 text-slate-400 cursor-help" />
               </Tooltip>
             </div>

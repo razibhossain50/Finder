@@ -386,7 +386,7 @@ export const BiodataSearch = () => {
 
 
     return (
-        <div className="space-y-4 md:space-y-8 pt-20 bg-[url('/images/hero-bg.png')] bg-no-repeat bg-center bg-cover">
+        <div className="space-y-4 md:space-y-8 pt-20 bg-gradient-to-b from-purple-50 via-pink-100 to-purple-100 bg-[url('/images/hero-bg.png')] bg-no-repeat bg-center bg-cover bg-blend-overlay min-h-screen">
             <div className="container max-w-7xl mx-auto py-12 md:py-24 px-4 space-y-4 md:space-y-8">
                 {/* Enhanced Header */}
                 <div className="text-center space-y-5 pb-12">
