@@ -1401,8 +1401,9 @@ export default function Biodatas() {
                             </div>
                         )}
                     </ModalBody>
-                    <ModalFooter className="flex justify-end items-center px-6 py-4 bg-content1/50">
-                             <div className="text-sm font-semibold text-default-700 whitespace-nowrap">Update Status:</div>
+                    <ModalFooter className="flex justify-end items-end py-2 bg-content1/50">
+                    <div>
+                        <div className="text-sm font-semibold text-default-700 whitespace-nowrap mb-1">Biodata Status:</div>
                             <Select
                                 size="md"
                                 placeholder="Select new status"
@@ -1435,6 +1436,7 @@ export default function Biodatas() {
                                     </SelectItem>
                                 ))}
                             </Select>
+                    </div>
                             <Button
                                 color="primary"
                                 size="md"

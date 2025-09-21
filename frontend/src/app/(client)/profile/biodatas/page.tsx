@@ -5,6 +5,7 @@ import { BiodataSearch } from "@/components/biodata/BiodataSearch";
 import { Card, CardBody, Button } from "@heroui/react";
 import { PlusCircle, FileText, Camera, Heart, Sparkles, Zap, Users, UserCheck, Award, TrendingUp, Globe } from 'lucide-react';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 const AllBiodatas = () => {
     const successStory = [
@@ -77,7 +78,16 @@ const AllBiodatas = () => {
 
     return (
         <div className="-mt-20">
+            <Suspense fallback={
+                <div className="min-h-screen bg-gradient-to-b from-purple-50 via-pink-100 to-purple-100 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-gray-600">Loading search...</p>
+                    </div>
+                </div>
+            }>
                 <BiodataSearch />
+            </Suspense>
             <section className="py-12 md:py-24 px-4 bg-gradient-to-br from-white via-rose-50/50 to-pink-50/50 relative overflow-hidden">
                 {/* Subtle Background Elements */}
                 <div className="absolute inset-0 opacity-10">

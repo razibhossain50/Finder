@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   User, Heart, GraduationCap, Briefcase, MapPin, Users, Phone, Mail, Calendar, Ruler, Weight, Droplets, Shield,
-  Home, AlertCircle, RefreshCw, Star, Share2, MessageCircle, Sparkles, Edit, Plus
+  Home, AlertCircle, RefreshCw, Star, Share2, MessageCircle, Sparkles, Edit, Plus, ArrowLeft, Search
 } from "lucide-react";
 import { Card, CardBody, CardHeader, Button, Chip, addToast } from "@heroui/react";
 import Image from "next/image";
@@ -314,6 +314,46 @@ export default function Profile() {
     }
   };
 
+  // Handle back to search button click
+  const handleBackToSearch = () => {
+    // Get the referring URL or search parameters from session storage
+    const searchState = sessionStorage.getItem('searchState');
+    
+    if (searchState) {
+      try {
+        const { filters, hasSearched } = JSON.parse(searchState);
+        
+        // Build URL with search parameters to restore the search state
+        const searchParams = new URLSearchParams();
+        
+        if (filters.gender && filters.gender !== 'all') {
+          searchParams.append('gender', filters.gender);
+        }
+        if (filters.maritalStatus && filters.maritalStatus !== 'all') {
+          searchParams.append('maritalStatus', filters.maritalStatus);
+        }
+        if (filters.location) {
+          searchParams.append('location', filters.location);
+        }
+        if (filters.biodataNumber) {
+          searchParams.append('biodataNumber', filters.biodataNumber);
+        }
+        if (hasSearched) {
+          searchParams.append('searched', 'true');
+        }
+        
+        const searchUrl = searchParams.toString() ? `/?${searchParams.toString()}` : '/';
+        router.push(searchUrl);
+      } catch (error) {
+        // If there's an error parsing the search state, just go to home
+        router.push('/');
+      }
+    } else {
+      // No previous search state, go to home page
+      router.push('/');
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
@@ -528,6 +568,21 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 p-4 md:p-8">
       <div className="container max-w-6xl mx-auto space-y-8">
+        {/* Back to Search Button */}
+        <div className="flex justify-center">
+          <Button
+            variant="solid"
+            size="lg"
+            className="flex items-center gap-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+            onPress={handleBackToSearch}
+          >
+            <div className="p-1 bg-white/20 rounded-full">
+              <ArrowLeft className="h-4 w-4" />
+            </div>
+            <span>Back to Search Page</span>
+          </Button>
+        </div>
+
         {/* Enhanced Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div className="flex items-center gap-4">

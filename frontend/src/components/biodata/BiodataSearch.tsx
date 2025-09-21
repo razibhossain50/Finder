@@ -9,7 +9,7 @@ import { Search, User, Eye, Heart, Sparkles, Star } from "lucide-react";
 import { LocationSelector } from "@/components/form/LocationSelector";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRegularAuth } from "@/context/RegularAuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { logger } from "@/services/logger";
 import { publicApi } from "@/services/api-client";
 import { handleApiError } from "@/services/error-handler";
@@ -56,19 +56,71 @@ export const BiodataSearch = () => {
     const { user, isAuthenticated } = useRegularAuth();
     const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const itemsPerPage = 12;
 
-    // Don't fetch biodatas automatically on component mount
+    // Restore search state from URL parameters on component load
+    useEffect(() => {
+        const gender = searchParams.get('gender');
+        const maritalStatus = searchParams.get('maritalStatus');
+        const location = searchParams.get('location');
+        const biodataNumber = searchParams.get('biodataNumber');
+        const searched = searchParams.get('searched');
+
+        // Set form field values
+        if (gender) {
+            setSelectedGender(gender);
+        }
+        if (maritalStatus) {
+            setSelectedMaritalStatus(maritalStatus);
+        }
+        if (location) {
+            setSelectedLocation(location);
+        }
+        if (biodataNumber) {
+            setBiodataNumber(biodataNumber);
+        }
+        
+        // If we have search parameters, automatically perform the search
+        if (searched === 'true' || gender || maritalStatus || location || biodataNumber) {
+            setHasSearched(true);
+            
+            // Set search filters immediately
+            const filters = {
+                gender: gender || "",
+                maritalStatus: maritalStatus || "",
+                location: location || "",
+                biodataNumber: biodataNumber || ""
+            };
+            setSearchFilters(filters);
+            
+            // Trigger search with restored parameters
+            setTimeout(() => {
+                handleSearchFromParams(gender, maritalStatus, location, biodataNumber);
+            }, 200); // Slightly longer delay to ensure all state is set
+        }
+    }, [searchParams]);
+
+    // Handle search from URL parameters
+    const handleSearchFromParams = async (gender?: string | null, maritalStatus?: string | null, location?: string | null, biodataNumberParam?: string | null) => {
+        const filters = {
+            gender: gender || selectedGender || "",
+            maritalStatus: maritalStatus || selectedMaritalStatus || "",
+            location: location || selectedLocation || "",
+            biodataNumber: biodataNumberParam || biodataNumber || ""
+        };
+
+        setSearchFilters(filters);
+        await fetchBiodatas();
+    };
 
     const fetchBiodatas = async () => {
         try {
-            console.log('🚀 fetchBiodatas called - setting loading to true');
             setLoading(true);
             logger.debug('Fetching biodatas', undefined, 'BiodataSearch');
 
             const data = await publicApi.get('/biodatas');
-            console.log('📦 API response received:', { dataType: Array.isArray(data) ? 'array' : typeof data, count: Array.isArray(data) ? data.length : 1 });
 
             // Handle both single object and array responses
             const biodatasArray = Array.isArray(data) ? data : [data];
@@ -76,14 +128,11 @@ export const BiodataSearch = () => {
             setError(null);
 
             logger.info('Successfully fetched biodatas', { count: biodatasArray.length }, 'BiodataSearch');
-            console.log('✅ fetchBiodatas completed successfully');
         } catch (error) {
             const appError = handleApiError(error, 'BiodataSearch');
             logger.error('Failed to fetch biodatas', appError, 'BiodataSearch');
             setError(appError.message);
-            console.log('❌ fetchBiodatas failed:', appError.message);
         } finally {
-            console.log('🏁 fetchBiodatas finished - setting loading to false');
             setLoading(false);
         }
     };
@@ -287,11 +336,8 @@ export const BiodataSearch = () => {
             );
 
             if (uncheckedBiodatas.length === 0) {
-                console.log('🔄 All current biodatas already checked for favorites, skipping');
                 return;
             }
-
-            console.log('🔍 Checking favorite statuses for new biodatas:', uncheckedBiodatas.map(b => b.id));
             const statuses: { [key: number]: boolean } = {};
 
             for (const biodata of uncheckedBiodatas) {
@@ -381,6 +427,40 @@ export const BiodataSearch = () => {
 
         setSearchFilters(filters);
         setHasSearched(true);
+        
+        // Update URL with search parameters
+        const searchParams = new URLSearchParams();
+        
+        if (filters.gender && filters.gender !== '' && filters.gender !== 'all' && filters.gender !== 'All') {
+            searchParams.append('gender', filters.gender);
+        }
+        if (filters.maritalStatus && filters.maritalStatus !== '' && filters.maritalStatus !== 'all' && filters.maritalStatus !== 'All') {
+            searchParams.append('maritalStatus', filters.maritalStatus);
+        }
+        if (filters.location && filters.location !== '') {
+            searchParams.append('location', filters.location);
+        }
+        if (filters.biodataNumber && filters.biodataNumber !== '') {
+            searchParams.append('biodataNumber', filters.biodataNumber);
+        }
+        searchParams.append('searched', 'true');
+        
+        // Update URL without page reload
+        const newUrl = searchParams.toString() ? `/?${searchParams.toString()}` : '/';
+        window.history.pushState({}, '', newUrl);
+        
+        // Save search state to sessionStorage so we can restore it when user returns from profile view
+        try {
+            const searchState = {
+                filters,
+                hasSearched: true,
+                timestamp: Date.now()
+            };
+            sessionStorage.setItem('searchState', JSON.stringify(searchState));
+        } catch (error) {
+            logger.warn('Failed to save search state to sessionStorage', error as any, 'BiodataSearch');
+        }
+        
         await fetchBiodatas();
     };
 
@@ -400,9 +480,12 @@ export const BiodataSearch = () => {
                     <p className="text-gray-600 text-2xl">&quot;Craft your love story with someone who complements your soul and spirit&quot;</p>
                 </div>
 
+
                 {/* Enhanced Search and Filters */}
                 <Card className="overflow-visible w-full bg-white/95  border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
                     <CardBody className="p-8 overflow-y-visible">
+                        
+                        
                         <div className="grid gap-6 md:grid-cols-4">
                             <div className="space-y-2">
                                 <Select
@@ -411,8 +494,11 @@ export const BiodataSearch = () => {
                                     aria-label="Select gender preference"
                                     size="lg"
                                     placeholder="Select gender"
-                                    selectedKeys={selectedGender ? [selectedGender] : []}
-                                    onSelectionChange={(keys) => setSelectedGender(Array.from(keys)[0] as string)}
+                                    selectedKeys={selectedGender ? new Set([selectedGender]) : new Set()}
+                                    onSelectionChange={(keys) => {
+                                        const newValue = Array.from(keys)[0] as string;
+                                        setSelectedGender(newValue);
+                                    }}
                                     className="w-full"
                                 >
                                     <SelectItem key="all">All</SelectItem>
@@ -428,8 +514,11 @@ export const BiodataSearch = () => {
                                     aria-label="Select marital status preference"
                                     size="lg"
                                     placeholder="Select marital status"
-                                    selectedKeys={selectedMaritalStatus ? [selectedMaritalStatus] : []}
-                                    onSelectionChange={(keys) => setSelectedMaritalStatus(Array.from(keys)[0] as string)}
+                                    selectedKeys={selectedMaritalStatus ? new Set([selectedMaritalStatus]) : new Set()}
+                                    onSelectionChange={(keys) => {
+                                        const newValue = Array.from(keys)[0] as string;
+                                        setSelectedMaritalStatus(newValue);
+                                    }}
                                     className="w-full"
                                 >
                                     <SelectItem key="all">All</SelectItem>
@@ -442,7 +531,12 @@ export const BiodataSearch = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <LocationSelector id="location-select" aria-label="Select location preference" onLocationSelect={setSelectedLocation} value={selectedLocation} />
+                                <LocationSelector 
+                                    id="location-select" 
+                                    aria-label="Select location preference" 
+                                    onLocationSelect={setSelectedLocation} 
+                                    value={selectedLocation} 
+                                />
                             </div>
 
                             <div className="space-y-2">
@@ -462,10 +556,7 @@ export const BiodataSearch = () => {
                         <Button
                             className="w-full mt-8 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
                             size="lg"
-                            onPress={() => {
-                                console.log('🔘 Find Your Partner button clicked');
-                                handleSearch();
-                            }}
+                            onPress={handleSearch}
                             startContent={<Search className="h-5 w-5" />}
                             isLoading={loading}
                             isDisabled={loading}
@@ -653,6 +744,24 @@ export const BiodataSearch = () => {
                                         className="w-full bg-white border-1 text-rose-500 border-rose-500 hover:from-rose-600 hover:to-pink-600 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                                         size="md"
                                         startContent={<Eye className="h-4 w-4" />}
+                                        onPress={() => {
+                                            // Save current search state before navigating to profile
+                                            try {
+                                                const searchState = {
+                                                    filters: {
+                                                        gender: selectedGender,
+                                                        maritalStatus: selectedMaritalStatus,
+                                                        location: selectedLocation,
+                                                        biodataNumber: biodataNumber
+                                                    },
+                                                    hasSearched: hasSearched,
+                                                    timestamp: Date.now()
+                                                };
+                                                sessionStorage.setItem('searchState', JSON.stringify(searchState));
+                                            } catch (error) {
+                                                console.warn('Failed to save search state:', error);
+                                            }
+                                        }}
                                     >
                                         View Full Profile
                                     </Button>
