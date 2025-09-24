@@ -11,8 +11,14 @@ This project is configured to deploy the frontend on Vercel and backend + databa
 
 ### First Time Setup
 1. Login to Vercel: `vercel login`
-2. Link your project: `vercel link`
-3. Deploy: `vercel --prod`
+2. Connect your GitHub repository to Vercel
+3. Set the root directory to `/` (monorepo root)
+4. Framework preset: Next.js
+5. Build and output settings are configured in `vercel.json`
+
+### Alternative CLI Deployment
+1. `vercel link`
+2. `vercel --prod`
 
 ### Environment Variables on Vercel
 Set these in your Vercel dashboard:
@@ -25,10 +31,16 @@ Set these in your Vercel dashboard:
 
 ## Backend Deployment (Railway)
 
-### First Time Setup
+### Method 1: Using railway.toml (Recommended)
 1. Login to Railway: `railway login`
 2. Create new project: `railway new`
 3. Link your project: `railway link`
+4. Deploy: `railway up`
+
+### Method 2: Using Dockerfile
+1. Railway will automatically detect the Dockerfile
+2. Make sure to set the root directory to `/` in Railway dashboard
+3. Railway will build and deploy using Docker
 
 ### Environment Variables on Railway
 Set these in your Railway dashboard:

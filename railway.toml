@@ -1,17 +1,12 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm run build:backend"
+buildCommand = "npm --workspace backend run build"
 
 [deploy]
-startCommand = "npm run start:backend"
+startCommand = "npm --workspace backend run start:prod"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 
-[[services]]
-name = "backend"
-source = "backend"
-
-[services.backend.variables]
+[variables]
 NODE_ENV = "production"
-BE_PORT = "${{ PORT }}"
