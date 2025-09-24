@@ -21,6 +21,8 @@
         "test:biodata:e2e": "npm --workspace frontend run test:e2e",
         "test:biodata:api": "npm --workspace backend run test:api",
         "test:frontend": "npm --workspace frontend run test",
-        "test:backend": "npm --workspace backend run test"
+        "test:backend": "npm --workspace backend run test",
+        "deploy:vercel": "vercel --prod",
+        "deploy:railway": "railway up"
     }
 }
