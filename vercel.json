@@ -1,7 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "npm --workspace frontend run build",
+  "buildCommand": "npm install --workspaces && npm run build:frontend",
   "outputDirectory": "frontend/.next",
-  "installCommand": "npm install",
-  "framework": "nextjs"
+  "installCommand": "npm install --workspaces",
+  "framework": "nextjs",
+  "functions": {
+    "frontend/src/app/api/**/*.ts": {
+      "runtime": "nodejs20.x"
+    }
+  }
 }
