@@ -1,12 +1,20 @@
 {
   "version": 2,
-  "buildCommand": "npm install --workspaces && npm --workspace frontend run build",
-  "outputDirectory": "frontend/.next",
-  "installCommand": "npm install --workspaces",
-  "framework": "nextjs",
-  "functions": {
-    "frontend/src/app/api/**/*.ts": {
-      "runtime": "nodejs20.x"
+  "builds": [
+    { "src": "frontend/package.json", "use": "@vercel/next" }
+  ],
+  "buildCommand": "npm --workspace frontend run build",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
     }
-  }
+  ]
 }
