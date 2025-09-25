@@ -59,22 +59,69 @@ async function bootstrap() {
   });
 
   // -----------------------------
-  // CORS setup
+  // CORS setup - Production ready
   // -----------------------------
+  console.log('Setting up CORS...');
+  console.log('FRONTEND_URL env:', process.env.FRONTEND_URL);
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  
   const allowedOrigins = [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
     'https://mawami.com',
     'https://www.mawami.com',
-  ];
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL
+  ].filter(Boolean);
 
-  console.log('CORS allowed origins:', allowedOrigins);
+  console.log('Allowed origins:', allowedOrigins);
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // For development, allow all origins
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      
+      console.log('CORS blocked origin:', origin);
+      return callback(new Error('Not allowed by CORS'), false);
+    },
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With', 
+      'Accept', 
+      'Origin',
+      'Cache-Control',
+      'X-File-Name'
+    ],
     credentials: true,
     optionsSuccessStatus: 200,
+    preflightContinue: false,
+  });
+
+  // Add manual CORS headers as backup
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      res.header('Access-Control-Allow-Origin', origin || '*');
+      res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, X-File-Name');
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+    next();
   });
 
   // Create super admin if not exists
