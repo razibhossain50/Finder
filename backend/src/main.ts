@@ -13,17 +13,19 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Serve static files from uploads directory
+  // Serve static files from uploads/public directory
   app.useStaticAssets(join(__dirname, '..', '..', 'public'), {
     prefix: '/',
   });
 
-  // Enable validation pipes
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: false, // Temporarily allow unknown properties
-    transform: true,
-  }));
+  // Enable validation pipes globally
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false, // Temporarily allow unknown properties
+      transform: true,
+    }),
+  );
 
   // Enable global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
@@ -45,7 +47,7 @@ async function bootstrap() {
         description: 'Enter JWT token',
         in: 'header',
       },
-      'JWT-auth', // This name here is important for matching up with @ApiBearerAuth() in your controller!
+      'JWT-auth',
     )
     .build();
 
@@ -56,21 +58,42 @@ async function bootstrap() {
     },
   });
 
-  // Enable CORS for the frontend application
-  // Allow both local and deployed frontend origins, configurable via env
+  // -----------------------------
+  // CORS setup
+  // -----------------------------
   const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3000',
     'https://mawami.com',
-    'https://www.mawami.com', 
+    'https://www.mawami.com',
   ];
 
   console.log('CORS allowed origins:', allowedOrigins);
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // allow requests with no origin (like server-to-server)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn('Blocked CORS origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
+    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
+
+  // Optional: respond early to OPTIONS requests (preflight)
+  app.use((req, res, next) => {
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    next();
   });
 
   // Create super admin if not exists
@@ -82,4 +105,5 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
   console.log(`Application is running on: ${await app.getUrl()}/api`);
 }
+
 void bootstrap();
