@@ -1,12 +1,13 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm --workspace backend run build"
+buildCommand = "npm install && npm run build:backend"
 
 [deploy]
-startCommand = "npm --workspace backend run start:prod"
-healthcheckPath = "/health"
-healthcheckTimeout = 300
+startCommand = "npm run start:backend"
+healthcheckPath = "/api"
+healthcheckTimeout = 60
 restartPolicyType = "on_failure"
 
 [variables]
 NODE_ENV = "production"
+FRONTEND_URL = "https://mawami.com"

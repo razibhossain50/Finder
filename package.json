@@ -19,14 +19,7 @@
         "start:frontend": "npm --workspace frontend run start",
         "start:backend": "npm --workspace backend run start",
         "test": "npm run test:frontend && npm run test:backend",
-        "test:biodata": "npm run test:biodata:frontend && npm run test:biodata:backend && npm run test:biodata:e2e",
-        "test:biodata:frontend": "npm --workspace frontend run test:frontend",
-        "test:biodata:backend": "npm --workspace backend run test:biodata",
-        "test:biodata:e2e": "npm --workspace frontend run test:e2e",
-        "test:biodata:api": "npm --workspace backend run test:api",
         "test:frontend": "npm --workspace frontend run test",
-        "test:backend": "npm --workspace backend run test",
-        "deploy:vercel": "vercel --prod --cwd frontend",
-        "deploy:railway": "railway up"
+        "test:backend": "npm --workspace backend run test"
     }
 }

@@ -60,7 +60,8 @@ async function bootstrap() {
   // Allow both local and deployed frontend origins, configurable via env
   const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3000',
-    'https://mawami.com', // Explicitly allow production frontend
+    'https://mawami.com',
+    'https://www.mawami.com', 
   ];
 
   console.log('CORS allowed origins:', allowedOrigins);
