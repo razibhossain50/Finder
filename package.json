@@ -22,7 +22,7 @@
         "test:biodata:api": "npm --workspace backend run test:api",
         "test:frontend": "npm --workspace frontend run test",
         "test:backend": "npm --workspace backend run test",
-        "deploy:vercel": "vercel --prod",
+        "deploy:vercel": "vercel --prod --cwd frontend",
         "deploy:railway": "railway up"
     }
 }
