@@ -4,8 +4,6 @@ buildCommand = "npm install && npm --workspace backend run build"
 
 [deploy]
 startCommand = "npm --workspace backend run start:prod"
-healthcheckPath = "/api"
-healthcheckTimeout = 60
 restartPolicyType = "on_failure"
 
 [variables]
