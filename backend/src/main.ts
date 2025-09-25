@@ -70,30 +70,11 @@ async function bootstrap() {
   console.log('CORS allowed origins:', allowedOrigins);
 
   app.enableCors({
-    origin: (origin, callback) => {
-      // allow requests with no origin (like server-to-server)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn('Blocked CORS origin:', origin);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+    origin: allowedOrigins,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  });
-
-  // Optional: respond early to OPTIONS requests (preflight)
-  app.use((req, res, next) => {
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(204);
-    }
-    next();
+    optionsSuccessStatus: 200,
   });
 
   // Create super admin if not exists
