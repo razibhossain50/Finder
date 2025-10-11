@@ -1,9 +1,8 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 
 interface ProfileLayoutProps {
     children: React.ReactNode;
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }
 
 async function getProfile(id: string) {
@@ -32,8 +31,9 @@ async function getProfile(id: string) {
     }
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-    const profile = await getProfile(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const profile = await getProfile(id);
 
     if (!profile) {
         return {
@@ -66,10 +66,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         return `${baseUrl}/default-profile.svg`; // fallback
     };
 
-    const title = `${profile.fullName || 'Biodata Profile'} - BD${params.id}`;
+    const title = `${profile.fullName || 'Biodata Profile'} - BD${id}`;
     const description = `${profile.age} years • ${profile.height} • ${profile.profession} • ${profile.maritalStatus} • ${profile.religion} • ${profile.presentDivision}, ${profile.presentCountry}`;
     const imageUrl = getDefaultImage();
-    const currentUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://mawami.com'}/profile/biodatas/${params.id}`;
+    const currentUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://mawami.com'}/profile/biodatas/${id}`;
 
     return {
         title,
