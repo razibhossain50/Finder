@@ -17,7 +17,6 @@ import { logger } from '@/services/logger';
 import { handleApiError } from '@/services/error-handler';
 import { resolveImageUrl } from '@/services/image-service';
 import FacebookShareModal from '@/components/profile/FacebookShareModal';
-import ProfileMetaTags from '@/components/profile/ProfileMetaTags';
 
 // Helper function to safely display data or fallback
 const safeDisplay = (value: unknown, fallback: string = "Not provided"): string => {
@@ -1371,9 +1370,6 @@ export default function Profile() {
           </CardBody>
         </Card>
       </div>
-
-      {/* Meta Tags for Social Sharing */}
-      <ProfileMetaTags profile={profile} biodataId={biodataId} />
 
       {/* Facebook Share Modal */}
       <FacebookShareModal
