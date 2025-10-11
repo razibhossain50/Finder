@@ -16,6 +16,8 @@ import { BiodataStatusHandler } from "@/components/biodata/BiodataStatusHandler"
 import { logger } from '@/services/logger';
 import { handleApiError } from '@/services/error-handler';
 import { resolveImageUrl } from '@/services/image-service';
+import FacebookShareModal from '@/components/profile/FacebookShareModal';
+import ProfileMetaTags from '@/components/profile/ProfileMetaTags';
 
 // Helper function to safely display data or fallback
 const safeDisplay = (value: unknown, fallback: string = "Not provided"): string => {
@@ -44,6 +46,7 @@ export default function Profile() {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [userHasBiodata, setUserHasBiodata] = useState(false);
   const [checkingUserBiodata, setCheckingUserBiodata] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
   const params = useParams();
   const router = useRouter();
   const biodataId = params.id as string;
@@ -153,7 +156,7 @@ export default function Profile() {
       }
     } catch (error) {
       const appError = handleApiError(error, 'Component');
-            logger.error('Error fetching profile', appError, 'Page');
+      logger.error('Error fetching profile', appError, 'Page');
       setError(error instanceof Error ? error.message : "Failed to load profile");
     } finally {
       setLoading(false);
@@ -201,7 +204,7 @@ export default function Profile() {
       }
     } catch (error) {
       const appError = handleApiError(error, 'Component');
-            logger.error('Error checking user biodata', appError, 'Page');
+      logger.error('Error checking user biodata', appError, 'Page');
       setUserHasBiodata(false);
     } finally {
       setCheckingUserBiodata(false);
@@ -217,7 +220,7 @@ export default function Profile() {
       setIsFavoriteProfile(favoriteStatus);
     } catch (error) {
       const appError = handleApiError(error, 'Component');
-            logger.error('Error checking favorite status', appError, 'Page');
+      logger.error('Error checking favorite status', appError, 'Page');
     }
   }, [profile, isAuthenticated, user, isFavorite]);
 
@@ -246,7 +249,7 @@ export default function Profile() {
       }
     } catch (error) {
       const appError = handleApiError(error, 'Component');
-            logger.error('Error toggling favorite', appError, 'Page');
+      logger.error('Error toggling favorite', appError, 'Page');
     } finally {
       setFavoriteLoading(false);
     }
@@ -269,63 +272,23 @@ export default function Profile() {
     }
   };
 
-  // Handle share button click - copy current URL to clipboard
-  const handleShareClick = async () => {
-    try {
-      const currentUrl = window.location.href;
-      await navigator.clipboard.writeText(currentUrl);
-
-      // Show HeroUI success toast
-      addToast({
-        title: "Success!",
-        description: "Profile link copied to clipboard!",
-        color: "success",
-      });
-    } catch (error) {
-      const appError = handleApiError(error, 'Component');
-            logger.error('Failed to copy URL', appError, 'Page');
-
-      // Fallback for browsers that don't support clipboard API
-      try {
-        const textArea = document.createElement('textarea');
-        textArea.value = window.location.href;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-
-        // Show HeroUI success toast for fallback
-        addToast({
-          title: "Success!",
-          description: "Profile link copied to clipboard!",
-          color: "success",
-        });
-      } catch (fallbackError) {
-        const appError = handleApiError(fallbackError, 'Component');
-            logger.error('Fallback copy failed', appError, 'Page');
-
-        // Show HeroUI error toast
-        addToast({
-          title: "Error",
-          description: "Unable to copy link. Please copy the URL manually from your browser.",
-          color: "danger",
-        });
-      }
-    }
+  // Handle share button click - open Facebook share modal
+  const handleShareClick = () => {
+    setShowShareModal(true);
   };
 
   // Handle back to search button click
   const handleBackToSearch = () => {
     // Get the referring URL or search parameters from session storage
     const searchState = sessionStorage.getItem('searchState');
-    
+
     if (searchState) {
       try {
         const { filters, hasSearched } = JSON.parse(searchState);
-        
+
         // Build URL with search parameters to restore the search state
         const searchParams = new URLSearchParams();
-        
+
         if (filters.gender && filters.gender !== 'all') {
           searchParams.append('gender', filters.gender);
         }
@@ -341,7 +304,7 @@ export default function Profile() {
         if (hasSearched) {
           searchParams.append('searched', 'true');
         }
-        
+
         const searchUrl = searchParams.toString() ? `/?${searchParams.toString()}` : '/';
         router.push(searchUrl);
       } catch (error) {
@@ -374,7 +337,7 @@ export default function Profile() {
           await trackProfileView(parseInt(biodataId));
         } catch (error) {
           const appError = handleApiError(error, 'Component');
-            logger.error('Failed to track profile view', appError, 'Page');
+          logger.error('Failed to track profile view', appError, 'Page');
         }
       };
 
@@ -566,8 +529,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 p-4 md:p-8">
-      <div className="container max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 p-2 md:p-4">
+      <div className="container max-w-6xl mx-auto space-y-4">
         {/* Back to Search Button */}
         <div className="flex justify-center">
           <Button
@@ -647,9 +610,9 @@ export default function Profile() {
               {isFavoriteProfile ? 'Remove from Favorites' : 'Add to Favorites'}
             </Button>
             <Button
-              variant="flat"
+              variant="solid"
               size="sm"
-              className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 hover:shadow-md"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-0 transition-all duration-300 hover:shadow-xl hover:scale-110 font-bold px-6 py-2 shadow-lg rounded-full"
               onPress={handleShareClick}
             >
               <Share2 className="h-4 w-4" />
@@ -681,8 +644,8 @@ export default function Profile() {
             <Heart className="h-6 w-6 text-white animate-pulse delay-1000" />
           </div>
 
-          <CardBody className="relative p-8">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+          <CardBody className="relative p-4">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
               {/* Enhanced Profile Picture */}
               <div className="relative">
                 <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border-4 border-white/30 shadow-xl">
@@ -708,10 +671,10 @@ export default function Profile() {
               </div>
 
               {/* Enhanced Profile Info */}
-              <div className="flex-1 text-center md:text-left space-y-4 text-white">
+              <div className="flex-1 text-center md:text-left space-y-2 text-white">
                 <div>
                   <h2 className="text-3xl md:text-4xl font-bold mb-2">
-                    {isAuthenticated && user && userHasBiodata 
+                    {isAuthenticated && user && userHasBiodata
                       ? safeDisplay(profile.fullName, "Unknown User")
                       : ""
                     }
@@ -722,7 +685,7 @@ export default function Profile() {
                 </div>
 
                 {/* Key Info Row */}
-                <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 text-white/90">
+                <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 text-white/90">
                   <span className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full">
                     <Calendar className="h-4 w-4" />
                     {profile.age || "N/A"} years old
@@ -755,7 +718,7 @@ export default function Profile() {
         </Card>
 
         {/* Enhanced Main Content Grid */}
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           {/* Personal Information */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
@@ -766,56 +729,56 @@ export default function Profile() {
                 <span className="text-xl font-bold text-gray-800">Personal Information</span>
               </div>
             </CardHeader>
-            <CardBody className="p-6">
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+            <CardBody className="p-4">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Date of Birth</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-blue-500" />
                       {formatDate(profile.dateOfBirth)}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Age</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.age)} years</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.age)} years</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Height</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                       <Ruler className="h-4 w-4 text-green-500" />
                       {safeDisplay(profile.height)}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Weight</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                       <Weight className="h-4 w-4 text-orange-500" />
                       {safeDisplay(profile.weight)} {profile.weight ? 'kg' : ''}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Complexion</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.complexion)}</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.complexion)}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Blood Group</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                       <Droplets className="h-4 w-4 text-red-500" />
                       {safeDisplay(profile.bloodGroup)}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Religion</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.religion)}</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.religion)}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Marital Status</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.maritalStatus)}</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.maritalStatus)}</p>
                   </div>
                 </div>
                 {profile.healthIssues && safeDisplay(profile.healthIssues) !== "Not provided" && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                     <p className="text-sm font-semibold text-yellow-800 mb-2 flex items-center gap-2">
                       <Shield className="h-4 w-4" />
                       Health Information
@@ -839,32 +802,32 @@ export default function Profile() {
                 <span className="text-xl font-bold text-gray-800">Education Background</span>
               </div>
             </CardHeader>
-            <CardBody className="p-6">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+            <CardBody className="p-4">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Education Medium</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.educationMedium)}</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.educationMedium)}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Highest Education</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.highestEducation)}</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.highestEducation)}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Institute</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.instituteName)}</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.instituteName)}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Subject</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.subject)}</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.subject)}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Passing Year</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.passingYear)}</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.passingYear)}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                     <p className="text-sm font-semibold text-gray-600 mb-1">Result</p>
-                    <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.result)}</p>
+                    <p className="text-base font-medium text-gray-800">{safeDisplay(profile.result)}</p>
                   </div>
                 </div>
               </div>
@@ -881,18 +844,18 @@ export default function Profile() {
                 <span className="text-xl font-bold text-gray-800">Professional Details</span>
               </div>
             </CardHeader>
-            <CardBody className="p-6">
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">Profession</p>
-                  <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+            <CardBody className="p-4">
+              <div className="space-y-3">
+                <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-1">Profession</p>
+                  <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                     <Briefcase className="h-4 w-4 text-orange-500" />
                     {safeDisplay(profile.profession)}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">Economic Condition</p>
-                  <p className="text-lg font-medium text-gray-800">{safeDisplay(profile.economicCondition)}</p>
+                <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-1">Economic Condition</p>
+                  <p className="text-base font-medium text-gray-800">{safeDisplay(profile.economicCondition)}</p>
                 </div>
               </div>
             </CardBody>
@@ -906,25 +869,25 @@ export default function Profile() {
                 <span className="text-xl font-bold text-gray-800">Permanent Address</span>
               </div>
             </CardHeader>
-            <CardBody className="p-6">
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">Area & Upazilla</p>
-                  <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+            <CardBody className="p-4">
+              <div className="space-y-3">
+                <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-1">Area & Upazilla</p>
+                  <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-indigo-500" />
                     {safeDisplay(profile.permanentArea)}, {safeDisplay(profile.permanentUpazilla)}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">District & Division</p>
-                  <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-1">District & Division</p>
+                  <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-indigo-500" />
                     {safeDisplay(profile.permanentZilla)}, {safeDisplay(profile.permanentDivision)}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                  <p className="text-sm font-semibold text-gray-600 mb-2">Country</p>
-                  <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                  <p className="text-sm font-semibold text-gray-600 mb-1">Country</p>
+                  <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-indigo-500" />
                     {safeDisplay(profile.permanentCountry)}
                   </p>
@@ -942,32 +905,32 @@ export default function Profile() {
                 <span className="text-xl font-bold text-gray-800">Present Address</span>
               </div>
             </CardHeader>
-            <CardBody className="p-6">
+            <CardBody className="p-4">
               {profile.sameAsPermanent ? (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
                   <Home className="h-8 w-8 text-blue-500 mx-auto mb-3" />
                   <p className="text-blue-800 font-medium text-lg">Same as permanent address</p>
                   <p className="text-blue-600 text-sm mt-1">Currently residing at permanent location</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">Area & Upazilla</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                <div className="space-y-3">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Area & Upazilla</p>
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-teal-500" />
                       {safeDisplay(profile.presentArea)}, {safeDisplay(profile.presentUpazilla)}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">District & Division</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">District & Division</p>
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-teal-500" />
                       {safeDisplay(profile.presentZilla)}, {safeDisplay(profile.presentDivision)}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">Country</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Country</p>
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-teal-500" />
                       {safeDisplay(profile.presentCountry)}
                     </p>
@@ -987,19 +950,19 @@ export default function Profile() {
                 <span className="text-xl font-bold text-gray-800">Family Information</span>
               </div>
             </CardHeader>
-            <CardBody className="p-6">
+            <CardBody className="p-4">
               {/* Parents Information */}
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-100">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <User className="h-5 w-5 text-blue-500" />
+              <div className="space-y-3">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
+                  <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <User className="h-4 w-4 text-blue-500" />
                     Parents Information
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Father&apos;s Name</p>
-                      <div className="text-lg font-medium text-gray-800">
-                        {isAuthenticated && user && userHasBiodata 
+                      <div className="text-base font-medium text-gray-800">
+                        {isAuthenticated && user && userHasBiodata
                           ? safeDisplay(profile.fatherName)
                           : (
                             <div className="flex items-center gap-2 text-gray-500">
@@ -1010,16 +973,16 @@ export default function Profile() {
                         }
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Father&apos;s Profession</p>
-                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                         <Briefcase className="h-4 w-4 text-blue-500" />
                         {safeDisplay(profile.fatherProfession)}
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Father Status</p>
-                      <div className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <div className="text-base font-medium text-gray-800 flex items-center gap-2">
                         {profile.fatherAlive === 'Yes' ? (
                           <>
                             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -1035,10 +998,10 @@ export default function Profile() {
                         )}
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Mother&apos;s Name</p>
-                      <div className="text-lg font-medium text-gray-800">
-                        {isAuthenticated && user && userHasBiodata 
+                      <div className="text-base font-medium text-gray-800">
+                        {isAuthenticated && user && userHasBiodata
                           ? safeDisplay(profile.motherName)
                           : (
                             <div className="flex items-center gap-2 text-gray-500">
@@ -1049,16 +1012,16 @@ export default function Profile() {
                         }
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Mother&apos;s Profession</p>
-                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                         <Briefcase className="h-4 w-4 text-pink-500" />
                         {safeDisplay(profile.motherProfession)}
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Mother Status</p>
-                      <div className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <div className="text-base font-medium text-gray-800 flex items-center gap-2">
                         {profile.motherAlive === 'Yes' ? (
                           <>
                             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -1089,22 +1052,22 @@ export default function Profile() {
                 <span className="text-xl font-bold text-gray-800">Family Information</span>
               </div>
             </CardHeader>
-            <CardBody className="p-6">
+            <CardBody className="p-4">
               {/* Siblings & Family Details */}
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-5 border border-purple-100">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <Users className="h-5 w-5 text-purple-500" />
+              <div className="space-y-3">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
+                  <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <Users className="h-4 w-4 text-purple-500" />
                     Siblings & Family
                   </h4>
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow">
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="bg-white rounded-lg p-3 text-center hover:shadow-md transition-shadow">
                       <div className="text-3xl font-bold text-blue-600 mb-1">
                         {safeDisplay(profile.brothersCount, "0")}
                       </div>
                       <p className="text-sm font-semibold text-gray-600">Brothers</p>
                     </div>
-                    <div className="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 text-center hover:shadow-md transition-shadow">
                       <div className="text-3xl font-bold text-pink-600 mb-1">
                         {safeDisplay(profile.sistersCount, "0")}
                       </div>
@@ -1113,7 +1076,7 @@ export default function Profile() {
                   </div>
 
                   {profile.familyDetails && safeDisplay(profile.familyDetails) !== "Not provided" && (
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
                         <Home className="h-4 w-4 text-purple-500" />
                         Family Details
@@ -1135,39 +1098,39 @@ export default function Profile() {
                 <span className="text-xl font-bold text-gray-800">Partner Preferences</span>
               </div>
             </CardHeader>
-            <CardBody className="p-6">
+            <CardBody className="p-4">
               {/* Basic Preferences */}
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg p-5 border border-rose-100">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <User className="h-5 w-5 text-rose-500" />
+              <div className="space-y-3">
+                <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg p-3 border border-rose-100">
+                  <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <User className="h-4 w-4 text-rose-500" />
                     Basic Preferences
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Age Range</p>
-                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-rose-500" />
                         {safeDisplay(profile.partnerAgeMin)} - {safeDisplay(profile.partnerAgeMax)} years
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Complexion</p>
-                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                         <Sparkles className="h-4 w-4 text-amber-500" />
                         {safeDisplay(profile.partnerComplexion)}
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Height Preference</p>
-                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                         <Ruler className="h-4 w-4 text-green-500" />
                         {safeDisplay(profile.partnerHeight)}
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-sm font-semibold text-gray-600 mb-1">Education</p>
-                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                         <GraduationCap className="h-4 w-4 text-purple-500" />
                         {safeDisplay(profile.partnerEducation)}
                       </p>
@@ -1188,25 +1151,25 @@ export default function Profile() {
                 <span className="text-xl font-bold text-gray-800">Partner Preferences</span>
               </div>
             </CardHeader>
-            <CardBody className="p-6">
+            <CardBody className="p-4">
               {/* Professional & Location Preferences */}
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-100">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <Briefcase className="h-5 w-5 text-blue-500" />
+              <div className="space-y-3">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
+                  <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-blue-500" />
                     Professional & Location
                   </h4>
-                  <div className="space-y-4">
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <p className="text-sm font-semibold text-gray-600 mb-2">Profession Preference</p>
-                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                  <div className="space-y-3">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Profession Preference</p>
+                      <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                         <Briefcase className="h-4 w-4 text-blue-500" />
                         {safeDisplay(profile.partnerProfession)}
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <p className="text-sm font-semibold text-gray-600 mb-2">Location Preference</p>
-                      <p className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Location Preference</p>
+                      <p className="text-base font-medium text-gray-800 flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-teal-500" />
                         {safeDisplay(profile.partnerLocation)}
                       </p>
@@ -1216,12 +1179,12 @@ export default function Profile() {
 
                 {/* Additional Details */}
                 {profile.partnerDetails && safeDisplay(profile.partnerDetails) !== "Not provided" && (
-                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-5 border border-amber-100">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                      <Heart className="h-5 w-5 text-amber-500" />
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-3 border border-amber-100">
+                    <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                      <Heart className="h-4 w-4 text-amber-500" />
                       Additional Preferences
                     </h4>
-                    <div className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
                       <p className="text-gray-700 leading-relaxed">{safeDisplay(profile.partnerDetails)}</p>
                     </div>
                   </div>
@@ -1244,41 +1207,41 @@ export default function Profile() {
                 )}
               </div>
             </CardHeader>
-            <CardBody className="p-6">
+            <CardBody className="p-4">
               {checkingUserBiodata ? (
                 // Loading state while checking if user has biodata
-                <div className="text-center py-8">
+                <div className="text-center py-6">
                   <div className="w-8 h-8 mx-auto mb-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
                   <p className="text-gray-600">Checking access permissions...</p>
                 </div>
               ) : isAuthenticated && user && userHasBiodata ? (
                 // Show contact info only if user is logged in AND has their own biodata
-                <div className="space-y-4">
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">Email Address</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
-                      <Mail className="h-5 w-5 text-emerald-500" />
+                <div className="space-y-3">
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Email Address</p>
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-emerald-500" />
                       <span className="break-all">{safeDisplay(profile.email, "Not provided")}</span>
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">Personal Mobile</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
-                      <Phone className="h-5 w-5 text-blue-500" />
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Personal Mobile</p>
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-blue-500" />
                       {safeDisplay(profile.ownMobile)}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">Guardian Mobile</p>
-                    <p className="text-lg font-medium text-gray-800 flex items-center gap-3">
-                      <Phone className="h-5 w-5 text-purple-500" />
+                  <div className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Guardian Mobile</p>
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-purple-500" />
                       {safeDisplay(profile.guardianMobile)}
                     </p>
                   </div>
                 </div>
               ) : isAuthenticated && user && !userHasBiodata ? (
                 // User is logged in but doesn't have their own biodata
-                <div className="text-center py-8">
+                <div className="text-center py-6">
                   <div className="max-w-md mx-auto">
                     <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
                       <User className="h-8 w-8 text-blue-600" />
@@ -1305,7 +1268,7 @@ export default function Profile() {
                 </div>
               ) : (
                 // User is not logged in
-                <div className="text-center py-8">
+                <div className="text-center py-6">
                   <div className="max-w-md mx-auto">
                     <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
                       <Shield className="h-8 w-8 text-amber-600" />
@@ -1357,9 +1320,9 @@ export default function Profile() {
             <Heart className="h-8 w-8 text-white animate-pulse delay-1000" />
           </div>
 
-          <CardBody className="relative p-8 text-center">
-            <div className="max-w-2xl mx-auto space-y-6">
-              <div className="space-y-4">
+          <CardBody className="relative p-4 text-center">
+            <div className="max-w-2xl mx-auto space-y-4">
+              <div className="space-y-2">
                 <h3 className="text-2xl md:text-3xl font-bold">
                   Interested in this Profile?
                 </h3>
@@ -1409,7 +1372,16 @@ export default function Profile() {
         </Card>
       </div>
 
+      {/* Meta Tags for Social Sharing */}
+      <ProfileMetaTags profile={profile} biodataId={biodataId} />
 
+      {/* Facebook Share Modal */}
+      <FacebookShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        profile={profile}
+        biodataId={biodataId}
+      />
     </div>
   );
 }
